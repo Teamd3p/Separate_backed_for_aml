@@ -58,7 +58,7 @@ public class TransactionServiceImpl implements TransactionService {
 
         if (!result.isSuspicious()) {
             transaction.setStatus(TransactionStatus.COMPLETED);
-        } else if (result.getTotalRiskScore() >= 70) {
+        } else if (result.getTotalRiskScore() >= 85) {
             transaction.setStatus(TransactionStatus.BLOCKED);
         } else {
             transaction.setStatus(TransactionStatus.FLAGGED);

@@ -24,4 +24,6 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
         @Param("senderAccountNumber") String senderAccountNumber,
         @Param("receiverAccountNumber") String receiverAccountNumber
     );
+    
+    List<Transaction> findByCustomerUserId(Long customerId);
 }

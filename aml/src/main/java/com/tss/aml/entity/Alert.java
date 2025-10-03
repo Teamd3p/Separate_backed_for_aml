@@ -13,60 +13,59 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotNull;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Entity
 @Table(name = "alerts")
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class Alert {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long alertId;
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	private Long alertId;
 
-    @NotNull
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "customer_id", nullable = false)
-    private Customer customer;
+	@NotNull
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "customer_id", nullable = false)
+	private Customer customer;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "transaction_id")
-    private Transaction transaction;
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "transaction_id")
+	private Transaction transaction;
 
-    @NotNull
-    private String ruleTriggered;
+	@NotNull
+	private String ruleTriggered;
 
-    @NotNull
-    private Integer riskScore;
+	@NotNull
+	private Integer riskScore;
 
-    @Enumerated(EnumType.STRING)
-    @NotNull
-    private AlertStatus status = AlertStatus.PENDING;
+	@Enumerated(EnumType.STRING)
+	@NotNull
+	private AlertStatus status = AlertStatus.PENDING;
 
-    private LocalDateTime createdAt = LocalDateTime.now();
+	private LocalDateTime createdAt = LocalDateTime.now();
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "assigned_to")
-    private ComplianceOfficer assignedTo;
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "assigned_to")
+	private ComplianceOfficer assignedTo;
 
-    public Alert() {}
+	@Enumerated(EnumType.STRING)
+	private InvestigationStatus investigationStatus = InvestigationStatus.PENDING;
 
-    public Alert(Customer customer, String ruleTriggered, int riskScore) {
-        this.customer = customer;
-        this.ruleTriggered = ruleTriggered;
-        this.riskScore = riskScore;
-    }
+	public enum InvestigationStatus {
+		PENDING, INVESTIGATING, TRUE_POSITIVE, FALSE_POSITIVE, ESCALATED
+	}
 
-    public Long getAlertId() { return alertId; }
-    public Customer getCustomer() { return customer; }
-    public void setCustomer(Customer customer) { this.customer = customer; }
-    public Transaction getTransaction() { return transaction; }
-    public void setTransaction(Transaction transaction) { this.transaction = transaction; }
-    public String getRuleTriggered() { return ruleTriggered; }
-    public void setRuleTriggered(String ruleTriggered) { this.ruleTriggered = ruleTriggered; }
-    public Integer getRiskScore() { return riskScore; }
-    public void setRiskScore(Integer riskScore) { this.riskScore = riskScore; }
-    public AlertStatus getStatus() { return status; }
-    public void setStatus(AlertStatus status) { this.status = status; }
-    public LocalDateTime getCreatedAt() { return createdAt; }
-    public ComplianceOfficer getAssignedTo() { return assignedTo; }
-    public void setAssignedTo(ComplianceOfficer assignedTo) { this.assignedTo = assignedTo; }
+	// Add getter/setter
+	public InvestigationStatus getInvestigationStatus() {
+		return investigationStatus;
+	}
+
+	public void setInvestigationStatus(InvestigationStatus investigationStatus) {
+		this.investigationStatus = investigationStatus;
+	}
 }
