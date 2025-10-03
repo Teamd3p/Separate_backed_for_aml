@@ -5,4 +5,5 @@ import com.tss.aml.entity.Account;
 
 public interface AccountService {
     Account createAccount(CreateAccountRequest request, Long customerId);
+    Account getAccountByNumber(String accountNumber);
 }
