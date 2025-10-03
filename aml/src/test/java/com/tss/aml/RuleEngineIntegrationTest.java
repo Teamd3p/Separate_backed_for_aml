@@ -102,7 +102,7 @@ public class RuleEngineIntegrationTest {
     @Order(2)
     void testGeographicRule() {
         // Arrange
-        riskyCountryRepo.save(new RiskyCountry("IR", "Iran", RiskLevel.CRITICAL));
+        riskyCountryRepo.save(new RiskyCountry("PB", "PORBANDAR", RiskLevel.CRITICAL));
 
         Rule rule = new Rule(
             "High Risk Country Rule",
@@ -116,10 +116,10 @@ public class RuleEngineIntegrationTest {
         Transaction tx = new Transaction();
         tx.setCustomer(customer);
         tx.setAmount(new BigDecimal("500"));
-        tx.setCurrency("USD");
-        tx.setDescription("Transfer to Iran");
+        tx.setCurrency("UZ");
+        tx.setDescription("Transfer to Uzbekisthan");
         tx.setTransactionType(TransactionType.TRANSFER);
-        tx.setCountryCode("IR");
+        tx.setCountryCode("PB");
         tx.setTimestamp(LocalDateTime.now());
 
         // Act
