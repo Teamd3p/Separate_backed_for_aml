@@ -37,10 +37,14 @@ public abstract class User {
     private Role role;
 
     @Enumerated(EnumType.STRING)
-    private UserStatus status = UserStatus.ACTIVE;
+    private UserStatus status = UserStatus.PENDING_VERIFICATION;
 
     private LocalDateTime createdAt = LocalDateTime.now();
     private LocalDateTime lastLogin;
+
+    private boolean emailVerified = false;
+    private String verificationOtp;
+    private LocalDateTime otpExpiryTime;
 
     protected User() {}
 
@@ -62,6 +66,13 @@ public abstract class User {
     // Setters
     public void setEmail(String email) { this.email = email; }
     public void setPasswordHash(String passwordHash) { this.passwordHash = passwordHash; }
+    public void setRole(Role role) { this.role = role; }
     public void setStatus(UserStatus status) { this.status = status; }
     public void setLastLogin(LocalDateTime lastLogin) { this.lastLogin = lastLogin; }
+    public boolean isEmailVerified() { return emailVerified; }
+    public void setEmailVerified(boolean emailVerified) { this.emailVerified = emailVerified; }
+    public String getVerificationOtp() { return verificationOtp; }
+    public void setVerificationOtp(String verificationOtp) { this.verificationOtp = verificationOtp; }
+    public LocalDateTime getOtpExpiryTime() { return otpExpiryTime; }
+    public void setOtpExpiryTime(LocalDateTime otpExpiryTime) { this.otpExpiryTime = otpExpiryTime; }
 }
