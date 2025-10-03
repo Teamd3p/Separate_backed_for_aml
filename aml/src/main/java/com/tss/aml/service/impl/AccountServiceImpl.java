@@ -38,6 +38,11 @@ public class AccountServiceImpl implements AccountService {
         return accountRepository.save(account);
     }
 
+    @Override
+    public Account getAccountByNumber(String accountNumber) {
+        return accountRepository.findByAccountNumber(accountNumber);
+    }
+
     private String generateAccountNumber() {
         // A simple way to generate a unique account number
         return UUID.randomUUID().toString().replaceAll("-", "").substring(0, 12);

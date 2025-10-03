@@ -1,5 +1,6 @@
 package com.tss.aml.dto;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 public class AccountResponse {
@@ -7,6 +8,7 @@ public class AccountResponse {
     private String accountNumber;
     private String accountType;
     private String currency;
+    private BigDecimal balance;
     private String status;
     private LocalDateTime createdAt;
     private String customerEmail;
@@ -15,11 +17,12 @@ public class AccountResponse {
     public AccountResponse() {}
 
     public AccountResponse(Long accountId, String accountNumber, String accountType, 
-                          String currency, String status, LocalDateTime createdAt, String customerEmail) {
+                          String currency, BigDecimal balance, String status, LocalDateTime createdAt, String customerEmail) {
         this.accountId = accountId;
         this.accountNumber = accountNumber;
         this.accountType = accountType;
         this.currency = currency;
+        this.balance = balance;
         this.status = status;
         this.createdAt = createdAt;
         this.customerEmail = customerEmail;
@@ -37,6 +40,9 @@ public class AccountResponse {
 
     public String getCurrency() { return currency; }
     public void setCurrency(String currency) { this.currency = currency; }
+
+    public BigDecimal getBalance() { return balance; }
+    public void setBalance(BigDecimal balance) { this.balance = balance; }
 
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }

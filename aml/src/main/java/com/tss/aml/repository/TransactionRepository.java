@@ -18,4 +18,10 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
         @Param("timestamp") LocalDateTime timestamp,
         @Param("amount") BigDecimal amount
     );
+    
+    @Query("SELECT t FROM Transaction t WHERE t.senderAccount.accountNumber = :senderAccountNumber OR t.receiverAccount.accountNumber = :receiverAccountNumber")
+    List<Transaction> findBySenderAccountAccountNumberOrReceiverAccountAccountNumber(
+        @Param("senderAccountNumber") String senderAccountNumber,
+        @Param("receiverAccountNumber") String receiverAccountNumber
+    );
 }

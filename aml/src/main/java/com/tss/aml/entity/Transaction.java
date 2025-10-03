@@ -3,6 +3,8 @@ package com.tss.aml.entity;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -21,7 +23,9 @@ import jakarta.validation.constraints.NotNull;
 	    @Index(name = "idx_transactions_customer_status", columnList = "customer_id,status"),
 	    @Index(name = "idx_transactions_country", columnList = "countryCode"),
 	    @Index(name = "idx_transactions_timestamp", columnList = "timestamp DESC") // optional: for time-range queries
-	})public class Transaction {
+})
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
+public class Transaction {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -31,6 +35,15 @@ import jakarta.validation.constraints.NotNull;
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "customer_id", nullable = false)
     private Customer customer;
+
+    @NotNull
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "sender_account_id", nullable = false)
+    private Account senderAccount;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "receiver_account_id")
+    private Account receiverAccount;
 
     @NotNull
     private BigDecimal amount;
@@ -54,9 +67,11 @@ import jakarta.validation.constraints.NotNull;
 
     public Transaction() {}
 
-    public Transaction(Customer customer, BigDecimal amount, String currency,
-                       String description, TransactionType type) {
+    public Transaction(Customer customer, Account senderAccount, Account receiverAccount, 
+                       BigDecimal amount, String currency, String description, TransactionType type) {
         this.customer = customer;
+        this.senderAccount = senderAccount;
+        this.receiverAccount = receiverAccount;
         this.amount = amount;
         this.currency = currency;
         this.description = description;
@@ -84,4 +99,8 @@ import jakarta.validation.constraints.NotNull;
     public void setTransactionType(TransactionType transactionType) { this.transactionType = transactionType; }
     public TransactionStatus getStatus() { return status; }
     public void setStatus(TransactionStatus status) { this.status = status; }
+    public Account getSenderAccount() { return senderAccount; }
+    public void setSenderAccount(Account senderAccount) { this.senderAccount = senderAccount; }
+    public Account getReceiverAccount() { return receiverAccount; }
+    public void setReceiverAccount(Account receiverAccount) { this.receiverAccount = receiverAccount; }
 }
