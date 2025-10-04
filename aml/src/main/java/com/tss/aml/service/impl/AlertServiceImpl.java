@@ -5,8 +5,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.tss.aml.entity.Alert;
-import com.tss.aml.entity.AlertStatus;
 import com.tss.aml.entity.Transaction;
+import com.tss.aml.entity.enums.AlertStatus;
 import com.tss.aml.repository.AlertRepository;
 import com.tss.aml.rule.RuleEngineResult;
 import com.tss.aml.service.AlertService;

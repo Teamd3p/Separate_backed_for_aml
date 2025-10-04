@@ -1,8 +1,8 @@
 package com.tss.aml.service;
 
-import com.tss.aml.entity.AuditAction;
-import com.tss.aml.entity.AuditResourceType;
-import com.tss.aml.entity.AuditStatus;
+import com.tss.aml.entity.enums.AuditAction;
+import com.tss.aml.entity.enums.AuditResourceType;
+import com.tss.aml.entity.enums.AuditStatus;
 
 public interface AuditService {
     void logAction(AuditAction action, AuditResourceType resourceType, Long resourceId, 

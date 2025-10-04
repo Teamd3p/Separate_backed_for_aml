@@ -1,8 +1,8 @@
 package com.tss.aml.service;
 
-import com.tss.aml.dto.DepositRequest;
-import com.tss.aml.dto.TransferRequest;
-import com.tss.aml.dto.WithdrawalRequest;
+import com.tss.aml.dto.request.DepositRequest;
+import com.tss.aml.dto.request.TransferRequest;
+import com.tss.aml.dto.request.WithdrawalRequest;
 import com.tss.aml.entity.Transaction;
 
 public interface TransactionService {

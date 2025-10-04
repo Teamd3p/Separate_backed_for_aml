@@ -16,11 +16,12 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.tss.aml.dto.AlertDTO;
-import com.tss.aml.dto.InvestigationActionRequest;
-import com.tss.aml.dto.SarRequest;
+import com.tss.aml.dto.SarDTO;
+import com.tss.aml.dto.TransactionDTO;
+import com.tss.aml.dto.request.InvestigationActionRequest;
+import com.tss.aml.dto.request.SarRequest;
 import com.tss.aml.entity.Alert;
 import com.tss.aml.entity.Sar;
-import com.tss.aml.entity.Transaction;
 import com.tss.aml.entity.User;
 import com.tss.aml.service.ComplianceOfficerService;
 
@@ -61,8 +62,12 @@ public class ComplianceOfficerController {
 
     // === TRANSACTIONS ===
     @GetMapping("/customers/{customerId}/transactions")
-    public ResponseEntity<List<Transaction>> getCustomerTransactions(@PathVariable Long customerId) {
-        return ResponseEntity.ok(complianceService.getCustomerTransactions(customerId));
+    public ResponseEntity<List<TransactionDTO>> getCustomerTransactions(@PathVariable Long customerId) {
+        List<TransactionDTO> transactions = complianceService.getCustomerTransactions(customerId)
+            .stream()
+            .map(TransactionDTO::new)
+            .collect(Collectors.toList());
+        return ResponseEntity.ok(transactions);
     }
 
     // === INVESTIGATION ===
@@ -80,18 +85,20 @@ public class ComplianceOfficerController {
 
     // === SAR ===
     @PostMapping("/alerts/{alertId}/sar")
-    public ResponseEntity<Sar> generateSar(@PathVariable Long alertId,
+    public ResponseEntity<SarDTO> generateSar(@PathVariable Long alertId,
                                          @RequestBody SarRequest request) {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         if (auth == null || auth.getPrincipal() == null) {
             throw new RuntimeException("User not authenticated");
         }
         Long officerId = ((User) auth.getPrincipal()).getUserId();
-        return ResponseEntity.ok(complianceService.generateSar(alertId, officerId, request));
+        Sar sar = complianceService.generateSar(alertId, officerId, request);
+        return ResponseEntity.ok(new SarDTO(sar));
     }
 
     @PostMapping("/sars/{sarId}/submit")
-    public ResponseEntity<Sar> submitSar(@PathVariable Long sarId) {
-        return ResponseEntity.ok(complianceService.submitSar(sarId));
+    public ResponseEntity<SarDTO> submitSar(@PathVariable Long sarId) {
+        Sar sar = complianceService.submitSar(sarId);
+        return ResponseEntity.ok(new SarDTO(sar));
     }
 }

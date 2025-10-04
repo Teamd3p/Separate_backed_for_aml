@@ -2,6 +2,9 @@ package com.tss.aml.entity;
 
 import java.time.LocalDateTime;
 
+import com.tss.aml.entity.enums.Role;
+import com.tss.aml.entity.enums.UserStatus;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;

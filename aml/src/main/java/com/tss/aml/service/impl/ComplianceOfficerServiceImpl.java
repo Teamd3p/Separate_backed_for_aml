@@ -7,14 +7,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.tss.aml.dto.InvestigationActionRequest;
-import com.tss.aml.dto.SarRequest;
+import com.tss.aml.dto.request.InvestigationActionRequest;
+import com.tss.aml.dto.request.SarRequest;
 import com.tss.aml.entity.Alert;
 import com.tss.aml.entity.ComplianceOfficer;
-import com.tss.aml.entity.Role;
 import com.tss.aml.entity.Sar;
 import com.tss.aml.entity.Transaction;
-import com.tss.aml.entity.TransactionStatus;
+import com.tss.aml.entity.enums.Role;
+import com.tss.aml.entity.enums.TransactionStatus;
 import com.tss.aml.repository.AlertRepository;
 import com.tss.aml.repository.ComplianceOfficerRepository;
 import com.tss.aml.repository.SarRepository;

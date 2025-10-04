@@ -1,5 +1,7 @@
 package com.tss.aml.entity;
 
+import com.tss.aml.entity.enums.Role;
+
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotNull;

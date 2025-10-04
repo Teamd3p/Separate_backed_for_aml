@@ -3,10 +3,10 @@ package com.tss.aml.service.impl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import com.tss.aml.entity.AuditAction;
 import com.tss.aml.entity.AuditLog;
-import com.tss.aml.entity.AuditResourceType;
-import com.tss.aml.entity.AuditStatus;
+import com.tss.aml.entity.enums.AuditAction;
+import com.tss.aml.entity.enums.AuditResourceType;
+import com.tss.aml.entity.enums.AuditStatus;
 import com.tss.aml.repository.AuditLogRepository;
 import com.tss.aml.service.AuditService;
 

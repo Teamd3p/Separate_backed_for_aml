@@ -10,9 +10,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.tss.aml.entity.AuditAction;
 import com.tss.aml.entity.AuditLog;
-import com.tss.aml.entity.AuditResourceType;
+import com.tss.aml.entity.enums.AuditAction;
+import com.tss.aml.entity.enums.AuditResourceType;
 import com.tss.aml.repository.AuditLogRepository;
 import com.tss.aml.service.AuditService;
 

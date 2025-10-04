@@ -10,14 +10,14 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.tss.aml.dto.AuthResponse;
-import com.tss.aml.dto.LoginRequest;
-import com.tss.aml.dto.RegisterRequest;
 import com.tss.aml.dto.VerifyOtpRequest;
-import com.tss.aml.entity.AuditAction;
-import com.tss.aml.entity.AuditResourceType;
-import com.tss.aml.service.AuthService;
+import com.tss.aml.dto.request.LoginRequest;
+import com.tss.aml.dto.request.RegisterRequest;
+import com.tss.aml.dto.response.AuthResponse;
+import com.tss.aml.entity.enums.AuditAction;
+import com.tss.aml.entity.enums.AuditResourceType;
 import com.tss.aml.service.AuditService;
+import com.tss.aml.service.AuthService;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;

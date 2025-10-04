@@ -3,7 +3,7 @@ package com.tss.aml.dto;
 import java.time.LocalDateTime;
 
 import com.tss.aml.entity.Alert;
-import com.tss.aml.entity.AlertStatus;
+import com.tss.aml.entity.enums.AlertStatus;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

@@ -1,9 +1,9 @@
 package com.tss.aml.service;
 
-import com.tss.aml.dto.AuthResponse;
-import com.tss.aml.dto.LoginRequest;
-import com.tss.aml.dto.RegisterRequest;
 import com.tss.aml.dto.VerifyOtpRequest;
+import com.tss.aml.dto.request.LoginRequest;
+import com.tss.aml.dto.request.RegisterRequest;
+import com.tss.aml.dto.response.AuthResponse;
 
 public interface AuthService {
     AuthResponse register(RegisterRequest request);

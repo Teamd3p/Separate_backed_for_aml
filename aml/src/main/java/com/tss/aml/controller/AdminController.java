@@ -14,10 +14,10 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.tss.aml.dto.ComplianceOfficerRequest;
-import com.tss.aml.dto.KeywordRequest;
-import com.tss.aml.dto.RiskyCountryRequest;
-import com.tss.aml.dto.RuleRequest;
+import com.tss.aml.dto.request.ComplianceOfficerRequest;
+import com.tss.aml.dto.request.KeywordRequest;
+import com.tss.aml.dto.request.RiskyCountryRequest;
+import com.tss.aml.dto.request.RuleRequest;
 import com.tss.aml.entity.ComplianceOfficer;
 import com.tss.aml.entity.RiskyCountry;
 import com.tss.aml.entity.Rule;

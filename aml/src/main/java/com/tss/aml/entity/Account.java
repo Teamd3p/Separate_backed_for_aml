@@ -4,6 +4,8 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.tss.aml.entity.enums.AccountStatus;
+import com.tss.aml.entity.enums.AccountType;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;

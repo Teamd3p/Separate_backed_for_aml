@@ -10,10 +10,10 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.tss.aml.dto.ComplianceOfficerRequest;
-import com.tss.aml.dto.KeywordRequest;
-import com.tss.aml.dto.RiskyCountryRequest;
-import com.tss.aml.dto.RuleRequest;
+import com.tss.aml.dto.request.ComplianceOfficerRequest;
+import com.tss.aml.dto.request.KeywordRequest;
+import com.tss.aml.dto.request.RiskyCountryRequest;
+import com.tss.aml.dto.request.RuleRequest;
 import com.tss.aml.entity.Admin;
 import com.tss.aml.entity.ComplianceOfficer;
 import com.tss.aml.entity.RiskyCountry;
@@ -72,7 +72,7 @@ public class AdminServiceImpl implements AdminService {
             request.getPhone()
         );
         // Set officer as active and verified immediately
-        officer.setStatus(com.tss.aml.entity.UserStatus.ACTIVE);
+        officer.setStatus(com.tss.aml.entity.enums.UserStatus.ACTIVE);
         officer.setEmailVerified(true);
         return complianceOfficerRepo.save(officer);
     }

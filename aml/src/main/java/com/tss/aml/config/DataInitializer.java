@@ -1,7 +1,5 @@
 package com.tss.aml.config;
 
-import com.tss.aml.entity.*;
-import com.tss.aml.repository.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.CommandLineRunner;
@@ -9,7 +7,20 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
-import java.time.LocalDateTime;
+import com.tss.aml.entity.Admin;
+import com.tss.aml.entity.ComplianceOfficer;
+import com.tss.aml.entity.RiskyCountry;
+import com.tss.aml.entity.Rule;
+import com.tss.aml.entity.SuspiciousKeyword;
+import com.tss.aml.entity.enums.RiskLevel;
+import com.tss.aml.entity.enums.Role;
+import com.tss.aml.entity.enums.RuleType;
+import com.tss.aml.entity.enums.UserStatus;
+import com.tss.aml.repository.ComplianceOfficerRepository;
+import com.tss.aml.repository.RiskyCountryRepository;
+import com.tss.aml.repository.RuleRepository;
+import com.tss.aml.repository.SuspiciousKeywordRepository;
+import com.tss.aml.repository.UserRepository;
 
 @Configuration
 public class DataInitializer {

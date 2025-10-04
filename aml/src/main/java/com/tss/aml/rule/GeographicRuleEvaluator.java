@@ -1,6 +1,7 @@
 package com.tss.aml.rule;
 
 import com.tss.aml.entity.*;
+import com.tss.aml.entity.enums.RiskLevel;
 import com.tss.aml.repository.RiskyCountryRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;

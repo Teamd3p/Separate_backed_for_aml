@@ -4,6 +4,8 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.tss.aml.entity.enums.TransactionStatus;
+import com.tss.aml.entity.enums.TransactionType;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -34,15 +36,18 @@ public class Transaction {
     @NotNull
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "customer_id", nullable = false)
+    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler", "passwordHash", "verificationOtp", "otpExpiryTime"})
     private Customer customer;
 
     @NotNull
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "sender_account_id", nullable = false)
+    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
     private Account senderAccount;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "receiver_account_id")
+    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
     private Account receiverAccount;
 
     @NotNull

@@ -2,6 +2,10 @@ package com.tss.aml.entity;
 
 import java.time.LocalDateTime;
 
+import com.tss.aml.entity.enums.AuditAction;
+import com.tss.aml.entity.enums.AuditResourceType;
+import com.tss.aml.entity.enums.AuditStatus;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;

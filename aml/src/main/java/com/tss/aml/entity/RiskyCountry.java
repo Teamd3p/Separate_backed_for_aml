@@ -2,6 +2,8 @@ package com.tss.aml.entity;
 
 import java.time.LocalDateTime;
 
+import com.tss.aml.entity.enums.RiskLevel;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;

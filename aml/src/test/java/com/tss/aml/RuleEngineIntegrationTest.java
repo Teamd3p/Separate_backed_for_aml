@@ -15,14 +15,14 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.tss.aml.entity.Customer;
-import com.tss.aml.entity.RiskLevel;
 import com.tss.aml.entity.RiskyCountry;
 import com.tss.aml.entity.Rule;
-import com.tss.aml.entity.RuleType;
 import com.tss.aml.entity.SuspiciousKeyword;
 import com.tss.aml.entity.Transaction;
-import com.tss.aml.entity.TransactionStatus;
-import com.tss.aml.entity.TransactionType;
+import com.tss.aml.entity.enums.RiskLevel;
+import com.tss.aml.entity.enums.RuleType;
+import com.tss.aml.entity.enums.TransactionStatus;
+import com.tss.aml.entity.enums.TransactionType;
 import com.tss.aml.repository.CustomerRepository;
 import com.tss.aml.repository.RiskyCountryRepository;
 import com.tss.aml.repository.RuleRepository;

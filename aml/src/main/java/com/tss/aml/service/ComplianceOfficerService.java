@@ -2,8 +2,8 @@ package com.tss.aml.service;
 
 import java.util.List;
 
-import com.tss.aml.dto.InvestigationActionRequest;
-import com.tss.aml.dto.SarRequest;
+import com.tss.aml.dto.request.InvestigationActionRequest;
+import com.tss.aml.dto.request.SarRequest;
 import com.tss.aml.entity.Alert;
 import com.tss.aml.entity.Sar;
 import com.tss.aml.entity.Transaction;

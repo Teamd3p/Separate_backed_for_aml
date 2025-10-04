@@ -5,10 +5,10 @@ import java.util.UUID;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import com.tss.aml.dto.CreateAccountRequest;
+import com.tss.aml.dto.request.CreateAccountRequest;
 import com.tss.aml.entity.Account;
-import com.tss.aml.entity.AccountType;
 import com.tss.aml.entity.Customer;
+import com.tss.aml.entity.enums.AccountType;
 import com.tss.aml.exception.UserApiException;
 import com.tss.aml.repository.AccountRepository;
 import com.tss.aml.repository.CustomerRepository;

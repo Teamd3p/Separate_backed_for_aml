@@ -2,10 +2,10 @@ package com.tss.aml.service;
 
 import java.util.List;
 
-import com.tss.aml.dto.ComplianceOfficerRequest;
-import com.tss.aml.dto.KeywordRequest;
-import com.tss.aml.dto.RiskyCountryRequest;
-import com.tss.aml.dto.RuleRequest;
+import com.tss.aml.dto.request.ComplianceOfficerRequest;
+import com.tss.aml.dto.request.KeywordRequest;
+import com.tss.aml.dto.request.RiskyCountryRequest;
+import com.tss.aml.dto.request.RuleRequest;
 import com.tss.aml.entity.ComplianceOfficer;
 import com.tss.aml.entity.RiskyCountry;
 import com.tss.aml.entity.Rule;

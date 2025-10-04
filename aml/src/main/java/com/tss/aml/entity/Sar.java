@@ -2,6 +2,8 @@ package com.tss.aml.entity;
 
 import java.time.LocalDateTime;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -22,6 +24,7 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class Sar {
 
 	@Id
@@ -31,11 +34,13 @@ public class Sar {
 	@NotNull
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "alert_id", nullable = false)
+	@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 	private Alert alert;
 
 	@NotNull
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "officer_id", nullable = false)
+	@JsonIgnoreProperties({"hibernateLazyInitializer", "handler", "passwordHash", "verificationOtp", "otpExpiryTime"})
 	private ComplianceOfficer officer;
 
 	@NotNull

@@ -6,8 +6,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 
-import com.tss.aml.entity.AuditAction;
 import com.tss.aml.entity.AuditLog;
+import com.tss.aml.entity.enums.AuditAction;
 
 public interface AuditLogRepository extends JpaRepository<AuditLog, Long> {
     Page<AuditLog> findByUserId(Long userId, Pageable pageable);
