@@ -1,5 +1,7 @@
 package com.tss.aml.entity;
 
+import java.time.LocalDateTime;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -31,6 +33,8 @@ public class RiskyCountry {
     @JoinColumn(name = "last_updated_by")
     private Admin lastUpdatedBy;
 
+    private LocalDateTime lastUpdatedAt = LocalDateTime.now();
+
     public RiskyCountry() {}
 
     public RiskyCountry(String countryCode, String countryName, RiskLevel riskLevel) {
@@ -51,4 +55,7 @@ public class RiskyCountry {
 
     public Admin getLastUpdatedBy() { return lastUpdatedBy; }
     public void setLastUpdatedBy(Admin lastUpdatedBy) { this.lastUpdatedBy = lastUpdatedBy; }
+
+    public LocalDateTime getLastUpdatedAt() { return lastUpdatedAt; }
+    public void setLastUpdatedAt(LocalDateTime lastUpdatedAt) { this.lastUpdatedAt = lastUpdatedAt; }
 }

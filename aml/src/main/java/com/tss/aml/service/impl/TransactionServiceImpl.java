@@ -84,6 +84,13 @@ public class TransactionServiceImpl implements TransactionService {
                 throw new UserApiException("Sender account not found");
             }
             
+            // SECURITY CHECK: Verify that the logged-in user owns the sender account
+            if (!senderAccount.getCustomer().getUserId().equals(userId)) {
+                auditService.logFailure(AuditAction.TRANSFER_FUNDS, AuditResourceType.TRANSACTION, null, 
+                    userId, null, "Unauthorized access attempt - user does not own sender account: " + transferRequest.getSenderAccountNumber(), ipAddress);
+                throw new UserApiException("You are not authorized to transfer from this account");
+            }
+            
             Account receiverAccount = accountRepository.findByAccountNumber(transferRequest.getReceiverAccountNumber());
             if (receiverAccount == null) {
                 auditService.logFailure(AuditAction.TRANSFER_FUNDS, AuditResourceType.TRANSACTION, null, 
@@ -159,6 +166,13 @@ public class TransactionServiceImpl implements TransactionService {
                 throw new UserApiException("Account not found");
             }
             
+            // SECURITY CHECK: Verify that the logged-in user owns the account
+            if (!account.getCustomer().getUserId().equals(userId)) {
+                auditService.logFailure(AuditAction.TRANSACTION_CREATED, AuditResourceType.TRANSACTION, null, 
+                    userId, null, "Unauthorized deposit attempt - user does not own account: " + depositRequest.getAccountNumber(), ipAddress);
+                throw new UserApiException("You are not authorized to deposit to this account");
+            }
+            
             // Check currency match
             if (!account.getCurrency().equals(depositRequest.getCurrency())) {
                 auditService.logFailure(AuditAction.TRANSACTION_CREATED, AuditResourceType.TRANSACTION, null, 
@@ -213,6 +227,13 @@ public class TransactionServiceImpl implements TransactionService {
                 auditService.logFailure(AuditAction.TRANSACTION_CREATED, AuditResourceType.TRANSACTION, null, 
                     userId, null, "Withdrawal failed - account not found: " + withdrawalRequest.getAccountNumber(), ipAddress);
                 throw new UserApiException("Account not found");
+            }
+            
+            // SECURITY CHECK: Verify that the logged-in user owns the account
+            if (!account.getCustomer().getUserId().equals(userId)) {
+                auditService.logFailure(AuditAction.TRANSACTION_CREATED, AuditResourceType.TRANSACTION, null, 
+                    userId, null, "Unauthorized withdrawal attempt - user does not own account: " + withdrawalRequest.getAccountNumber(), ipAddress);
+                throw new UserApiException("You are not authorized to withdraw from this account");
             }
             
             // Check sufficient balance

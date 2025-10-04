@@ -1,8 +1,11 @@
 package com.tss.aml.service.impl;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -11,10 +14,13 @@ import com.tss.aml.dto.ComplianceOfficerRequest;
 import com.tss.aml.dto.KeywordRequest;
 import com.tss.aml.dto.RiskyCountryRequest;
 import com.tss.aml.dto.RuleRequest;
+import com.tss.aml.entity.Admin;
 import com.tss.aml.entity.ComplianceOfficer;
 import com.tss.aml.entity.RiskyCountry;
 import com.tss.aml.entity.Rule;
 import com.tss.aml.entity.SuspiciousKeyword;
+import com.tss.aml.entity.User;
+import com.tss.aml.repository.AdminRepository;
 import com.tss.aml.repository.ComplianceOfficerRepository;
 import com.tss.aml.repository.RiskyCountryRepository;
 import com.tss.aml.repository.RuleRepository;
@@ -38,7 +44,19 @@ public class AdminServiceImpl implements AdminService {
     private RiskyCountryRepository riskyCountryRepo;
     
     @Autowired
+    private AdminRepository adminRepo;
+    
+    @Autowired
     private PasswordEncoder passwordEncoder;
+
+    private Admin getCurrentAdmin() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth != null && auth.getPrincipal() instanceof User) {
+            User user = (User) auth.getPrincipal();
+            return adminRepo.findById(user.getUserId()).orElse(null);
+        }
+        return null;
+    }
 
     // === COMPLIANCE OFFICERS ===
     @Override
@@ -53,6 +71,9 @@ public class AdminServiceImpl implements AdminService {
             request.getLastName(),
             request.getPhone()
         );
+        // Set officer as active and verified immediately
+        officer.setStatus(com.tss.aml.entity.UserStatus.ACTIVE);
+        officer.setEmailVerified(true);
         return complianceOfficerRepo.save(officer);
     }
 
@@ -77,6 +98,14 @@ public class AdminServiceImpl implements AdminService {
         );
         rule.setDescription(request.getDescription());
         rule.setActive(request.getActive());
+        
+        // Set updatedBy and updatedAt
+        Admin currentAdmin = getCurrentAdmin();
+        if (currentAdmin != null) {
+            rule.setUpdatedBy(currentAdmin);
+        }
+        rule.setUpdatedAt(LocalDateTime.now());
+        
         return ruleRepo.save(rule);
     }
 
@@ -89,6 +118,14 @@ public class AdminServiceImpl implements AdminService {
         rule.setConditions(request.getConditions());
         rule.setRiskScoreImpact(request.getRiskScoreImpact());
         rule.setActive(request.getActive());
+        
+        // Set updatedBy and updatedAt
+        Admin currentAdmin = getCurrentAdmin();
+        if (currentAdmin != null) {
+            rule.setUpdatedBy(currentAdmin);
+        }
+        rule.setUpdatedAt(LocalDateTime.now());
+        
         return ruleRepo.save(rule);
     }
 
@@ -137,11 +174,24 @@ public class AdminServiceImpl implements AdminService {
     // === RISKY COUNTRIES ===
     @Override
     public RiskyCountry createRiskyCountry(RiskyCountryRequest request) {
+        // Check if country already exists
+        if (riskyCountryRepo.findById(request.getCountryCode().toUpperCase()).isPresent()) {
+            throw new RuntimeException("Country with code " + request.getCountryCode() + " already exists");
+        }
+        
         RiskyCountry country = new RiskyCountry(
             request.getCountryCode().toUpperCase(),
             request.getCountryName(),
             request.getRiskLevel()
         );
+        
+        // Set lastUpdatedBy
+        Admin currentAdmin = getCurrentAdmin();
+        if (currentAdmin != null) {
+            country.setLastUpdatedBy(currentAdmin);
+        }
+        country.setLastUpdatedAt(LocalDateTime.now());
+        
         return riskyCountryRepo.save(country);
     }
 
@@ -151,11 +201,22 @@ public class AdminServiceImpl implements AdminService {
             .orElseThrow(() -> new RuntimeException("Country not found"));
         country.setCountryName(request.getCountryName());
         country.setRiskLevel(request.getRiskLevel());
+        
+        // Set lastUpdatedBy
+        Admin currentAdmin = getCurrentAdmin();
+        if (currentAdmin != null) {
+            country.setLastUpdatedBy(currentAdmin);
+        }
+        country.setLastUpdatedAt(LocalDateTime.now());
+        
         return riskyCountryRepo.save(country);
     }
 
     @Override
     public void deleteRiskyCountry(String countryCode) {
+        if (!riskyCountryRepo.existsById(countryCode.toUpperCase())) {
+            throw new RuntimeException("Country not found");
+        }
         riskyCountryRepo.deleteById(countryCode.toUpperCase());
     }
 

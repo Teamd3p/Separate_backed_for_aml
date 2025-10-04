@@ -39,6 +39,7 @@ public class Rule {
     private Integer riskScoreImpact;
     private boolean isActive = true;
     private LocalDateTime createdAt = LocalDateTime.now();
+    private LocalDateTime updatedAt;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "updated_by")
@@ -67,6 +68,8 @@ public class Rule {
     public boolean isActive() { return isActive; }
     public void setActive(boolean active) { isActive = active; }
     public LocalDateTime getCreatedAt() { return createdAt; }
+    public LocalDateTime getUpdatedAt() { return updatedAt; }
+    public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
     public Admin getUpdatedBy() { return updatedBy; }
     public void setUpdatedBy(Admin updatedBy) { this.updatedBy = updatedBy; }
 }
