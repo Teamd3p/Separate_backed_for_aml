@@ -36,6 +36,7 @@ public abstract class User {
     @NotNull
     private Role role;
 
+    @Column(length = 50)
     @Enumerated(EnumType.STRING)
     private UserStatus status = UserStatus.PENDING_VERIFICATION;
 

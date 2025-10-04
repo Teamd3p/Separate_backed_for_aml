@@ -1,11 +1,13 @@
 package com.tss.aml.controller;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -13,6 +15,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.tss.aml.dto.AlertDTO;
 import com.tss.aml.dto.InvestigationActionRequest;
 import com.tss.aml.dto.SarRequest;
 import com.tss.aml.entity.Alert;
@@ -31,19 +34,29 @@ public class ComplianceOfficerController {
 
     // === ALERTS ===
     @GetMapping("/alerts")
-    public ResponseEntity<List<Alert>> getAllAlerts() {
-        return ResponseEntity.ok(complianceService.getAllAlerts());
+    public ResponseEntity<List<AlertDTO>> getAllAlerts() {
+        List<AlertDTO> alerts = complianceService.getAllAlerts()
+            .stream()
+            .map(AlertDTO::new)
+            .collect(Collectors.toList());
+        return ResponseEntity.ok(alerts);
     }
 
     @PostMapping("/alerts/{alertId}/assign")
-    public ResponseEntity<Alert> assignAlert(@PathVariable Long alertId, Authentication auth) {
+    public ResponseEntity<AlertDTO> assignAlert(@PathVariable Long alertId) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || auth.getPrincipal() == null) {
+            throw new RuntimeException("User not authenticated");
+        }
         Long officerId = ((User) auth.getPrincipal()).getUserId();
-        return ResponseEntity.ok(complianceService.assignAlertToOfficer(alertId, officerId));
+        Alert alert = complianceService.assignAlertToOfficer(alertId, officerId);
+        return ResponseEntity.ok(new AlertDTO(alert));
     }
 
     @GetMapping("/alerts/{alertId}")
-    public ResponseEntity<Alert> getAlertDetails(@PathVariable Long alertId) {
-        return ResponseEntity.ok(complianceService.getAlertDetails(alertId));
+    public ResponseEntity<AlertDTO> getAlertDetails(@PathVariable Long alertId) {
+        Alert alert = complianceService.getAlertDetails(alertId);
+        return ResponseEntity.ok(new AlertDTO(alert));
     }
 
     // === TRANSACTIONS ===
@@ -54,18 +67,25 @@ public class ComplianceOfficerController {
 
     // === INVESTIGATION ===
     @PostMapping("/alerts/{alertId}/action")
-    public ResponseEntity<Alert> takeAction(@PathVariable Long alertId, 
-                                          @RequestBody InvestigationActionRequest request,
-                                          Authentication auth) {
+    public ResponseEntity<AlertDTO> takeAction(@PathVariable Long alertId, 
+                                          @RequestBody InvestigationActionRequest request) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || auth.getPrincipal() == null) {
+            throw new RuntimeException("User not authenticated");
+        }
         Long officerId = ((User) auth.getPrincipal()).getUserId();
-        return ResponseEntity.ok(complianceService.takeActionOnAlert(alertId, officerId, request));
+        Alert alert = complianceService.takeActionOnAlert(alertId, officerId, request);
+        return ResponseEntity.ok(new AlertDTO(alert));
     }
 
     // === SAR ===
     @PostMapping("/alerts/{alertId}/sar")
     public ResponseEntity<Sar> generateSar(@PathVariable Long alertId,
-                                         @RequestBody SarRequest request,
-                                         Authentication auth) {
+                                         @RequestBody SarRequest request) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || auth.getPrincipal() == null) {
+            throw new RuntimeException("User not authenticated");
+        }
         Long officerId = ((User) auth.getPrincipal()).getUserId();
         return ResponseEntity.ok(complianceService.generateSar(alertId, officerId, request));
     }
