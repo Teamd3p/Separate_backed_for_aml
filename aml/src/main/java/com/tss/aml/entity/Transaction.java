@@ -39,9 +39,8 @@ public class Transaction {
     @JsonIgnoreProperties({"hibernateLazyInitializer", "handler", "passwordHash", "verificationOtp", "otpExpiryTime"})
     private Customer customer;
 
-    @NotNull
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "sender_account_id", nullable = false)
+    @JoinColumn(name = "sender_account_id")
     @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
     private Account senderAccount;
 
@@ -69,6 +68,8 @@ public class Transaction {
     @Enumerated(EnumType.STRING)
     @NotNull
     private TransactionStatus status = TransactionStatus.PENDING;
+
+    private Integer riskScore = 0;
 
     public Transaction() {}
 
@@ -108,4 +109,7 @@ public class Transaction {
     public void setSenderAccount(Account senderAccount) { this.senderAccount = senderAccount; }
     public Account getReceiverAccount() { return receiverAccount; }
     public void setReceiverAccount(Account receiverAccount) { this.receiverAccount = receiverAccount; }
+    public Integer getRiskScore() { return riskScore; }
+    public void setRiskScore(Integer riskScore) { this.riskScore = riskScore; }
+    public void setRiskScore(int riskScore) { this.riskScore = riskScore; }
 }

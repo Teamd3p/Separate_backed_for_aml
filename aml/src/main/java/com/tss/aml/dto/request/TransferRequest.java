@@ -23,16 +23,20 @@ public class TransferRequest {
 
     private String description;
 
+    @NotBlank(message = "Country code is required")
+    private String countryCode;
+
     // Constructors
     public TransferRequest() {}
 
     public TransferRequest(String senderAccountNumber, String receiverAccountNumber, 
-                          BigDecimal amount, String currency, String description) {
+                          BigDecimal amount, String currency, String description, String countryCode) {
         this.senderAccountNumber = senderAccountNumber;
         this.receiverAccountNumber = receiverAccountNumber;
         this.amount = amount;
         this.currency = currency;
         this.description = description;
+        this.countryCode = countryCode;
     }
 
     // Getters and Setters
@@ -50,4 +54,7 @@ public class TransferRequest {
 
     public String getDescription() { return description; }
     public void setDescription(String description) { this.description = description; }
+
+    public String getCountryCode() { return countryCode; }
+    public void setCountryCode(String countryCode) { this.countryCode = countryCode; }
 }

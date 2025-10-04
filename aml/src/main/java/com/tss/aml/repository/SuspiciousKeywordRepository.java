@@ -1,9 +1,10 @@
 package com.tss.aml.repository;
 
-import com.tss.aml.entity.SuspiciousKeyword;
+import java.util.List;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 
-import java.util.List;
+import com.tss.aml.entity.SuspiciousKeyword;
 
 public interface SuspiciousKeywordRepository extends JpaRepository<SuspiciousKeyword, Long> {
     List<SuspiciousKeyword> findByIsActiveTrue();

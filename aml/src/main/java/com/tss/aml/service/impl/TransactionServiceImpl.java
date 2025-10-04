@@ -1,5 +1,7 @@
 package com.tss.aml.service.impl;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -28,6 +30,8 @@ import jakarta.transaction.Transactional;
 @Transactional
 public class TransactionServiceImpl implements TransactionService {
 
+	private static final Logger logger = LoggerFactory.getLogger(TransactionServiceImpl.class);
+
 	@Autowired
 	private TransactionRepository transactionRepository;
 
@@ -45,24 +49,53 @@ public class TransactionServiceImpl implements TransactionService {
 
 	@Override
 	public Transaction processTransaction(Transaction transaction) {
+		logger.info("🔄 Processing transaction: {} | Amount: {} {} | Type: {}", 
+			transaction.getTransactionId(), 
+			transaction.getAmount(), 
+			transaction.getCurrency(),
+			transaction.getTransactionType());
+
+		// Save transaction first
 		transaction.setStatus(TransactionStatus.PENDING);
 		transaction = transactionRepository.save(transaction);
+		logger.debug("💾 Transaction saved with ID: {}", transaction.getTransactionId());
 
+		// Evaluate AML rules
+		logger.info("🔍 Starting AML rule evaluation for transaction: {}", transaction.getTransactionId());
 		RuleEngineResult result = ruleEngineService.evaluate(transaction);
 
+		// Normalize risk score to 0-100 range and set status based on thresholds
+		int normalizedRisk = result.getRiskScore(); // Already normalized in RuleEngineService
+		
+		logger.info("📊 Risk assessment complete - Normalized Risk: {}/100", normalizedRisk);
+		
 		if (!result.isSuspicious()) {
 			transaction.setStatus(TransactionStatus.COMPLETED);
+			logger.info("✅ TRANSACTION COMPLETED - Low risk score: {}", normalizedRisk);
 		} else if (result.getTotalRiskScore() >= 85) {
 			transaction.setStatus(TransactionStatus.BLOCKED);
+			logger.warn("🚫 TRANSACTION BLOCKED - High risk score: {}", normalizedRisk);
 		} else {
 			transaction.setStatus(TransactionStatus.FLAGGED);
+			logger.warn("⚠️ TRANSACTION FLAGGED - Medium risk score: {}", normalizedRisk);
 		}
 
+		transaction.setRiskScore(normalizedRisk);
 		transaction = transactionRepository.save(transaction);
 
+		// Create alert if suspicious
 		if (result.isSuspicious()) {
+			logger.warn("🚨 Creating alert for suspicious transaction: {} | Triggered rules: {}", 
+				transaction.getTransactionId(), result.getTriggeredRules());
 			alertService.createAlertForTransaction(transaction, result);
+		} else {
+			logger.info("✅ No alert needed - transaction is clean");
 		}
+
+		logger.info("✅ Transaction processing complete: {} | Final Status: {} | Risk Score: {}", 
+			transaction.getTransactionId(), 
+			transaction.getStatus(), 
+			transaction.getRiskScore());
 
 		return transaction;
 	}
@@ -118,6 +151,7 @@ public class TransactionServiceImpl implements TransactionService {
 			transaction.setCurrency(transferRequest.getCurrency());
 			transaction.setDescription(transferRequest.getDescription());
 			transaction.setTransactionType(TransactionType.TRANSFER);
+			transaction.setCountryCode(transferRequest.getCountryCode());
 			transaction.setCounterpartyName(
 					receiverAccount.getCustomer().getFirstName() + " " + receiverAccount.getCustomer().getLastName());
 			transaction.setCounterpartyAccount(receiverAccount.getAccountNumber());
@@ -191,6 +225,7 @@ public class TransactionServiceImpl implements TransactionService {
 			transaction.setDescription(
 					depositRequest.getDescription() + " (Source: " + depositRequest.getSourceOfFunds() + ")");
 			transaction.setTransactionType(TransactionType.CREDIT);
+			transaction.setCountryCode(depositRequest.getCountryCode());
 			transaction.setCounterpartyName("External Deposit");
 
 			// Process through AML rules
@@ -268,6 +303,7 @@ public class TransactionServiceImpl implements TransactionService {
 			transaction.setDescription(withdrawalRequest.getDescription() + " (Purpose: "
 					+ withdrawalRequest.getPurposeOfWithdrawal() + ")");
 			transaction.setTransactionType(TransactionType.DEBIT);
+			transaction.setCountryCode(withdrawalRequest.getCountryCode());
 			transaction.setCounterpartyName("External Withdrawal");
 
 			// Process through AML rules

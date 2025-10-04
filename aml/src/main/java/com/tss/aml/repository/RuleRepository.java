@@ -1,9 +1,10 @@
 package com.tss.aml.repository;
 
-import com.tss.aml.entity.Rule;
+import java.util.List;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 
-import java.util.List;
+import com.tss.aml.entity.Rule;
 
 public interface RuleRepository extends JpaRepository<Rule, Long> {
     List<Rule> findByIsActiveTrue();

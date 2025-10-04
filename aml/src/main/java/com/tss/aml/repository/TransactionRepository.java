@@ -1,13 +1,15 @@
 package com.tss.aml.repository;
 
-import com.tss.aml.entity.Transaction;
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.util.List;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-import java.math.BigDecimal;
-import java.time.LocalDateTime;
-import java.util.List;
+import com.tss.aml.entity.Transaction;
+import com.tss.aml.entity.enums.TransactionType;
 
 public interface TransactionRepository extends JpaRepository<Transaction, Long> {
 	long countByCustomerUserIdAndTimestampAfter(Long userId, LocalDateTime timestamp);
@@ -26,4 +28,11 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
     );
     
     List<Transaction> findByCustomerUserId(Long customerId);
+    
+    long countByCustomerUserIdAndTimestampAfterAndTransactionTypeAndAmountGreaterThanEqual(
+    	    Long userId, 
+    	    LocalDateTime timestamp, 
+    	    TransactionType type, 
+    	    BigDecimal amount
+    	);
 }

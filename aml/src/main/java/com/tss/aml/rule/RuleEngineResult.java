@@ -33,4 +33,12 @@ public class RuleEngineResult {
 	public List<String> getTriggeredRuleNames() {
 		return triggeredRuleNames;
 	}
+
+	public List<String> getTriggeredRules() {
+		return triggeredRuleNames;
+	}
+
+	public int getRiskScore() {
+		return totalRiskScore;
+	}
 }

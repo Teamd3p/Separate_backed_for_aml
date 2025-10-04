@@ -21,16 +21,20 @@ public class WithdrawalRequest {
     private String description;
     private String purposeOfWithdrawal; // e.g., "PERSONAL", "BUSINESS", "INVESTMENT"
 
+    @NotBlank(message = "Country code is required")
+    private String countryCode;
+
     // Constructors
     public WithdrawalRequest() {}
 
     public WithdrawalRequest(String accountNumber, BigDecimal amount, String currency, 
-                            String description, String purposeOfWithdrawal) {
+                            String description, String purposeOfWithdrawal, String countryCode) {
         this.accountNumber = accountNumber;
         this.amount = amount;
         this.currency = currency;
         this.description = description;
         this.purposeOfWithdrawal = purposeOfWithdrawal;
+        this.countryCode = countryCode;
     }
 
     // Getters and Setters
@@ -48,4 +52,7 @@ public class WithdrawalRequest {
 
     public String getPurposeOfWithdrawal() { return purposeOfWithdrawal; }
     public void setPurposeOfWithdrawal(String purposeOfWithdrawal) { this.purposeOfWithdrawal = purposeOfWithdrawal; }
+
+    public String getCountryCode() { return countryCode; }
+    public void setCountryCode(String countryCode) { this.countryCode = countryCode; }
 }

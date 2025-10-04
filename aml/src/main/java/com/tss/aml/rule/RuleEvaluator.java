@@ -1,7 +1,7 @@
 package com.tss.aml.rule;
 
-import com.tss.aml.entity.Transaction;
 import com.tss.aml.entity.Rule;
+import com.tss.aml.entity.Transaction;
 
 public interface RuleEvaluator {
     boolean supports(String ruleType);

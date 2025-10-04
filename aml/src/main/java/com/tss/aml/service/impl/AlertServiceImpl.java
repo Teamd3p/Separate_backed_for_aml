@@ -1,5 +1,7 @@
 package com.tss.aml.service.impl;
 
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -25,6 +27,19 @@ public class AlertServiceImpl implements AlertService {
         alert.setTransaction(transaction);
         alert.setRuleTriggered(String.join(", ", result.getTriggeredRuleNames()));
         alert.setRiskScore(result.getTotalRiskScore());
+        alert.setStatus(AlertStatus.PENDING); // Awaiting investigation
+        // assignedTo remains null until assigned by system or admin
+
+        return alertRepository.save(alert);
+    }
+
+    @Override
+    public Alert createAlert(Transaction transaction, List<String> triggeredRules, int riskScore) {
+        Alert alert = new Alert();
+        alert.setCustomer(transaction.getCustomer());
+        alert.setTransaction(transaction);
+        alert.setRuleTriggered(String.join(", ", triggeredRules));
+        alert.setRiskScore(riskScore);
         alert.setStatus(AlertStatus.PENDING); // Awaiting investigation
         // assignedTo remains null until assigned by system or admin
 

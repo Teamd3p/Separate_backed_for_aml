@@ -1,9 +1,9 @@
 package com.tss.aml.util;
 
+import java.util.Map;
+
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-
-import java.util.Map;
 
 public class ObjectMapperHolder {
     private static final ObjectMapper MAPPER = new ObjectMapper();

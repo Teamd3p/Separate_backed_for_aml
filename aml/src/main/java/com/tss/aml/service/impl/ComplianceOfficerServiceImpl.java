@@ -13,6 +13,7 @@ import com.tss.aml.entity.Alert;
 import com.tss.aml.entity.ComplianceOfficer;
 import com.tss.aml.entity.Sar;
 import com.tss.aml.entity.Transaction;
+import com.tss.aml.entity.enums.AlertStatus;
 import com.tss.aml.entity.enums.Role;
 import com.tss.aml.entity.enums.TransactionStatus;
 import com.tss.aml.repository.AlertRepository;
@@ -75,17 +76,24 @@ public class ComplianceOfficerServiceImpl implements ComplianceOfficerService {
             throw new RuntimeException("Not authorized...");
         }
 
-        Alert.InvestigationStatus status = Alert.InvestigationStatus.valueOf(request.getDecision());
-        alert.setInvestigationStatus(status);
-        // Update transaction status based on decision
-        if (status == Alert.InvestigationStatus.TRUE_POSITIVE) {
+        Alert.InvestigationStatus investigationStatus = Alert.InvestigationStatus.valueOf(request.getDecision());
+        alert.setInvestigationStatus(investigationStatus);
+        
+        // Update alert status based on investigation decision
+        if (investigationStatus == Alert.InvestigationStatus.TRUE_POSITIVE) {
+            alert.setStatus(AlertStatus.TRUE_POSITIVE);
             alert.getTransaction().setStatus(TransactionStatus.BLOCKED);
-        } else if (status == Alert.InvestigationStatus.FALSE_POSITIVE) {
+        } else if (investigationStatus == Alert.InvestigationStatus.FALSE_POSITIVE) {
+            alert.setStatus(AlertStatus.FALSE_POSITIVE);
             alert.getTransaction().setStatus(TransactionStatus.COMPLETED);
+        } else if (investigationStatus == Alert.InvestigationStatus.ESCALATED) {
+            alert.setStatus(AlertStatus.ESCALATED);
+        } else {
+            alert.setStatus(AlertStatus.INVESTIGATING);
         }
 
         // Auto-generate SAR if true positive
-        if (status == Alert.InvestigationStatus.TRUE_POSITIVE && request.getSarSummary() != null) {
+        if (investigationStatus == Alert.InvestigationStatus.TRUE_POSITIVE && request.getSarSummary() != null) {
             Sar sar = new Sar(alert, officer, request.getSarSummary());
             sarRepo.save(sar);
         }
