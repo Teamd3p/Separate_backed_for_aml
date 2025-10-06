@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import com.tss.aml.entity.Rule;
 import com.tss.aml.entity.Transaction;
 import com.tss.aml.repository.RuleRepository;
+import com.tss.aml.rule.KeywordRuleEvaluator;
 import com.tss.aml.rule.RuleEngineResult;
 import com.tss.aml.rule.RuleEvaluator;
 import com.tss.aml.service.RuleEngineService;
@@ -62,9 +63,19 @@ public class RuleEngineServiceImpl implements RuleEngineService {
 				boolean ruleTriggered = evaluator.evaluate(transaction, rule);
 				if (ruleTriggered) {
 					triggered.add(rule.getName());
-					totalRisk += evaluator.getRiskScoreImpact(rule);
-					logger.warn("🚨 RULE TRIGGERED: {} | Risk Impact: {} | Total Risk: {}", rule.getName(),
-							evaluator.getRiskScoreImpact(rule), totalRisk);
+					//totalRisk += evaluator.getRiskScoreImpact(rule);
+					
+					 int riskImpact;
+	                    if (evaluator instanceof KeywordRuleEvaluator) {
+	                    	riskImpact = ((KeywordRuleEvaluator) evaluator).calculateKeywordRisk(transaction, rule);	                        logger.debug("Computed dynamic keyword risk: {}", riskImpact);
+	                    } else {
+	                        riskImpact = evaluator.getRiskScoreImpact(rule);
+	                    }
+	                    
+	                    totalRisk += riskImpact;
+	                    logger.warn("🚨 RULE TRIGGERED: {} | Risk Impact: {} | Total Risk: {}", 
+	                        rule.getName(), riskImpact, totalRisk);
+		
 				} else {
 					logger.debug("✅ Rule passed: {}", rule.getName());
 				}
@@ -89,4 +100,5 @@ public class RuleEngineServiceImpl implements RuleEngineService {
 
 		return triggered.isEmpty() ? RuleEngineResult.clean() : RuleEngineResult.suspicious(finalRiskScore, triggered);
 	}
+
 }

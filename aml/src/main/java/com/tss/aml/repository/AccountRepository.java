@@ -6,4 +6,6 @@ import com.tss.aml.entity.Account;
 
 public interface AccountRepository extends JpaRepository<Account, Long> {
     Account findByAccountNumber(String accountNumber);
+    boolean existsByAccountNumber(String accountNumber);
+
 }
