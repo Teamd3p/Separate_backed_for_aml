@@ -18,83 +18,75 @@ import com.tss.aml.service.RuleEngineService;
 @Service
 public class RuleEngineServiceImpl implements RuleEngineService {
 
-    private static final Logger logger = LoggerFactory.getLogger(RuleEngineServiceImpl.class);
+	private static final Logger logger = LoggerFactory.getLogger(RuleEngineServiceImpl.class);
 
-    @Autowired
-    private List<RuleEvaluator> evaluators;
+	@Autowired
+	private List<RuleEvaluator> evaluators;
 
-    @Autowired
-    private RuleRepository ruleRepository;
+	@Autowired
+	private RuleRepository ruleRepository;
 
-    @Override
-    public RuleEngineResult evaluate(Transaction transaction) {
-        logger.info("=== AML RULE EVALUATION START ===");
-        logger.info("Transaction ID: {}, Amount: {} {}, Type: {}, Customer: {}", 
-            transaction.getTransactionId(), 
-            transaction.getAmount(), 
-            transaction.getCurrency(),
-            transaction.getTransactionType(),
-            transaction.getCustomer() != null ? transaction.getCustomer().getUserId() : "Unknown");
-        
-        List<Rule> activeRules = ruleRepository.findByIsActiveTrue();
-        logger.info("Found {} active rules to evaluate", activeRules.size());
-        
-        List<String> triggered = new ArrayList<>();
-        int totalRisk = 0;
-        int maxPossibleRisk = 0;
+	@Override
+	public RuleEngineResult evaluate(Transaction transaction) {
+		logger.info("=== AML RULE EVALUATION START ===");
+		logger.info("Transaction ID: {}, Amount: {} {}, Type: {}, Customer: {}", transaction.getTransactionId(),
+				transaction.getAmount(), transaction.getCurrency(), transaction.getTransactionType(),
+				transaction.getCustomer() != null ? transaction.getCustomer().getUserId() : "Unknown");
 
-        // Calculate total possible risk for normalization
-        for (Rule rule : activeRules) {
-            maxPossibleRisk += rule.getRiskScoreImpact();
-        }
-        logger.info("Maximum possible risk score: {}", maxPossibleRisk);
+		List<Rule> activeRules = ruleRepository.findByIsActiveTrue();
+		logger.info("Found {} active rules to evaluate", activeRules.size());
 
-        for (Rule rule : activeRules) {
-            try {
-                logger.debug("Evaluating rule: {} (Type: {}, Risk Impact: {})", 
-                    rule.getName(), rule.getType(), rule.getRiskScoreImpact());
-                
-                RuleEvaluator evaluator = evaluators.stream()
-                    .filter(e -> e.supports(rule.getType().name()))
-                    .findFirst()
-                    .orElse(null);
+		List<String> triggered = new ArrayList<>();
+		int totalRisk = 0;
+		int maxPossibleRisk = 0;
 
-                if (evaluator == null) {
-                    logger.warn("No evaluator found for rule type: {} (Rule: {})", 
-                        rule.getType(), rule.getName());
-                    continue;
-                }
+		// Calculate total possible risk for normalization
+		for (Rule rule : activeRules) {
+			maxPossibleRisk += rule.getRiskScoreImpact();
+		}
+		logger.info("Maximum possible risk score: {}", maxPossibleRisk);
 
-                boolean ruleTriggered = evaluator.evaluate(transaction, rule);
-                if (ruleTriggered) {
-                    triggered.add(rule.getName());
-                    totalRisk += evaluator.getRiskScoreImpact(rule);
-                    logger.warn("🚨 RULE TRIGGERED: {} | Risk Impact: {} | Total Risk: {}", 
-                        rule.getName(), evaluator.getRiskScoreImpact(rule), totalRisk);
-                } else {
-                    logger.debug("✅ Rule passed: {}", rule.getName());
-                }
-            } catch (Exception e) {
-                logger.error("❌ Error evaluating rule {}: {}", rule.getName(), e.getMessage(), e);
-            }
-        }
+		for (Rule rule : activeRules) {
+			try {
+				logger.debug("Evaluating rule: {} (Type: {}, Risk Impact: {})", rule.getName(), rule.getType(),
+						rule.getRiskScoreImpact());
 
-        // Normalize risk score to 0-100 range
-        int normalizedRisk = maxPossibleRisk > 0 ? 
-            Math.min(100, (totalRisk * 100) / maxPossibleRisk) : 0;
+				RuleEvaluator evaluator = evaluators.stream().filter(e -> e.supports(rule.getType().name())).findFirst()
+						.orElse(null);
 
-        logger.info("=== EVALUATION SUMMARY ===");
-        logger.info("Raw Risk Score: {} / {}", totalRisk, maxPossibleRisk);
-        logger.info("Normalized Risk Score: {}/100", normalizedRisk);
-        logger.info("Triggered Rules: {}", triggered);
-        logger.info("Transaction Status: {}", 
-            triggered.isEmpty() ? "CLEAN" : 
-            (normalizedRisk >= 85 ? "BLOCKED" : 
-            (normalizedRisk >= 50 ? "FLAGGED" : "COMPLETED")));
-        logger.info("=== AML RULE EVALUATION END ===");
+				if (evaluator == null) {
+					logger.warn("No evaluator found for rule type: {} (Rule: {})", rule.getType(), rule.getName());
+					continue;
+				}
 
-        return triggered.isEmpty() ?
-            RuleEngineResult.clean() :
-            RuleEngineResult.suspicious(normalizedRisk, triggered);
-    }
+				boolean ruleTriggered = evaluator.evaluate(transaction, rule);
+				if (ruleTriggered) {
+					triggered.add(rule.getName());
+					totalRisk += evaluator.getRiskScoreImpact(rule);
+					logger.warn("🚨 RULE TRIGGERED: {} | Risk Impact: {} | Total Risk: {}", rule.getName(),
+							evaluator.getRiskScoreImpact(rule), totalRisk);
+				} else {
+					logger.debug("✅ Rule passed: {}", rule.getName());
+				}
+			} catch (Exception e) {
+				logger.error("❌ Error evaluating rule {}: {}", rule.getName(), e.getMessage(), e);
+			}
+		}
+
+		// Normalize risk score to 0-100 range
+//        int finalRiskScore = maxPossibleRisk > 0 ? 
+//            Math.min(100, (totalRisk * 100) / maxPossibleRisk) : 0;
+
+		int finalRiskScore = Math.min(100, totalRisk);
+
+		logger.info("=== EVALUATION SUMMARY ===");
+		logger.info("Raw Risk Score: {} / {}", totalRisk, maxPossibleRisk);
+		logger.info("Normalized Risk Score: {}/100", finalRiskScore);
+		logger.info("Triggered Rules: {}", triggered);
+		logger.info("Transaction Status: {}", triggered.isEmpty() ? "CLEAN"
+				: (finalRiskScore >= 85 ? "BLOCKED" : (finalRiskScore >= 50 ? "FLAGGED" : "COMPLETED")));
+		logger.info("=== AML RULE EVALUATION END ===");
+
+		return triggered.isEmpty() ? RuleEngineResult.clean() : RuleEngineResult.suspicious(finalRiskScore, triggered);
+	}
 }
