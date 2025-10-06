@@ -5,9 +5,13 @@ import com.tss.aml.entity.enums.Role;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotNull;
+import lombok.AllArgsConstructor;
+import lombok.NoArgsConstructor;
 
 @Entity
 @Table(name = "admins")
+@NoArgsConstructor
+@AllArgsConstructor
 public class Admin extends User {
 
 	@NotNull
@@ -17,9 +21,6 @@ public class Admin extends User {
 	private String lastName;
 
 	private String phone;
-
-	public Admin() {
-	}
 
 	public Admin(String email, String passwordHash, String firstName, String lastName, String phone) {
 		super(email, passwordHash, Role.ADMIN);

@@ -14,50 +14,79 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotNull;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Entity
 @Table(name = "risky_countries")
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class RiskyCountry {
 
-    @Id
-    @NotNull
-    @Column(length = 2) // ISO 3166-1 alpha-2, e.g., "IN", "US"
-    private String countryCode;
+	@Id
+	@NotNull
+	@Column(length = 2) // ISO 3166-1 alpha-2, e.g., "IN", "US"
+	private String countryCode;
 
-    @NotNull
-    private String countryName;
+	@NotNull
+	private String countryName;
 
-    @Enumerated(EnumType.STRING)
-    @NotNull
-    private RiskLevel riskLevel;
+	@Enumerated(EnumType.STRING)
+	@NotNull
+	private RiskLevel riskLevel;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "last_updated_by")
-    private Admin lastUpdatedBy;
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "last_updated_by")
+	private Admin lastUpdatedBy;
 
-    private LocalDateTime lastUpdatedAt = LocalDateTime.now();
+	private LocalDateTime lastUpdatedAt = LocalDateTime.now();
 
-    public RiskyCountry() {}
+	public RiskyCountry(String countryCode, String countryName, RiskLevel riskLevel) {
+		this.countryCode = countryCode;
+		this.countryName = countryName;
+		this.riskLevel = riskLevel;
+	}
 
-    public RiskyCountry(String countryCode, String countryName, RiskLevel riskLevel) {
-        this.countryCode = countryCode;
-        this.countryName = countryName;
-        this.riskLevel = riskLevel;
-    }
+	// Getters & Setters
+	public String getCountryCode() {
+		return countryCode;
+	}
 
-    // Getters & Setters
-    public String getCountryCode() { return countryCode; }
-    public void setCountryCode(String countryCode) { this.countryCode = countryCode; }
+	public void setCountryCode(String countryCode) {
+		this.countryCode = countryCode;
+	}
 
-    public String getCountryName() { return countryName; }
-    public void setCountryName(String countryName) { this.countryName = countryName; }
+	public String getCountryName() {
+		return countryName;
+	}
 
-    public RiskLevel getRiskLevel() { return riskLevel; }
-    public void setRiskLevel(RiskLevel riskLevel) { this.riskLevel = riskLevel; }
+	public void setCountryName(String countryName) {
+		this.countryName = countryName;
+	}
 
-    public Admin getLastUpdatedBy() { return lastUpdatedBy; }
-    public void setLastUpdatedBy(Admin lastUpdatedBy) { this.lastUpdatedBy = lastUpdatedBy; }
+	public RiskLevel getRiskLevel() {
+		return riskLevel;
+	}
 
-    public LocalDateTime getLastUpdatedAt() { return lastUpdatedAt; }
-    public void setLastUpdatedAt(LocalDateTime lastUpdatedAt) { this.lastUpdatedAt = lastUpdatedAt; }
+	public void setRiskLevel(RiskLevel riskLevel) {
+		this.riskLevel = riskLevel;
+	}
+
+	public Admin getLastUpdatedBy() {
+		return lastUpdatedBy;
+	}
+
+	public void setLastUpdatedBy(Admin lastUpdatedBy) {
+		this.lastUpdatedBy = lastUpdatedBy;
+	}
+
+	public LocalDateTime getLastUpdatedAt() {
+		return lastUpdatedAt;
+	}
+
+	public void setLastUpdatedAt(LocalDateTime lastUpdatedAt) {
+		this.lastUpdatedAt = lastUpdatedAt;
+	}
 }

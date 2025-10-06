@@ -12,49 +12,48 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.Lob;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotNull;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Entity
 @Table(name = "kyc_documents")
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
 public class KycDocument {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	private Long id;
 
-    @NotNull
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "customer_id", nullable = false)
-    private Customer customer;
+	@NotNull
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "customer_id", nullable = false)
+	private Customer customer;
 
-    @NotNull
-    @Enumerated(EnumType.STRING)
-    private DocumentType docType;
+	@NotNull
+	@Enumerated(EnumType.STRING)
+	private DocumentType docType;
 
-    @NotNull
-    private String fileUrl;
+	@NotNull
+	private String fileUrl; // Cloudinary/S3 URL
 
-    private LocalDateTime uploadTimestamp = LocalDateTime.now();
-    private boolean isValidated = false;
+	@Lob // For large text (OCR output)
+	private String extractedText; // ← NEW FIELD
 
-    public KycDocument() {}
+	private LocalDateTime uploadTimestamp = LocalDateTime.now();
+	private boolean isValidated = false;
 
-    public KycDocument(Customer customer, DocumentType docType, String fileUrl) {
-        this.customer = customer;
-        this.docType = docType;
-        this.fileUrl = fileUrl;
-    }
+	public KycDocument(Customer customer, DocumentType docType, String fileUrl) {
+		this.customer = customer;
+		this.docType = docType;
+		this.fileUrl = fileUrl;
+	}
 
-    public Long getId() { return id; }
-    public Customer getCustomer() { return customer; }
-    public void setCustomer(Customer customer) { this.customer = customer; }
-    public DocumentType getDocType() { return docType; }
-    public void setDocType(DocumentType docType) { this.docType = docType; }
-    public String getFileUrl() { return fileUrl; }
-    public void setFileUrl(String fileUrl) { this.fileUrl = fileUrl; }
-    public LocalDateTime getUploadTimestamp() { return uploadTimestamp; }
-    public boolean isValidated() { return isValidated; }
-    public void setValidated(boolean validated) { isValidated = validated; }
+
 }

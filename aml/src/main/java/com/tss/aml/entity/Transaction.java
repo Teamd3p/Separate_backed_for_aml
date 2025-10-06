@@ -19,97 +19,73 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotNull;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Entity
 @Table(name = "transactions", indexes = {
-	    @Index(name = "idx_transactions_customer_status", columnList = "customer_id,status"),
-	    @Index(name = "idx_transactions_country", columnList = "countryCode"),
-	    @Index(name = "idx_transactions_timestamp", columnList = "timestamp DESC") // optional: for time-range queries
+		@Index(name = "idx_transactions_customer_status", columnList = "customer_id,status"),
+		@Index(name = "idx_transactions_country", columnList = "countryCode"),
+		@Index(name = "idx_transactions_timestamp", columnList = "timestamp DESC") // optional: for time-range queries
 })
-@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
+@JsonIgnoreProperties({ "hibernateLazyInitializer", "handler" })
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class Transaction {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long transactionId;
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	private Long transactionId;
 
-    @NotNull
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "customer_id", nullable = false)
-    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler", "passwordHash", "verificationOtp", "otpExpiryTime"})
-    private Customer customer;
+	@NotNull
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "customer_id", nullable = false)
+	@JsonIgnoreProperties({ "hibernateLazyInitializer", "handler", "passwordHash", "verificationOtp", "otpExpiryTime" })
+	private Customer customer;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "sender_account_id")
-    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
-    private Account senderAccount;
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "sender_account_id")
+	@JsonIgnoreProperties({ "hibernateLazyInitializer", "handler" })
+	private Account senderAccount;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "receiver_account_id")
-    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
-    private Account receiverAccount;
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "receiver_account_id")
+	@JsonIgnoreProperties({ "hibernateLazyInitializer", "handler" })
+	private Account receiverAccount;
 
-    @NotNull
-    private BigDecimal amount;
+	@NotNull
+	private BigDecimal amount;
 
-    @NotNull
-    private String currency;
+	@NotNull
+	private String currency;
 
-    private LocalDateTime timestamp = LocalDateTime.now();
-    private String description;
-    private String counterpartyName;
-    private String counterpartyAccount;
-    private String countryCode;
+	private LocalDateTime timestamp = LocalDateTime.now();
+	private String description;
+	private String counterpartyName;
+	private String counterpartyAccount;
+	private String countryCode;
 
-    @Enumerated(EnumType.STRING)
-    @NotNull
-    private TransactionType transactionType;
+	@Enumerated(EnumType.STRING)
+	@NotNull
+	private TransactionType transactionType;
 
-    @Enumerated(EnumType.STRING)
-    @NotNull
-    private TransactionStatus status = TransactionStatus.PENDING;
+	@Enumerated(EnumType.STRING)
+	@NotNull
+	private TransactionStatus status = TransactionStatus.PENDING;
 
-    private Integer riskScore = 0;
+	private Integer riskScore = 0;
 
-    public Transaction() {}
+	public Transaction(Customer customer, Account senderAccount, Account receiverAccount, BigDecimal amount,
+			String currency, String description, TransactionType type) {
+		this.customer = customer;
+		this.senderAccount = senderAccount;
+		this.receiverAccount = receiverAccount;
+		this.amount = amount;
+		this.currency = currency;
+		this.description = description;
+		this.transactionType = type;
+	}
 
-    public Transaction(Customer customer, Account senderAccount, Account receiverAccount, 
-                       BigDecimal amount, String currency, String description, TransactionType type) {
-        this.customer = customer;
-        this.senderAccount = senderAccount;
-        this.receiverAccount = receiverAccount;
-        this.amount = amount;
-        this.currency = currency;
-        this.description = description;
-        this.transactionType = type;
-    }
-
-    public Long getTransactionId() { return transactionId; }
-    public Customer getCustomer() { return customer; }
-    public void setCustomer(Customer customer) { this.customer = customer; }
-    public BigDecimal getAmount() { return amount; }
-    public void setAmount(BigDecimal amount) { this.amount = amount; }
-    public String getCurrency() { return currency; }
-    public void setCurrency(String currency) { this.currency = currency; }
-    public LocalDateTime getTimestamp() { return timestamp; }
-    public void setTimestamp(LocalDateTime timestamp) { this.timestamp = timestamp; }
-    public String getDescription() { return description; }
-    public void setDescription(String description) { this.description = description; }
-    public String getCounterpartyName() { return counterpartyName; }
-    public void setCounterpartyName(String counterpartyName) { this.counterpartyName = counterpartyName; }
-    public String getCounterpartyAccount() { return counterpartyAccount; }
-    public void setCounterpartyAccount(String counterpartyAccount) { this.counterpartyAccount = counterpartyAccount; }
-    public String getCountryCode() { return countryCode; }
-    public void setCountryCode(String countryCode) { this.countryCode = countryCode; }
-    public TransactionType getTransactionType() { return transactionType; }
-    public void setTransactionType(TransactionType transactionType) { this.transactionType = transactionType; }
-    public TransactionStatus getStatus() { return status; }
-    public void setStatus(TransactionStatus status) { this.status = status; }
-    public Account getSenderAccount() { return senderAccount; }
-    public void setSenderAccount(Account senderAccount) { this.senderAccount = senderAccount; }
-    public Account getReceiverAccount() { return receiverAccount; }
-    public void setReceiverAccount(Account receiverAccount) { this.receiverAccount = receiverAccount; }
-    public Integer getRiskScore() { return riskScore; }
-    public void setRiskScore(Integer riskScore) { this.riskScore = riskScore; }
-    public void setRiskScore(int riskScore) { this.riskScore = riskScore; }
 }
