@@ -80,8 +80,16 @@ public class RuleEngineServiceImpl implements RuleEngineService {
         }
 
         // Normalize risk score to 0-100 range
-        int normalizedRisk = maxPossibleRisk > 0 ? 
-            Math.min(100, (totalRisk * 100) / maxPossibleRisk) : 0;
+//        int normalizedRisk = maxPossibleRisk > 0 ? 
+//            Math.min(100, (totalRisk * 100) / maxPossibleRisk) : 0;
+        
+     // Normalize risk score to 0–100 range safely
+        int normalizedRisk = 0;
+        if (maxPossibleRisk > 0) {
+            normalizedRisk = (int) Math.round(((double) totalRisk / maxPossibleRisk) * 100);
+            normalizedRisk = Math.min(100, normalizedRisk);
+        }
+
 
         logger.info("=== EVALUATION SUMMARY ===");
         logger.info("Raw Risk Score: {} / {}", totalRisk, maxPossibleRisk);

@@ -1,7 +1,5 @@
 package com.tss.aml.service.impl;
 
-import java.util.UUID;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -29,22 +27,34 @@ public class AccountServiceImpl implements AccountService {
                 .orElseThrow(() -> new UserApiException("Customer not found"));
 
         Account account = new Account();
-        account.setAccountType(AccountType.valueOf(request.getAccountType()));
-        account.setCurrency(request.getCurrency());
+        
+        if(!AccountType.isValid(request.getAccountType())) {
+        	throw new IllegalArgumentException("Invalid account type: "+ request.getAccountType());
+        }
+        account.setAccountType(AccountType.valueOf(request.getAccountType().toUpperCase()));
+       
+        account.setCurrency(request.getCurrency().toUpperCase());
+        
         account.setBalance(request.getBalance());
+        
         account.setCustomer(customer);
-        account.setAccountNumber(generateAccountNumber());
+        
+        // Set temporary account number to satisfy database NOT NULL constraint
+        account.setAccountNumber("TEMP_" + System.currentTimeMillis());
+        
+        // Save account first to get auto-generated ID
+        Account savedAccount = accountRepository.save(account);
 
-        return accountRepository.save(account);
+        // Generate proper account number using the saved account ID
+        String generatedAccountNumber = String.format("ACC%05d", savedAccount.getAccountId());
+        savedAccount.setAccountNumber(generatedAccountNumber);
+
+        // Save again with the proper account number
+        return accountRepository.save(savedAccount);
     }
 
     @Override
     public Account getAccountByNumber(String accountNumber) {
         return accountRepository.findByAccountNumber(accountNumber);
-    }
-
-    private String generateAccountNumber() {
-        // A simple way to generate a unique account number
-        return UUID.randomUUID().toString().replaceAll("-", "").substring(0, 12);
     }
 }

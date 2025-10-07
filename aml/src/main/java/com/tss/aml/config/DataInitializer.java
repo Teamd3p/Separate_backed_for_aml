@@ -43,16 +43,16 @@ public class DataInitializer {
             initializeAdmin(userRepository, passwordEncoder);
 
 //            // Initialize Compliance Officers
-            initializeComplianceOfficers(officerRepository, passwordEncoder);
+//            initializeComplianceOfficers(officerRepository, passwordEncoder);
 //
 //            // Initialize AML Rules
-            initializeAMLRules(ruleRepository);
+//            initializeAMLRules(ruleRepository);
 //
 //            // Initialize Suspicious Keywords
-            initializeSuspiciousKeywords(keywordRepository);
+//            initializeSuspiciousKeywords(keywordRepository);
 //
 //            // Initialize Risky Countries
-            initializeRiskyCountries(countryRepository);
+//            initializeRiskyCountries(countryRepository);
 
             logger.info("Data initialization completed successfully!");
         };

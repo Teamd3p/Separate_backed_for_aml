@@ -55,6 +55,14 @@ public class Transaction {
     @NotNull
     private String currency;
 
+    // Currency conversion fields
+    private String originalCurrency;
+    private BigDecimal originalAmount;
+    private BigDecimal exchangeRate;
+    private BigDecimal conversionFee;
+    private String conversionId;
+    private Boolean isCurrencyConverted = false;
+
     private LocalDateTime timestamp = LocalDateTime.now();
     private String description;
     private String counterpartyName;
@@ -112,4 +120,18 @@ public class Transaction {
     public Integer getRiskScore() { return riskScore; }
     public void setRiskScore(Integer riskScore) { this.riskScore = riskScore; }
     public void setRiskScore(int riskScore) { this.riskScore = riskScore; }
+
+    // Currency conversion getters and setters
+    public String getOriginalCurrency() { return originalCurrency; }
+    public void setOriginalCurrency(String originalCurrency) { this.originalCurrency = originalCurrency; }
+    public BigDecimal getOriginalAmount() { return originalAmount; }
+    public void setOriginalAmount(BigDecimal originalAmount) { this.originalAmount = originalAmount; }
+    public BigDecimal getExchangeRate() { return exchangeRate; }
+    public void setExchangeRate(BigDecimal exchangeRate) { this.exchangeRate = exchangeRate; }
+    public BigDecimal getConversionFee() { return conversionFee; }
+    public void setConversionFee(BigDecimal conversionFee) { this.conversionFee = conversionFee; }
+    public String getConversionId() { return conversionId; }
+    public void setConversionId(String conversionId) { this.conversionId = conversionId; }
+    public Boolean getIsCurrencyConverted() { return isCurrencyConverted; }
+    public void setIsCurrencyConverted(Boolean isCurrencyConverted) { this.isCurrencyConverted = isCurrencyConverted; }
 }
