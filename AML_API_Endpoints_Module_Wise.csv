@@ -1,0 +1,71 @@
+Module,HTTP Method,Endpoint,Description
+Authentication & User Management,POST,/api/auth/register,Register new user
+Authentication & User Management,POST,/api/auth/verify-otp,Verify OTP for registration
+Authentication & User Management,POST,/api/auth/login,User login
+Authentication & User Management,POST,/api/auth/resend-otp,Resend OTP verification
+Admin Management,POST,/api/admin/officers,Create compliance officer
+Admin Management,GET,/api/admin/officers,Get all compliance officers
+Admin Management,DELETE,/api/admin/officers/{id},Delete compliance officer
+Admin Management,POST,/api/admin/rules,Create AML rule
+Admin Management,PUT,/api/admin/rules/{id},Update AML rule
+Admin Management,DELETE,/api/admin/rules/{id},Delete AML rule
+Admin Management,GET,/api/admin/rules,Get all AML rules
+Admin Management,POST,/api/admin/keywords,Create suspicious keyword
+Admin Management,PUT,/api/admin/keywords/{id},Update suspicious keyword
+Admin Management,DELETE,/api/admin/keywords/{id},Delete suspicious keyword
+Admin Management,GET,/api/admin/keywords,Get all suspicious keywords
+Admin Management,POST,/api/admin/countries,Create risky country
+Admin Management,PUT,/api/admin/countries/{code},Update risky country
+Admin Management,DELETE,/api/admin/countries/{code},Delete risky country
+Admin Management,GET,/api/admin/countries,Get all risky countries
+Admin Management,GET,/api/admin/customers,Get all customers
+Admin Management,PUT,/api/admin/customers/{id},Update customer
+Admin Management,DELETE,/api/admin/customers/{id},Delete customer
+Admin Management,GET,/api/admin/accounts,Get all accounts
+Admin Management,GET,/api/admin/accounts/customer/{customerId},Get accounts by customer
+Admin Management,PUT,/api/admin/accounts/{accountId},Update account
+Admin Management,POST,/api/admin/accounts/{accountId}/freeze,Freeze account
+Admin Management,POST,/api/admin/accounts/{accountId}/unfreeze,Unfreeze account
+Account Management,POST,/api/accounts/customer/{customerId},Create account for customer
+Account Management,GET,/api/accounts/{accountNumber}/balance,Get account balance
+Transaction Management,POST,/api/transactions/transfer,Transfer funds between accounts
+Transaction Management,POST,/api/transactions/deposit,Deposit funds to account
+Transaction Management,POST,/api/transactions/withdraw,Withdraw funds from account
+Transaction Management,GET,/api/transactions/account/{accountNumber},Get transaction history
+Transaction Management,GET,/api/transactions/{transactionId},Get transaction by ID
+KYC Management,POST,/api/kyc/upload,Upload KYC document
+KYC Management,POST,/api/kyc/verify,Verify KYC document
+KYC Management,GET,/api/kyc/customer/{customerId},Get customer documents
+KYC Management,GET,/api/kyc/customer/{customerId}/status,Get customer KYC status
+KYC Management,GET,/api/kyc/pending,Get pending documents
+KYC Management,GET,/api/kyc/manual-review,Get documents requiring manual review
+KYC Management,GET,/api/kyc/high-risk,Get high risk documents
+KYC Management,GET,/api/kyc/expiring,Get expiring documents
+KYC Management,GET,/api/kyc/officer/{officerId},Get documents by officer
+KYC Management,GET,/api/kyc/{documentId},Get document by ID
+KYC Management,PUT,/api/kyc/{documentId}/risk-score,Update document risk score
+KYC Management,DELETE,/api/kyc/{documentId},Delete document
+KYC Management,GET,/api/kyc/reports/date-range,Get documents by date range
+KYC Management,GET,/api/admin/kyc/pending,Get pending KYC documents (admin)
+KYC Management,GET,/api/admin/kyc/manual-review,Get KYC documents requiring manual review (admin)
+KYC Management,POST,/api/admin/kyc/{documentId}/verify,Verify KYC document (admin)
+KYC Compliance Management,GET,/api/kyc/compliance/dashboard,Get compliance dashboard
+KYC Compliance Management,GET,/api/kyc/compliance/customers/status,Get all customers KYC status
+KYC Compliance Management,GET,/api/kyc/compliance/customer/{customerId}/detailed-report,Get detailed compliance report
+KYC Compliance Management,GET,/api/kyc/compliance/documents/attention-required,Get documents needing attention
+Compliance Officer Management,GET,/api/compliance/alerts,Get all alerts
+Compliance Officer Management,POST,/api/compliance/alerts/{alertId}/assign,Assign alert to officer
+Compliance Officer Management,GET,/api/compliance/alerts/{alertId},Get alert details
+Compliance Officer Management,GET,/api/compliance/customers/{customerId}/transactions,Get customer transactions
+Compliance Officer Management,POST,/api/compliance/alerts/{alertId}/action,Take action on alert
+Compliance Officer Management,POST,/api/compliance/alerts/{alertId}/sar,Generate SAR
+Compliance Officer Management,POST,/api/compliance/sars/{sarId}/submit,Submit SAR
+Audit Management,GET,/api/admin/audit/logs,Get all audit logs
+Audit Management,GET,/api/admin/audit/logs/user/{userId},Get audit logs by user
+Audit Management,GET,/api/admin/audit/logs/action/{action},Get audit logs by action
+Currency Management,GET,/api/currency/supported,Get supported currencies
+Currency Management,GET,/api/currency/rates,Get all exchange rates
+Currency Management,GET,/api/currency/rate/{fromCurrency}/{toCurrency},Get exchange rate
+Currency Management,POST,/api/currency/convert,Convert currency
+Currency Management,GET,/api/currency/supported/{fromCurrency}/{toCurrency},Check conversion support
+Currency Management,GET,/api/currency/fee/{fromCurrency}/{toCurrency},Calculate conversion fee

@@ -1,7 +1,9 @@
 package com.tss.aml.service.impl;
 
 import java.time.LocalDateTime;
+import java.util.Map;
 import java.util.Random;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -43,45 +45,67 @@ public class AuthServiceImpl implements AuthService {
     private JwtUtil jwtUtil;
 
     private static final int OTP_EXPIRY_MINUTES = 10;
+    
+    // In-memory storage for pending registrations
+    private final Map<String, PendingRegistration> pendingRegistrations = new ConcurrentHashMap<>();
+    
+    // Inner class to hold pending registration data
+    private static class PendingRegistration {
+        private final RegisterRequest registerRequest;
+        private final String hashedPassword;
+        private final String otp;
+        private final LocalDateTime otpExpiryTime;
+        private final LocalDateTime createdAt;
+        
+        public PendingRegistration(RegisterRequest registerRequest, String hashedPassword, String otp, LocalDateTime otpExpiryTime) {
+            this.registerRequest = registerRequest;
+            this.hashedPassword = hashedPassword;
+            this.otp = otp;
+            this.otpExpiryTime = otpExpiryTime;
+            this.createdAt = LocalDateTime.now();
+        }
+        
+        public RegisterRequest getRegisterRequest() { return registerRequest; }
+        public String getHashedPassword() { return hashedPassword; }
+        public String getOtp() { return otp; }
+        public LocalDateTime getOtpExpiryTime() { return otpExpiryTime; }
+        public LocalDateTime getCreatedAt() { return createdAt; }
+        
+        public boolean isExpired() {
+            return LocalDateTime.now().isAfter(otpExpiryTime);
+        }
+    }
 
     @Override
     public AuthResponse register(RegisterRequest request) {
-        // Check if email already exists
+        // Check if email already exists in main database
         if (userRepository.findByEmail(request.getEmail()).isPresent()) {
             throw new UserApiException("Email already registered");
         }
 
-        // Create customer entity
-        Customer customer = new Customer();
-        customer.setEmail(request.getEmail());
-        customer.setPasswordHash(passwordEncoder.encode(request.getPassword()));
-        customer.setRole(Role.CUSTOMER);
-        customer.setFirstName(request.getFirstName());
-        customer.setMiddleName(request.getMiddleName());
-        customer.setLastName(request.getLastName());
-        customer.setDateOfBirth(request.getDateOfBirth());
-        customer.setNationality(request.getNationality());
-        customer.setContactNumber(request.getContactNumber());
-        customer.setStreet(request.getStreet());
-        customer.setCity(request.getCity());
-        customer.setState(request.getState());
-        customer.setNation(request.getNation());
-        customer.setPincode(request.getPincode());
-        customer.setStatus(UserStatus.PENDING_VERIFICATION);
-        customer.setEmailVerified(false);
+        // Remove any existing pending registration for this email
+        pendingRegistrations.remove(request.getEmail());
+        
+        // Clean up expired registrations
+        cleanupExpiredRegistrations();
+
+        // Hash password
+        String hashedPassword = passwordEncoder.encode(request.getPassword());
 
         // Generate OTP
         String otp = generateOtp();
-        customer.setVerificationOtp(otp);
-        customer.setOtpExpiryTime(LocalDateTime.now().plusMinutes(OTP_EXPIRY_MINUTES));
+        LocalDateTime otpExpiryTime = LocalDateTime.now().plusMinutes(OTP_EXPIRY_MINUTES);
 
-        // Save customer
-        customerRepository.save(customer);
+        // Store registration data temporarily in memory (NOT in database)
+        PendingRegistration pendingRegistration = new PendingRegistration(request, hashedPassword, otp, otpExpiryTime);
+        pendingRegistrations.put(request.getEmail(), pendingRegistration);
 
         // Send OTP email
         try {
-            emailService.sendOtpEmail(customer.getEmail(), otp);
+            emailService.sendOtpEmail(request.getEmail(), otp);
         } catch (Exception e) {
+            // If email fails, remove the pending registration
+            pendingRegistrations.remove(request.getEmail());
             throw new UserApiException("Failed to send OTP email. Please try again.");
         }
 
@@ -90,40 +114,62 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public AuthResponse verifyOtp(VerifyOtpRequest request) {
-        // Find user by email
-        User user = userRepository.findByEmail(request.getEmail())
-                .orElseThrow(() -> new UserApiException("User not found"));
+        // Clean up expired registrations first
+        cleanupExpiredRegistrations();
+        
+        // Check if user already exists in main database
+        if (userRepository.findByEmail(request.getEmail()).isPresent()) {
+            throw new UserApiException("Email already registered. Please login.");
+        }
 
-        // Check if already verified
-        if (user.isEmailVerified()) {
-            throw new UserApiException("Email already verified. Please login.");
+        // Find pending registration
+        PendingRegistration pendingRegistration = pendingRegistrations.get(request.getEmail());
+        if (pendingRegistration == null) {
+            throw new UserApiException("Registration not found. Please register again.");
         }
 
         // Check if OTP matches
-        if (!request.getOtp().equals(user.getVerificationOtp())) {
+        if (!request.getOtp().equals(pendingRegistration.getOtp())) {
             throw new UserApiException("Invalid OTP");
         }
 
         // Check if OTP expired
-        if (user.getOtpExpiryTime() == null || LocalDateTime.now().isAfter(user.getOtpExpiryTime())) {
-            throw new UserApiException("OTP has expired. Please request a new one.");
+        if (pendingRegistration.isExpired()) {
+            pendingRegistrations.remove(request.getEmail());
+            throw new UserApiException("OTP has expired. Please register again.");
         }
 
-        // Verify email
-        user.setEmailVerified(true);
-        user.setStatus(UserStatus.ACTIVE);
-        user.setVerificationOtp(null);
-        user.setOtpExpiryTime(null);
-        userRepository.save(user);
+        // Create actual customer from pending registration data
+        RegisterRequest registerRequest = pendingRegistration.getRegisterRequest();
+        Customer customer = new Customer();
+        customer.setEmail(registerRequest.getEmail());
+        customer.setPasswordHash(pendingRegistration.getHashedPassword());
+        customer.setRole(Role.CUSTOMER);
+        customer.setFirstName(registerRequest.getFirstName());
+        customer.setMiddleName(registerRequest.getMiddleName());
+        customer.setLastName(registerRequest.getLastName());
+        customer.setDateOfBirth(registerRequest.getDateOfBirth());
+        customer.setNationality(registerRequest.getNationality());
+        customer.setContactNumber(registerRequest.getContactNumber());
+        customer.setStreet(registerRequest.getStreet());
+        customer.setCity(registerRequest.getCity());
+        customer.setState(registerRequest.getState());
+        customer.setNation(registerRequest.getNation());
+        customer.setPincode(registerRequest.getPincode());
+        customer.setStatus(UserStatus.ACTIVE);
+        customer.setEmailVerified(true);
+
+        // Save customer to database (commit the registration)
+        customerRepository.save(customer);
+
+        // Remove from pending registrations
+        pendingRegistrations.remove(request.getEmail());
 
         // Send welcome email
-        if (user instanceof Customer) {
-            Customer customer = (Customer) user;
-            try {
-                emailService.sendWelcomeEmail(customer.getEmail(), customer.getFirstName());
-            } catch (Exception e) {
-                // Continue even if welcome email fails
-            }
+        try {
+            emailService.sendWelcomeEmail(customer.getEmail(), customer.getFirstName());
+        } catch (Exception e) {
+            // Continue even if welcome email fails
         }
 
         return new AuthResponse("Email verified successfully! You can now login.");
@@ -162,24 +208,32 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public AuthResponse resendOtp(String email) {
-        // Find user by email
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new UserApiException("User not found"));
+        // Clean up expired registrations first
+        cleanupExpiredRegistrations();
+        
+        // Check if user already exists in main database
+        if (userRepository.findByEmail(email).isPresent()) {
+            throw new UserApiException("Email already registered. Please login.");
+        }
 
-        // Check if already verified
-        if (user.isEmailVerified()) {
-            throw new UserApiException("Email already verified. Please login.");
+        // Find pending registration
+        PendingRegistration pendingRegistration = pendingRegistrations.get(email);
+        if (pendingRegistration == null) {
+            throw new UserApiException("Registration not found. Please register again.");
         }
 
         // Generate new OTP
-        String otp = generateOtp();
-        user.setVerificationOtp(otp);
-        user.setOtpExpiryTime(LocalDateTime.now().plusMinutes(OTP_EXPIRY_MINUTES));
-        userRepository.save(user);
+        String newOtp = generateOtp();
+        LocalDateTime newOtpExpiryTime = LocalDateTime.now().plusMinutes(OTP_EXPIRY_MINUTES);
+        
+        // Update pending registration with new OTP
+        RegisterRequest registerRequest = pendingRegistration.getRegisterRequest();
+        PendingRegistration updatedRegistration = new PendingRegistration(registerRequest, pendingRegistration.getHashedPassword(), newOtp, newOtpExpiryTime);
+        pendingRegistrations.put(email, updatedRegistration);
 
         // Send OTP email
         try {
-            emailService.sendOtpEmail(user.getEmail(), otp);
+            emailService.sendOtpEmail(email, newOtp);
         } catch (Exception e) {
             throw new UserApiException("Failed to send OTP email. Please try again.");
         }
@@ -191,5 +245,10 @@ public class AuthServiceImpl implements AuthService {
         Random random = new Random();
         int otp = 100000 + random.nextInt(900000);
         return String.valueOf(otp);
+    }
+    
+    // Helper method to clean up expired registrations
+    private void cleanupExpiredRegistrations() {
+        pendingRegistrations.entrySet().removeIf(entry -> entry.getValue().isExpired());
     }
 }
