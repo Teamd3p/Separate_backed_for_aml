@@ -3,7 +3,9 @@ package com.tss.aml.entity;
 import java.time.LocalDateTime;
 
 import com.tss.aml.entity.enums.DocumentType;
+import com.tss.aml.entity.enums.KycStatus;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -41,19 +43,62 @@ public class KycDocument {
 	private DocumentType docType;
 
 	@NotNull
-	private String fileUrl; // Cloudinary/S3 URL
+	@Enumerated(EnumType.STRING)
+	private KycStatus status = KycStatus.PENDING;
 
-	@Lob // For large text (OCR output)
-	private String extractedText; // ← NEW FIELD
+	@NotNull
+	private String fileName;
 
+	@NotNull
+	private String fileUrl; // File storage URL
+
+	@Column(name = "file_size")
+	private Long fileSize;
+
+	@Column(name = "mime_type")
+	private String mimeType;
+
+	@Column(name = "document_number")
+	private String documentNumber; // Document ID number (manual entry)
+
+	@Column(name = "expiry_date")
+	private LocalDateTime expiryDate;
+
+	@Column(name = "issue_date")
+	private LocalDateTime issueDate;
+
+	@Column(name = "issuing_authority")
+	private String issuingAuthority;
+
+	@Column(name = "verification_notes", length = 1000)
+	private String verificationNotes;
+
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "verified_by")
+	private ComplianceOfficer verifiedBy;
+
+	@Column(name = "upload_timestamp")
 	private LocalDateTime uploadTimestamp = LocalDateTime.now();
+
+	@Column(name = "verification_timestamp")
+	private LocalDateTime verificationTimestamp;
+
+	@Column(name = "confidence_score")
+	private Double confidenceScore; // Document quality score
+
+	@Column(name = "risk_score")
+	private Integer riskScore; // Document risk assessment score
+
+	@Column(name = "is_validated")
 	private boolean isValidated = false;
 
-	public KycDocument(Customer customer, DocumentType docType, String fileUrl) {
+	@Column(name = "requires_manual_review")
+	private boolean requiresManualReview = true;
+
+	public KycDocument(Customer customer, DocumentType docType, String fileName, String fileUrl) {
 		this.customer = customer;
 		this.docType = docType;
+		this.fileName = fileName;
 		this.fileUrl = fileUrl;
 	}
-
-
 }

@@ -14,6 +14,7 @@ import com.tss.aml.repository.RuleRepository;
 import com.tss.aml.rule.KeywordRuleEvaluator;
 import com.tss.aml.rule.RuleEngineResult;
 import com.tss.aml.rule.RuleEvaluator;
+import com.tss.aml.service.KycRuleEvaluator;
 import com.tss.aml.service.RuleEngineService;
 
 @Service
@@ -26,6 +27,9 @@ public class RuleEngineServiceImpl implements RuleEngineService {
 
 	@Autowired
 	private RuleRepository ruleRepository;
+	
+	@Autowired
+	private KycRuleEvaluator kycRuleEvaluator;
 
 	@Override
 	public RuleEngineResult evaluate(Transaction transaction) {
@@ -82,6 +86,15 @@ public class RuleEngineServiceImpl implements RuleEngineService {
 			} catch (Exception e) {
 				logger.error("❌ Error evaluating rule {}: {}", rule.getName(), e.getMessage(), e);
 			}
+		}
+
+		// Evaluate KYC-specific rules
+		logger.info("=== KYC RULE EVALUATION ===");
+		try {
+			kycRuleEvaluator.evaluateKycRulesForTransaction(transaction);
+			logger.info("KYC rule evaluation completed successfully");
+		} catch (Exception e) {
+			logger.error("Error during KYC rule evaluation: {}", e.getMessage(), e);
 		}
 
 		// Normalize risk score to 0-100 range

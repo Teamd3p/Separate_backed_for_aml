@@ -2,11 +2,16 @@ package com.tss.aml.service;
 
 import java.util.List;
 
+import com.tss.aml.dto.request.AccountUpdateRequest;
 import com.tss.aml.dto.request.ComplianceOfficerRequest;
+import com.tss.aml.dto.request.CustomerUpdateRequest;
 import com.tss.aml.dto.request.KeywordRequest;
 import com.tss.aml.dto.request.RiskyCountryRequest;
 import com.tss.aml.dto.request.RuleRequest;
+import com.tss.aml.entity.Account;
 import com.tss.aml.entity.ComplianceOfficer;
+import com.tss.aml.entity.Customer;
+import com.tss.aml.entity.KycDocument;
 import com.tss.aml.entity.RiskyCountry;
 import com.tss.aml.entity.Rule;
 import com.tss.aml.entity.SuspiciousKeyword;
@@ -34,4 +39,23 @@ public interface AdminService {
     RiskyCountry updateRiskyCountry(String countryCode, RiskyCountryRequest request);
     void deleteRiskyCountry(String countryCode);
     List<RiskyCountry> getAllRiskyCountries();
+
+    // Customer Management
+    List<Customer> getAllCustomers();
+    Customer getCustomerById(Long id);
+    Customer updateCustomer(Long id, CustomerUpdateRequest request);
+    void deleteCustomer(Long id);
+
+    // Account Management
+    List<Account> getAllAccounts();
+    List<Account> getAccountsByCustomerId(Long customerId);
+    Account updateAccount(Long accountId, AccountUpdateRequest request);
+    void freezeAccount(Long accountId);
+    void unfreezeAccount(Long accountId);
+
+    // KYC Document Verification Management
+    List<KycDocument> getPendingDocuments();
+    List<KycDocument> getDocumentsRequiringManualReview();
+    KycDocument verifyDocument(Long documentId, Long officerId, String notes, boolean approved);
+    KycDocument rejectDocument(Long documentId, Long officerId, String rejectionReason);
 }

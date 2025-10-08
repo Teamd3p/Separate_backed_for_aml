@@ -58,8 +58,16 @@ public class Transaction {
 	@NotNull
 	private BigDecimal amount;
 
-	@NotNull
-	private String currency;
+    @NotNull
+    private String currency;
+
+    // Currency conversion fields
+    private String originalCurrency;
+    private BigDecimal originalAmount;
+    private BigDecimal exchangeRate;
+    private BigDecimal conversionFee;
+    private String conversionId;
+    private Boolean isCurrencyConverted = false;
 
 	private LocalDateTime timestamp = LocalDateTime.now();
 	private String description;
@@ -88,4 +96,32 @@ public class Transaction {
 		this.transactionType = type;
 	}
 
+    public Long getTransactionId() { return transactionId; }
+    public Customer getCustomer() { return customer; }
+    public void setCustomer(Customer customer) { this.customer = customer; }
+    public BigDecimal getAmount() { return amount; }
+    public void setAmount(BigDecimal amount) { this.amount = amount; }
+    public String getCurrency() { return currency; }
+    public void setCurrency(String currency) { this.currency = currency; }
+    public LocalDateTime getTimestamp() { return timestamp; }
+    public void setTimestamp(LocalDateTime timestamp) { this.timestamp = timestamp; }
+    public String getDescription() { return description; }
+    public void setDescription(String description) { this.description = description; }
+    public String getCounterpartyName() { return counterpartyName; }
+    public void setCounterpartyName(String counterpartyName) { this.counterpartyName = counterpartyName; }
+    public String getCounterpartyAccount() { return counterpartyAccount; }
+    public void setCounterpartyAccount(String counterpartyAccount) { this.counterpartyAccount = counterpartyAccount; }
+    public String getCountryCode() { return countryCode; }
+    public void setCountryCode(String countryCode) { this.countryCode = countryCode; }
+    public TransactionType getTransactionType() { return transactionType; }
+    public void setTransactionType(TransactionType transactionType) { this.transactionType = transactionType; }
+    public TransactionStatus getStatus() { return status; }
+    public void setStatus(TransactionStatus status) { this.status = status; }
+    public Account getSenderAccount() { return senderAccount; }
+    public void setSenderAccount(Account senderAccount) { this.senderAccount = senderAccount; }
+    public Account getReceiverAccount() { return receiverAccount; }
+    public void setReceiverAccount(Account receiverAccount) { this.receiverAccount = receiverAccount; }
+    public Integer getRiskScore() { return riskScore; }
+    public void setRiskScore(Integer riskScore) { this.riskScore = riskScore; }
+    public void setRiskScore(int riskScore) { this.riskScore = riskScore; }
 }

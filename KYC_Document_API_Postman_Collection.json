@@ -1,0 +1,658 @@
+{
+	"info": {
+		"_postman_id": "kyc-document-api-collection",
+		"name": "AML KYC Document API Collection",
+		"description": "Complete API collection for KYC document management in AML system",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"auth": {
+		"type": "bearer",
+		"bearer": [
+			{
+				"key": "token",
+				"value": "{{authToken}}",
+				"type": "string"
+			}
+		]
+	},
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:8080",
+			"type": "string"
+		},
+		{
+			"key": "authToken",
+			"value": "your-jwt-token-here",
+			"type": "string"
+		},
+		{
+			"key": "customerId",
+			"value": "1",
+			"type": "string"
+		},
+		{
+			"key": "documentId",
+			"value": "1",
+			"type": "string"
+		},
+		{
+			"key": "officerId",
+			"value": "2",
+			"type": "string"
+		}
+	],
+	"item": [
+		{
+			"name": "Authentication",
+			"item": [
+				{
+					"name": "Login User",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"customer@example.com\",\n  \"password\": \"password123\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/auth/login",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "auth", "login"]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "KYC Document Management",
+			"item": [
+				{
+					"name": "Upload Document",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "file",
+									"type": "file",
+									"src": "/path/to/document.pdf"
+								},
+								{
+									"key": "customerId",
+									"value": "{{customerId}}",
+									"type": "text"
+								},
+								{
+									"key": "documentType",
+									"value": "PASSPORT",
+									"type": "text",
+									"description": "Options: PASSPORT, PAN_CARD, AADHAAR_CARD, DRIVING_LICENSE, VOTER_ID, BANK_STATEMENT"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/kyc/upload",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "kyc", "upload"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Verify Document",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"documentId\": {{documentId}},\n  \"officerId\": {{officerId}},\n  \"status\": \"VERIFIED\",\n  \"comments\": \"Document verified successfully. All details are clear and valid.\",\n  \"riskScore\": 25\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/kyc/verify",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "kyc", "verify"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Customer Documents",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/kyc/customer/{{customerId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "kyc", "customer", "{{customerId}}"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Customer KYC Status",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/kyc/customer/{{customerId}}/status",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "kyc", "customer", "{{customerId}}", "status"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Document Details",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/kyc/document/{{documentId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "kyc", "document", "{{documentId}}"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Document",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"status\": \"PENDING\",\n  \"comments\": \"Document requires additional verification\",\n  \"riskScore\": 45\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/kyc/document/{{documentId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "kyc", "document", "{{documentId}}"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Document",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/kyc/document/{{documentId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "kyc", "document", "{{documentId}}"]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Document Lists & Filtering",
+			"item": [
+				{
+					"name": "Get All Documents",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/kyc/documents",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "kyc", "documents"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Pending Documents",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/kyc/pending",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "kyc", "pending"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Documents for Manual Review",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/kyc/manual-review",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "kyc", "manual-review"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get High Risk Documents",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/kyc/high-risk",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "kyc", "high-risk"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Expiring Documents",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/kyc/expiring?days=30",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "kyc", "expiring"],
+							"query": [
+								{
+									"key": "days",
+									"value": "30",
+									"description": "Number of days to check for expiring documents"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Documents by Status",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/kyc/documents/status/VERIFIED",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "kyc", "documents", "status", "VERIFIED"],
+							"variable": [
+								{
+									"key": "status",
+									"value": "VERIFIED",
+									"description": "Options: PENDING, VERIFIED, REJECTED, MANUAL_REVIEW"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Documents by Type",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/kyc/documents/type/PASSPORT",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "kyc", "documents", "type", "PASSPORT"],
+							"variable": [
+								{
+									"key": "type",
+									"value": "PASSPORT",
+									"description": "Options: PASSPORT, PAN_CARD, AADHAAR_CARD, DRIVING_LICENSE, VOTER_ID, BANK_STATEMENT"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "KYC Compliance & Reporting",
+			"item": [
+				{
+					"name": "Get Compliance Dashboard",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/kyc/compliance/dashboard",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "kyc", "compliance", "dashboard"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Customers KYC Status",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/kyc/compliance/customers/status",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "kyc", "compliance", "customers", "status"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Customer Compliance Report",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/kyc/compliance/customer/{{customerId}}/report",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "kyc", "compliance", "customer", "{{customerId}}", "report"]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Document Verification Workflows",
+			"item": [
+				{
+					"name": "Approve Document",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"documentId\": {{documentId}},\n  \"officerId\": {{officerId}},\n  \"status\": \"VERIFIED\",\n  \"comments\": \"Document approved after thorough verification. All details match and document is authentic.\",\n  \"riskScore\": 15\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/kyc/verify",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "kyc", "verify"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Reject Document",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"documentId\": {{documentId}},\n  \"officerId\": {{officerId}},\n  \"status\": \"REJECTED\",\n  \"comments\": \"Document rejected due to poor quality and unclear text. Please resubmit with better quality scan.\",\n  \"riskScore\": 85\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/kyc/verify",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "kyc", "verify"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Flag for Manual Review",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"documentId\": {{documentId}},\n  \"officerId\": {{officerId}},\n  \"status\": \"MANUAL_REVIEW\",\n  \"comments\": \"Document flagged for manual review due to inconsistencies in extracted data. Requires senior officer verification.\",\n  \"riskScore\": 65\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/kyc/verify",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "kyc", "verify"]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Sample Test Data",
+			"item": [
+				{
+					"name": "Upload Passport Document",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "file",
+									"type": "file",
+									"src": "/path/to/passport.pdf",
+									"description": "Upload a passport document (PDF/Image)"
+								},
+								{
+									"key": "customerId",
+									"value": "1",
+									"type": "text"
+								},
+								{
+									"key": "documentType",
+									"value": "PASSPORT",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/kyc/upload",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "kyc", "upload"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Upload PAN Card",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "file",
+									"type": "file",
+									"src": "/path/to/pancard.jpg",
+									"description": "Upload a PAN card (PDF/Image)"
+								},
+								{
+									"key": "customerId",
+									"value": "1",
+									"type": "text"
+								},
+								{
+									"key": "documentType",
+									"value": "PAN_CARD",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/kyc/upload",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "kyc", "upload"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Upload Aadhaar Card",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "file",
+									"type": "file",
+									"src": "/path/to/aadhaar.pdf",
+									"description": "Upload an Aadhaar card (PDF/Image)"
+								},
+								{
+									"key": "customerId",
+									"value": "1",
+									"type": "text"
+								},
+								{
+									"key": "documentType",
+									"value": "AADHAAR_CARD",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/kyc/upload",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "kyc", "upload"]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	]
+}

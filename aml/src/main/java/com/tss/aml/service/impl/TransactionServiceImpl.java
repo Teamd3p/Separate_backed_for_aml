@@ -1,5 +1,7 @@
 package com.tss.aml.service.impl;
 
+import java.math.BigDecimal;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -8,6 +10,7 @@ import org.springframework.stereotype.Service;
 import com.tss.aml.dto.request.DepositRequest;
 import com.tss.aml.dto.request.TransferRequest;
 import com.tss.aml.dto.request.WithdrawalRequest;
+import com.tss.aml.dto.response.CurrencyConversionResult;
 import com.tss.aml.entity.Account;
 import com.tss.aml.entity.Transaction;
 import com.tss.aml.entity.enums.AuditAction;
@@ -21,6 +24,7 @@ import com.tss.aml.repository.TransactionRepository;
 import com.tss.aml.rule.RuleEngineResult;
 import com.tss.aml.service.AlertService;
 import com.tss.aml.service.AuditService;
+import com.tss.aml.service.CurrencyService;
 import com.tss.aml.service.RuleEngineService;
 import com.tss.aml.service.TransactionService;
 
@@ -46,6 +50,9 @@ public class TransactionServiceImpl implements TransactionService {
 
 	@Autowired
 	private AuditService auditService;
+
+	@Autowired
+	private CurrencyService currencyService;
 
 	@Override
 	public Transaction processTransaction(Transaction transaction) {
@@ -134,12 +141,45 @@ public class TransactionServiceImpl implements TransactionService {
 				throw new UserApiException("Insufficient balance");
 			}
 
-			// Check currency match
-			if (!senderAccount.getCurrency().equals(transferRequest.getCurrency())
-					|| !receiverAccount.getCurrency().equals(transferRequest.getCurrency())) {
+			// Validate sender account currency matches request
+			if (!senderAccount.getCurrency().equals(transferRequest.getCurrency())) {
 				auditService.logFailure(AuditAction.TRANSFER_FUNDS, AuditResourceType.TRANSACTION, null, userId, null,
-						"Currency mismatch", ipAddress);
-				throw new UserApiException("Currency mismatch");
+						"Sender account currency mismatch", ipAddress);
+				throw new UserApiException("Transfer currency must match sender account currency");
+			}
+
+			// Handle currency conversion if needed
+			CurrencyConversionResult conversionResult = null;
+			BigDecimal finalAmount = transferRequest.getAmount();
+			BigDecimal totalDeductionFromSender = transferRequest.getAmount();
+			
+			if (!senderAccount.getCurrency().equals(receiverAccount.getCurrency())) {
+				logger.info("💱 Cross-currency transfer detected: {} {} → {} {}", 
+					transferRequest.getAmount(), senderAccount.getCurrency(), 
+					"?", receiverAccount.getCurrency());
+				
+				// Convert from sender currency to receiver currency
+				conversionResult = currencyService.convertCurrency(
+					senderAccount.getCurrency(), 
+					receiverAccount.getCurrency(), 
+					transferRequest.getAmount()
+				);
+				
+				finalAmount = conversionResult.getNetAmount(); // Amount after conversion fee
+				totalDeductionFromSender = transferRequest.getAmount().add(conversionResult.getConversionFee());
+				
+				// Check if sender has sufficient balance including conversion fee
+				if (senderAccount.getBalance().compareTo(totalDeductionFromSender) < 0) {
+					auditService.logFailure(AuditAction.TRANSFER_FUNDS, AuditResourceType.TRANSACTION, null, userId, null,
+							"Insufficient balance for transfer including conversion fee", ipAddress);
+					throw new UserApiException("Insufficient balance for transfer including conversion fee of " + 
+						conversionResult.getConversionFee() + " " + senderAccount.getCurrency());
+				}
+				
+				logger.info("✅ Currency conversion: {} {} = {} {} (Fee: {} {})", 
+					transferRequest.getAmount(), senderAccount.getCurrency(),
+					finalAmount, receiverAccount.getCurrency(),
+					conversionResult.getConversionFee(), senderAccount.getCurrency());
 			}
 
 			// Create transaction
@@ -147,22 +187,34 @@ public class TransactionServiceImpl implements TransactionService {
 			transaction.setCustomer(senderAccount.getCustomer());
 			transaction.setSenderAccount(senderAccount);
 			transaction.setReceiverAccount(receiverAccount);
-			transaction.setAmount(transferRequest.getAmount());
-			transaction.setCurrency(transferRequest.getCurrency());
+			transaction.setAmount(finalAmount);
+			transaction.setCurrency(receiverAccount.getCurrency());
 			transaction.setDescription(transferRequest.getDescription());
 			transaction.setTransactionType(TransactionType.TRANSFER);
 			transaction.setCountryCode(transferRequest.getCountryCode());
 			transaction.setCounterpartyName(
 					receiverAccount.getCustomer().getFirstName() + " " + receiverAccount.getCustomer().getLastName());
 			transaction.setCounterpartyAccount(receiverAccount.getAccountNumber());
+			
+			// Set currency conversion details if applicable
+			if (conversionResult != null) {
+				transaction.setOriginalCurrency(senderAccount.getCurrency());
+				transaction.setOriginalAmount(transferRequest.getAmount());
+				transaction.setExchangeRate(conversionResult.getExchangeRate());
+				transaction.setConversionFee(conversionResult.getConversionFee());
+				transaction.setConversionId(conversionResult.getConversionId());
+				transaction.setIsCurrencyConverted(true);
+			}
 
 			// Process the transaction through AML rules
 			transaction = processTransaction(transaction);
 
 			// If transaction is approved, update balances
 			if (transaction.getStatus() == TransactionStatus.COMPLETED) {
-				senderAccount.setBalance(senderAccount.getBalance().subtract(transferRequest.getAmount()));
-				receiverAccount.setBalance(receiverAccount.getBalance().add(transferRequest.getAmount()));
+				// Deduct from sender (original amount + conversion fee if applicable)
+				senderAccount.setBalance(senderAccount.getBalance().subtract(totalDeductionFromSender));
+				// Add to receiver (converted amount)
+				receiverAccount.setBalance(receiverAccount.getBalance().add(finalAmount));
 
 				accountRepository.save(senderAccount);
 				accountRepository.save(receiverAccount);

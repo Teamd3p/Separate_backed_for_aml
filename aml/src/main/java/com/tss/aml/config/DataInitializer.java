@@ -42,17 +42,17 @@ public class DataInitializer {
             // Initialize Admin User
             initializeAdmin(userRepository, passwordEncoder);
 
-//            // Initialize Compliance Officers
+            // Initialize Compliance Officers
 //            initializeComplianceOfficers(officerRepository, passwordEncoder);
-//
-//            // Initialize AML Rules
-//            initializeAMLRules(ruleRepository);
-//
-//            // Initialize Suspicious Keywords
-//            initializeSuspiciousKeywords(keywordRepository);
-//
-//            // Initialize Risky Countries
-//            initializeRiskyCountries(countryRepository);
+
+            // Initialize AML Rules
+            initializeAMLRules(ruleRepository);
+
+            // Initialize Suspicious Keywords
+            initializeSuspiciousKeywords(keywordRepository);
+
+            // Initialize Risky Countries
+            initializeRiskyCountries(countryRepository);
 
             logger.info("Data initialization completed successfully!");
         };

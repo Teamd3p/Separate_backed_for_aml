@@ -35,16 +35,14 @@ public class Account {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long accountId;
 
-    @NotNull
     @Column(unique = true)
     private String accountNumber;
 
     @NotNull
     @Enumerated(EnumType.STRING)
-    private AccountType accountType; // use enum
-
+    private AccountType accountType;
     @NotNull
-    private String currency; // ISO 4217
+    private String currency; 
 
     @NotNull
     @Column(precision = 19, scale = 2)

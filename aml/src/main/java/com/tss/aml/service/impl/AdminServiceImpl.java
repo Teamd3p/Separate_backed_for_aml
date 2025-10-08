@@ -10,18 +10,29 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.tss.aml.dto.request.AccountUpdateRequest;
 import com.tss.aml.dto.request.ComplianceOfficerRequest;
+import com.tss.aml.dto.request.CustomerUpdateRequest;
 import com.tss.aml.dto.request.KeywordRequest;
 import com.tss.aml.dto.request.RiskyCountryRequest;
 import com.tss.aml.dto.request.RuleRequest;
+import com.tss.aml.entity.Account;
 import com.tss.aml.entity.Admin;
 import com.tss.aml.entity.ComplianceOfficer;
+import com.tss.aml.entity.Customer;
+import com.tss.aml.entity.KycDocument;
 import com.tss.aml.entity.RiskyCountry;
 import com.tss.aml.entity.Rule;
 import com.tss.aml.entity.SuspiciousKeyword;
 import com.tss.aml.entity.User;
+import com.tss.aml.entity.enums.AccountStatus;
+import com.tss.aml.entity.enums.AccountType;
+import com.tss.aml.entity.enums.KycStatus;
+import com.tss.aml.repository.AccountRepository;
 import com.tss.aml.repository.AdminRepository;
 import com.tss.aml.repository.ComplianceOfficerRepository;
+import com.tss.aml.repository.CustomerRepository;
+import com.tss.aml.repository.KycDocumentRepository;
 import com.tss.aml.repository.RiskyCountryRepository;
 import com.tss.aml.repository.RuleRepository;
 import com.tss.aml.repository.SuspiciousKeywordRepository;
@@ -48,6 +59,15 @@ public class AdminServiceImpl implements AdminService {
     
     @Autowired
     private PasswordEncoder passwordEncoder;
+    
+    @Autowired
+    private CustomerRepository customerRepo;
+    
+    @Autowired
+    private AccountRepository accountRepo;
+    
+    @Autowired
+    private KycDocumentRepository kycDocumentRepo;
 
     private Admin getCurrentAdmin() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
@@ -223,5 +243,131 @@ public class AdminServiceImpl implements AdminService {
     @Override
     public List<RiskyCountry> getAllRiskyCountries() {
         return riskyCountryRepo.findAll();
+    }
+    
+    // === CUSTOMER MANAGEMENT ===
+    @Override
+    public List<Customer> getAllCustomers() {
+        return customerRepo.findAll();
+    }
+    
+    @Override
+    public Customer getCustomerById(Long id) {
+        return customerRepo.findById(id)
+            .orElseThrow(() -> new RuntimeException("Customer not found"));
+    }
+    
+    @Override
+    public Customer updateCustomer(Long id, CustomerUpdateRequest request) {
+        Customer customer = getCustomerById(id);
+        customer.setFirstName(request.getFirstName());
+        customer.setLastName(request.getLastName());
+        customer.setEmail(request.getEmail());
+        customer.setContactNumber(request.getPhoneNumber());
+        customer.setStreet(request.getAddress());
+        customer.setCity(request.getCity());
+        customer.setState(request.getState());
+        customer.setNationality(request.getCountryCode());
+        customer.setPincode(request.getPostalCode());
+        // Note: riskProfile field doesn't exist in Customer entity - removing this line
+        // customer.setRiskProfile(request.getRiskProfile());
+        return customerRepo.save(customer);
+    }
+    
+    @Override
+    public void deleteCustomer(Long id) {
+        if (!customerRepo.existsById(id)) {
+            throw new RuntimeException("Customer not found");
+        }
+        customerRepo.deleteById(id);
+    }
+    
+    // === ACCOUNT MANAGEMENT ===
+    @Override
+    public List<Account> getAllAccounts() {
+        return accountRepo.findAll();
+    }
+    
+    @Override
+    public List<Account> getAccountsByCustomerId(Long customerId) {
+        return accountRepo.findByCustomerUserId(customerId);
+    }
+    
+    @Override
+    public Account updateAccount(Long accountId, AccountUpdateRequest request) {
+        Account account = accountRepo.findById(accountId)
+            .orElseThrow(() -> new RuntimeException("Account not found"));
+        
+        // Convert string to AccountType enum
+        if (request.getAccountType() != null) {
+            account.setAccountType(AccountType.valueOf(request.getAccountType().toUpperCase()));
+        }
+        
+        if (request.getBalance() != null) {
+            account.setBalance(request.getBalance());
+        }
+        
+        // Note: dailyTransactionLimit, monthlyTransactionLimit, and riskLevel fields don't exist in Account entity
+        // These would need to be added to the Account entity if required
+        
+        // Convert string to AccountStatus enum
+        if (request.getStatus() != null) {
+            account.setStatus(AccountStatus.valueOf(request.getStatus().toUpperCase()));
+        }
+        
+        account.setUpdatedAt(java.time.LocalDateTime.now());
+        return accountRepo.save(account);
+    }
+    
+    @Override
+    public void freezeAccount(Long accountId) {
+        Account account = accountRepo.findById(accountId)
+            .orElseThrow(() -> new RuntimeException("Account not found"));
+        account.setStatus(AccountStatus.FROZEN);
+        account.setUpdatedAt(java.time.LocalDateTime.now());
+        accountRepo.save(account);
+    }
+    
+    @Override
+    public void unfreezeAccount(Long accountId) {
+        Account account = accountRepo.findById(accountId)
+            .orElseThrow(() -> new RuntimeException("Account not found"));
+        account.setStatus(AccountStatus.ACTIVE);
+        account.setUpdatedAt(java.time.LocalDateTime.now());
+        accountRepo.save(account);
+    }
+    
+    // === KYC DOCUMENT VERIFICATION MANAGEMENT ===
+    @Override
+    public List<KycDocument> getPendingDocuments() {
+        return kycDocumentRepo.findByStatus(KycStatus.PENDING);
+    }
+    
+    @Override
+    public List<KycDocument> getDocumentsRequiringManualReview() {
+        return kycDocumentRepo.findByRequiresManualReviewTrue();
+    }
+    
+    @Override
+    public KycDocument verifyDocument(Long documentId, Long officerId, String notes, boolean approved) {
+        KycDocument document = kycDocumentRepo.findById(documentId)
+            .orElseThrow(() -> new RuntimeException("Document not found"));
+        
+        ComplianceOfficer officer = complianceOfficerRepo.findById(officerId)
+            .orElseThrow(() -> new RuntimeException("Compliance officer not found"));
+        
+        document.setVerifiedBy(officer);
+        document.setVerificationNotes(notes);
+        document.setVerificationTimestamp(LocalDateTime.now());
+        document.setStatus(approved ? KycStatus.VERIFIED : KycStatus.REJECTED);
+        document.setValidated(approved);
+        document.setRequiresManualReview(false);
+        
+        return kycDocumentRepo.save(document);
+    }
+    
+    @Override
+    public KycDocument rejectDocument(Long documentId, Long officerId, String rejectionReason) {
+        return verifyDocument(documentId, officerId, rejectionReason, false);
     }
 }

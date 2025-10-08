@@ -1,7 +1,5 @@
 package com.tss.aml.service.impl;
 
-import java.util.concurrent.ThreadLocalRandom;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -28,35 +26,35 @@ public class AccountServiceImpl implements AccountService {
 		Customer customer = customerRepository.findById(customerId)
 				.orElseThrow(() -> new UserApiException("Customer not found"));
 
-		Account account = new Account();
-		account.setAccountType(AccountType.valueOf(request.getAccountType()));
-		account.setCurrency(request.getCurrency());
-		account.setBalance(request.getBalance());
-		account.setCustomer(customer);
-		account.setAccountNumber(generateUniqueAccountNumber());
+        Account account = new Account();
+        
+        if(!AccountType.isValid(request.getAccountType())) {
+        	throw new IllegalArgumentException("Invalid account type: "+ request.getAccountType());
+        }
+        account.setAccountType(AccountType.valueOf(request.getAccountType().toUpperCase()));
+       
+        account.setCurrency(request.getCurrency().toUpperCase());
+        
+        account.setBalance(request.getBalance());
+        
+        account.setCustomer(customer);
+        
+        // Set temporary account number to satisfy database NOT NULL constraint
+        account.setAccountNumber("TEMP_" + System.currentTimeMillis());
+        
+        // Save account first to get auto-generated ID
+        Account savedAccount = accountRepository.save(account);
 
-		return accountRepository.save(account);
-	}
+        // Generate proper account number using the saved account ID
+        String generatedAccountNumber = String.format("ACC%05d", savedAccount.getAccountId());
+        savedAccount.setAccountNumber(generatedAccountNumber);
 
-	@Override
-	public Account getAccountByNumber(String accountNumber) {
-		return accountRepository.findByAccountNumber(accountNumber);
-	}
+        // Save again with the proper account number
+        return accountRepository.save(savedAccount);
+    }
 
-	public String generateUniqueAccountNumber() {
-		String accountNumber;
-		boolean exists;
-
-		do {
-			accountNumber = generateRandomAccountNumber();
-			exists = accountRepository.existsByAccountNumber(accountNumber);
-		} while (exists);
-
-		return accountNumber;
-	}
-
-	private String generateRandomAccountNumber() {
-		long number = ThreadLocalRandom.current().nextLong(100000000000L, 1000000000000L); // 12-digit
-		return String.valueOf(number);
-	}
+    @Override
+    public Account getAccountByNumber(String accountNumber) {
+        return accountRepository.findByAccountNumber(accountNumber);
+    }
 }
