@@ -14,15 +14,21 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.tss.aml.dto.request.AccountStatusUpdateRequest;
 import com.tss.aml.dto.request.ComplianceOfficerRequest;
 import com.tss.aml.dto.request.KeywordRequest;
 import com.tss.aml.dto.request.RiskyCountryRequest;
 import com.tss.aml.dto.request.RuleRequest;
+import com.tss.aml.dto.response.DashboardStatsDto;
+import com.tss.aml.entity.AuditLog;
 import com.tss.aml.entity.ComplianceOfficer;
 import com.tss.aml.entity.RiskyCountry;
 import com.tss.aml.entity.Rule;
 import com.tss.aml.entity.SuspiciousKeyword;
+import com.tss.aml.entity.enums.RuleType;
 import com.tss.aml.service.AdminService;
+
+import org.springframework.web.bind.annotation.RequestParam;
 
 @RestController
 @RequestMapping("/api/admin")
@@ -113,5 +119,46 @@ public class AdminController {
     @GetMapping("/countries")
     public ResponseEntity<List<RiskyCountry>> getAllCountries() {
         return ResponseEntity.ok(adminService.getAllRiskyCountries());
+    }
+
+    // === DASHBOARD & STATISTICS ===
+    @GetMapping("/dashboard/stats")
+    public ResponseEntity<DashboardStatsDto> getDashboardStats() {
+        return ResponseEntity.ok(adminService.getDashboardStats());
+    }
+
+    @GetMapping("/alerts/count/customer/{customerId}")
+    public ResponseEntity<Long> getAlertCountByCustomer(@PathVariable Long customerId) {
+        return ResponseEntity.ok(adminService.getAlertCountByCustomerId(customerId));
+    }
+
+    // === AUDIT LOGS ===
+    @GetMapping("/audit-logs")
+    public ResponseEntity<List<AuditLog>> getAllAuditLogs(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "50") int size) {
+        return ResponseEntity.ok(adminService.getAllAuditLogs(page, size));
+    }
+
+    // === CUSTOMER MANAGEMENT ===
+    @PutMapping("/customers/{customerId}/account-status")
+    public ResponseEntity<String> updateCustomerAccountStatus(
+            @PathVariable Long customerId,
+            @RequestBody AccountStatusUpdateRequest request) {
+        adminService.updateCustomerAccountStatus(customerId, request.getStatus(), request.getReason());
+        return ResponseEntity.ok("Account status updated successfully");
+    }
+
+    // === RULES BY TYPE ===
+    @GetMapping("/rules/type/{ruleType}")
+    public ResponseEntity<List<Rule>> getRulesByType(
+            @PathVariable RuleType ruleType) {
+        return ResponseEntity.ok(adminService.getRulesByType(ruleType));
+    }
+
+    // === SYSTEM HEALTH ===
+    @GetMapping("/system/health")
+    public ResponseEntity<String> getSystemHealth() {
+        return ResponseEntity.ok(adminService.getSystemHealthStatus());
     }
 }

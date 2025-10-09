@@ -57,4 +57,10 @@ public class EmailServiceImpl implements EmailService {
             System.err.println("Failed to send welcome email: " + e.getMessage());
         }
     }
+
+	@Override
+	public void sendNotificationEmail(String email, String subject, String message) {
+		// TODO Auto-generated method stub
+		
+	}
 }

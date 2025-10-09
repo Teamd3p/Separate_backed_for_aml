@@ -45,4 +45,35 @@ public class AlertServiceImpl implements AlertService {
 
         return alertRepository.save(alert);
     }
+
+    // New methods for enhanced alert queries
+    @Override
+    public List<Alert> getAlertsByCustomerId(Long customerId) {
+        return alertRepository.findByCustomerUserIdOrderByCreatedAtDesc(customerId);
+    }
+
+    @Override
+    public List<Alert> getAlertsByStatus(AlertStatus status) {
+        return alertRepository.findByStatusOrderByCreatedAtDesc(status);
+    }
+
+    @Override
+    public List<Alert> getAlertsByRiskScoreRange(Integer minRiskScore, Integer maxRiskScore) {
+        return alertRepository.findByRiskScoreBetweenOrderByRiskScoreDesc(minRiskScore, maxRiskScore);
+    }
+
+    @Override
+    public List<Alert> getAlertHistoryByCustomerId(Long customerId) {
+        return alertRepository.findByCustomerUserIdOrderByCreatedAtDesc(customerId);
+    }
+
+    @Override
+    public List<Alert> getAlertHistoryByOfficerId(Long officerId) {
+        return alertRepository.findByAssignedToUserIdOrderByCreatedAtDesc(officerId);
+    }
+
+	@Override
+	public Alert getAlertById(Long alertId) {
+		return alertRepository.findById(alertId).orElse(null);
+	}
 }

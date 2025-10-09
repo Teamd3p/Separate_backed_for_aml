@@ -16,4 +16,7 @@ public interface AuditLogRepository extends JpaRepository<AuditLog, Long> {
     // Non-paginated methods for simple queries
     List<AuditLog> findByUserId(Long userId);
     List<AuditLog> findByAction(AuditAction action);
+    
+    // Method for admin dashboard
+    Page<AuditLog> findAllByOrderByTimestampDesc(Pageable pageable);
 }

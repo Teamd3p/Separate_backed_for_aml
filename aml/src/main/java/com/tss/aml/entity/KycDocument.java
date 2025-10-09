@@ -55,20 +55,8 @@ public class KycDocument {
 	@Column(name = "file_size")
 	private Long fileSize;
 
-	@Column(name = "mime_type")
-	private String mimeType;
-
 	@Column(name = "document_number")
 	private String documentNumber; // Document ID number (manual entry)
-
-	@Column(name = "expiry_date")
-	private LocalDateTime expiryDate;
-
-	@Column(name = "issue_date")
-	private LocalDateTime issueDate;
-
-	@Column(name = "issuing_authority")
-	private String issuingAuthority;
 
 	@Column(name = "verification_notes", length = 1000)
 	private String verificationNotes;
@@ -83,17 +71,11 @@ public class KycDocument {
 	@Column(name = "verification_timestamp")
 	private LocalDateTime verificationTimestamp;
 
-	@Column(name = "confidence_score")
-	private Double confidenceScore; // Document quality score
-
 	@Column(name = "risk_score")
 	private Integer riskScore; // Document risk assessment score
 
 	@Column(name = "is_validated")
 	private boolean isValidated = false;
-
-	@Column(name = "requires_manual_review")
-	private boolean requiresManualReview = true;
 
 	public KycDocument(Customer customer, DocumentType docType, String fileName, String fileUrl) {
 		this.customer = customer;

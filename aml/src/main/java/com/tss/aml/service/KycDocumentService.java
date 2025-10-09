@@ -23,129 +23,123 @@ import com.tss.aml.service.IDocumentVerificationService;
 @Transactional
 public class KycDocumentService {
 
-    @Autowired
-    private KycDocumentRepository kycDocumentRepository;
-    
-    @Autowired
-    private CustomerRepository customerRepository;
-    
-    @Autowired
-    private ComplianceOfficerRepository complianceOfficerRepository;
-    
-    @Autowired
-    private FileStorageService fileStorageService;
-    
-    @Autowired
-    private IDocumentVerificationService documentVerificationService;
+	@Autowired
+	private KycDocumentRepository kycDocumentRepository;
 
-    public KycDocument uploadDocument(Long customerId, DocumentType docType, MultipartFile file) {
-        Customer customer = customerRepository.findById(customerId)
-            .orElseThrow(() -> new RuntimeException("Customer not found"));
+	@Autowired
+	private CustomerRepository customerRepository;
 
-        // Check if document type already exists and is verified
-        Optional<KycDocument> existingDoc = kycDocumentRepository
-            .findByCustomerUserIdAndDocTypeAndStatus(customerId, docType, KycStatus.VERIFIED);
-        
-        if (existingDoc.isPresent()) {
-            throw new RuntimeException("Document type " + docType + " already verified for this customer");
-        }
+	@Autowired
+	private ComplianceOfficerRepository complianceOfficerRepository;
 
-        // Store file
-        String fileUrl = fileStorageService.storeFile(file);
-        
-        // Create KYC document
-        KycDocument kycDocument = new KycDocument();
-        kycDocument.setCustomer(customer);
-        kycDocument.setDocType(docType);
-        kycDocument.setFileName(file.getOriginalFilename());
-        kycDocument.setFileUrl(fileUrl);
-        kycDocument.setFileSize(file.getSize());
-        kycDocument.setMimeType(file.getContentType());
-        kycDocument.setStatus(KycStatus.PENDING);
-        
-        // Perform initial document verification
-      //  documentVerificationService.performInitialVerification(kycDocument, file);
-        
-        return kycDocumentRepository.save(kycDocument);
-    }
+	@Autowired
+	private FileStorageService fileStorageService;
 
-    public KycDocument verifyDocument(Long documentId, Long officerId, KycStatus status, String notes) {
-        KycDocument document = kycDocumentRepository.findById(documentId)
-            .orElseThrow(() -> new RuntimeException("Document not found"));
-            
-        ComplianceOfficer officer = complianceOfficerRepository.findById(officerId)
-            .orElseThrow(() -> new RuntimeException("Compliance officer not found"));
+	@Autowired
+	private IDocumentVerificationService documentVerificationService;
 
-        document.setStatus(status);
-        document.setVerificationNotes(notes);
-        document.setVerifiedBy(officer);
-        document.setVerificationTimestamp(LocalDateTime.now());
-        document.setValidated(status == KycStatus.VERIFIED);
+	public KycDocument uploadDocument(Long customerId, DocumentType docType, MultipartFile file) {
+		Customer customer = customerRepository.findById(customerId)
+				.orElseThrow(() -> new RuntimeException("Customer not found"));
 
-        return kycDocumentRepository.save(document);
-    }
+		// Check if document type already exists and is verified
+		Optional<KycDocument> existingDoc = kycDocumentRepository.findByCustomerUserIdAndDocTypeAndStatus(customerId,
+				docType, KycStatus.VERIFIED);
 
-    public List<KycDocument> getCustomerDocuments(Long customerId) {
-        return kycDocumentRepository.findByCustomerUserId(customerId);
-    }
+		if (existingDoc.isPresent()) {
+			throw new RuntimeException("Document type " + docType + " already verified for this customer");
+		}
 
-    public List<KycDocument> getDocumentsByStatus(KycStatus status) {
-        return kycDocumentRepository.findByStatus(status);
-    }
+		// Store file
+		String fileUrl = fileStorageService.storeFile(file);
 
-    public List<KycDocument> getPendingDocuments() {
-        return kycDocumentRepository.findByStatus(KycStatus.PENDING);
-    }
+		// Create KYC document
+		KycDocument kycDocument = new KycDocument();
+		kycDocument.setCustomer(customer);
+		kycDocument.setDocType(docType);
+		kycDocument.setFileName(file.getOriginalFilename());
+		kycDocument.setFileUrl(fileUrl);
+		kycDocument.setFileSize(file.getSize());
+		kycDocument.setStatus(KycStatus.PENDING);
 
-    public List<KycDocument> getDocumentsRequiringManualReview() {
-        return kycDocumentRepository.findByStatusAndRequiresManualReview(KycStatus.PENDING, true);
-    }
+		// Perform initial document verification
+		// documentVerificationService.performInitialVerification(kycDocument, file);
 
-    public List<KycDocument> getExpiringDocuments(int daysAhead) {
-        LocalDateTime futureDate = LocalDateTime.now().plusDays(daysAhead);
-        return kycDocumentRepository.findExpiringDocuments(futureDate);
-    }
+		return kycDocumentRepository.save(kycDocument);
+	}
 
-    public boolean isCustomerKycComplete(Long customerId) {
-        long verifiedCount = kycDocumentRepository.countVerifiedDocumentsByCustomer(customerId);
-        // Minimum required documents for complete KYC
-        return verifiedCount >= 2; // At least 2 verified documents required
-    }
+	public KycDocument verifyDocument(Long documentId, Long officerId, KycStatus status, String notes) {
+		KycDocument document = kycDocumentRepository.findById(documentId)
+				.orElseThrow(() -> new RuntimeException("Document not found"));
 
-    public List<KycDocument> getHighRiskDocuments(Integer minRiskScore) {
-        return kycDocumentRepository.findHighRiskDocuments(minRiskScore);
-    }
+		ComplianceOfficer officer = complianceOfficerRepository.findById(officerId)
+				.orElseThrow(() -> new RuntimeException("Compliance officer not found"));
 
-    public KycDocument updateDocumentRiskScore(Long documentId, Integer riskScore) {
-        KycDocument document = kycDocumentRepository.findById(documentId)
-            .orElseThrow(() -> new RuntimeException("Document not found"));
-            
-        document.setRiskScore(riskScore);
-        
-        // Auto-flag for manual review if high risk
-        if (riskScore >= 70) {
-            document.setRequiresManualReview(true);
-        }
-        
-        return kycDocumentRepository.save(document);
-    }
+		document.setStatus(status);
+		document.setVerificationNotes(notes);
+		document.setVerifiedBy(officer);
+		document.setVerificationTimestamp(LocalDateTime.now());
+		document.setValidated(status == KycStatus.VERIFIED);
 
-    public void deleteDocument(Long documentId) {
-        KycDocument document = kycDocumentRepository.findById(documentId)
-            .orElseThrow(() -> new RuntimeException("Document not found"));
-            
-        // Delete file from storage
-        fileStorageService.deleteFile(document.getFileUrl());
-        
-        // Delete database record
-        kycDocumentRepository.delete(document);
-    }
+		return kycDocumentRepository.save(document);
+	}
 
-    public List<KycDocument> getDocumentsByDateRange(LocalDateTime startDate, LocalDateTime endDate) {
-        return kycDocumentRepository.findByUploadDateRange(startDate, endDate);
-    }
+	public List<KycDocument> getCustomerDocuments(Long customerId) {
+		return kycDocumentRepository.findByCustomerUserId(customerId);
+	}
 
-    public List<KycDocument> getDocumentsByOfficer(Long officerId) {
-        return kycDocumentRepository.findByVerifiedBy(officerId);
-    }
+	public List<KycDocument> getDocumentsByStatus(KycStatus status) {
+		return kycDocumentRepository.findByStatus(status);
+	}
+
+	public List<KycDocument> getPendingDocuments() {
+		return kycDocumentRepository.findByStatus(KycStatus.PENDING);
+	}
+
+	public List<KycDocument> getDocumentsRequiringManualReview() {
+		return kycDocumentRepository.findByStatusAndRequiresManualReview(KycStatus.PENDING, true);
+	}
+
+	public List<KycDocument> getExpiringDocuments(int daysAhead) {
+		LocalDateTime futureDate = LocalDateTime.now().plusDays(daysAhead);
+		return kycDocumentRepository.findExpiringDocuments(futureDate);
+	}
+
+	public boolean isCustomerKycComplete(Long customerId) {
+		long verifiedCount = kycDocumentRepository.countVerifiedDocumentsByCustomer(customerId);
+		// Minimum required documents for complete KYC
+		return verifiedCount >= 2; // At least 2 verified documents required
+	}
+
+	public List<KycDocument> getHighRiskDocuments(Integer minRiskScore) {
+		return kycDocumentRepository.findHighRiskDocuments(minRiskScore);
+	}
+
+	public KycDocument updateDocumentRiskScore(Long documentId, Integer riskScore) {
+		KycDocument document = kycDocumentRepository.findById(documentId)
+				.orElseThrow(() -> new RuntimeException("Document not found"));
+
+		document.setRiskScore(riskScore);
+
+		return kycDocumentRepository.save(document);
+	}
+
+	public void deleteDocument(Long documentId) {
+		KycDocument document = kycDocumentRepository.findById(documentId)
+				.orElseThrow(() -> new RuntimeException("Document not found"));
+
+		// Delete file from storage
+		fileStorageService.deleteFile(document.getFileUrl());
+
+		// Delete database record
+		kycDocumentRepository.delete(document);
+	}
+
+	public List<KycDocument> getDocumentsByDateRange(LocalDateTime startDate, LocalDateTime endDate) {
+		return kycDocumentRepository.findByUploadDateRange(startDate, endDate);
+	}
+
+	public List<KycDocument> getDocumentsByOfficer(Long officerId) {
+		return kycDocumentRepository.findByVerifiedBy(officerId);
+	}
 }

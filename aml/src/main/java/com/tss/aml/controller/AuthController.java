@@ -36,8 +36,6 @@ public class AuthController {
     @PostMapping("/register")
     public ResponseEntity<AuthResponse> register(@Valid @RequestBody RegisterRequest request, HttpServletRequest httpRequest) {
         String ipAddress = getClientIpAddress(httpRequest);
-        String userAgent = httpRequest.getHeader("User-Agent");
-        
         try {
             AuthResponse response = authService.register(request);
             auditService.logSuccess(AuditAction.REGISTER, AuditResourceType.USER, null, 
@@ -59,8 +57,6 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest request, HttpServletRequest httpRequest) {
         String ipAddress = getClientIpAddress(httpRequest);
-        String userAgent = httpRequest.getHeader("User-Agent");
-        
         try {
             AuthResponse response = authService.login(request);
             auditService.logSuccess(AuditAction.LOGIN, AuditResourceType.USER, null, 

@@ -38,8 +38,6 @@ public class AccountController {
             HttpServletRequest httpRequest) {
         
         String ipAddress = getClientIpAddress(httpRequest);
-        String userAgent = httpRequest.getHeader("User-Agent");
-        
         try {
             Account createdAccount = accountService.createAccount(request, customerId);
             

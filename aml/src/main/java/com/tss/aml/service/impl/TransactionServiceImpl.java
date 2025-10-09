@@ -1,6 +1,7 @@
 package com.tss.aml.service.impl;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -11,6 +12,7 @@ import com.tss.aml.dto.request.DepositRequest;
 import com.tss.aml.dto.request.TransferRequest;
 import com.tss.aml.dto.request.WithdrawalRequest;
 import com.tss.aml.dto.response.CurrencyConversionResult;
+import com.tss.aml.dto.response.TransactionCountDto;
 import com.tss.aml.entity.Account;
 import com.tss.aml.entity.Transaction;
 import com.tss.aml.entity.enums.AuditAction;
@@ -391,5 +393,53 @@ public class TransactionServiceImpl implements TransactionService {
 	// In TransactionServiceImpl.java
 	public TransactionRepository getTransactionRepository() {
 		return transactionRepository;
+	}
+
+	@Override
+	public List<Transaction> getTransactionsByCustomerId(Long customerId) {
+		return transactionRepository.findByCustomerUserIdOrderByCreatedAtDesc(customerId);
+	}
+
+	@Override
+	public List<Transaction> getTransactionsByCustomerIdAndAccountNumber(Long customerId, String accountNumber) {
+		return transactionRepository.findByCustomerUserIdAndAccountNumberOrderByCreatedAtDesc(customerId, accountNumber);
+	}
+
+	@Override
+	public Transaction getTransactionByIdAndCustomerId(Long transactionId, Long customerId) {
+		return transactionRepository.findByTransactionIdAndCustomerUserId(transactionId, customerId);
+	}
+
+	@Override
+	public List<Transaction> getTransactionsByCustomerIdAndStatus(Long customerId, List<TransactionStatus> statuses) {
+		return transactionRepository.findByCustomerUserIdAndStatusInOrderByCreatedAtDesc(customerId, statuses);
+	}
+
+	@Override
+	public TransactionCountDto getTransactionCountsByCustomerId(Long customerId) {
+		List<Transaction> transactions = transactionRepository.findByCustomerUserIdOrderByCreatedAtDesc(customerId);
+		
+		long totalCount = transactions.size();
+		long completedCount = transactions.stream().filter(t -> t.getStatus() == TransactionStatus.COMPLETED).count();
+		long pendingCount = transactions.stream().filter(t -> t.getStatus() == TransactionStatus.PENDING).count();
+		long flaggedCount = transactions.stream().filter(t -> t.getStatus() == TransactionStatus.FLAGGED).count();
+		long blockedCount = transactions.stream().filter(t -> t.getStatus() == TransactionStatus.BLOCKED).count();
+		
+		TransactionCountDto countDto = new TransactionCountDto();
+		countDto.setTotalTransactions(totalCount);
+		countDto.setCompletedTransactions(completedCount);
+		countDto.setPendingTransactions(pendingCount);
+		countDto.setFlaggedTransactions(flaggedCount);
+		countDto.setBlockedTransactions(blockedCount);
+		
+		return countDto;
+	}
+
+	@Override
+	public List<Transaction> getFlaggedTransactionsByCustomerId(Long customerId) {
+		return transactionRepository.findByCustomerUserIdAndStatusInOrderByCreatedAtDesc(
+			customerId, 
+			List.of(TransactionStatus.FLAGGED)
+		);
 	}
 }

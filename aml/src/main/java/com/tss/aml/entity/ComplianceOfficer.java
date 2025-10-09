@@ -10,27 +10,45 @@ import jakarta.validation.constraints.NotNull;
 @Table(name = "compliance_officers")
 public class ComplianceOfficer extends User {
 
-    @NotNull
-    private String firstName;
+	@NotNull
+	private String firstName;
 
-    @NotNull
-    private String lastName;
+	@NotNull
+	private String lastName;
 
-    private String phone;
+	private String phone;
 
-    public ComplianceOfficer() {}
+	public ComplianceOfficer() {
+	}
 
-    public ComplianceOfficer(String email, String passwordHash, String firstName, String lastName, String phone) {
-        super(email, passwordHash, Role.COMPLIANCE_OFFICER);
-        this.firstName = firstName;
-        this.lastName = lastName;
-        this.phone = phone;
-    }
+	public ComplianceOfficer(String email, String passwordHash, String firstName, String lastName, String phone) {
+		super(email, passwordHash, Role.COMPLIANCE_OFFICER);
+		this.firstName = firstName;
+		this.lastName = lastName;
+		this.phone = phone;
+	}
 
-    public String getFirstName() { return firstName; }
-    public void setFirstName(String firstName) { this.firstName = firstName; }
-    public String getLastName() { return lastName; }
-    public void setLastName(String lastName) { this.lastName = lastName; }
-    public String getPhone() { return phone; }
-    public void setPhone(String phone) { this.phone = phone; }
+	public String getFirstName() {
+		return firstName;
+	}
+
+	public void setFirstName(String firstName) {
+		this.firstName = firstName;
+	}
+
+	public String getLastName() {
+		return lastName;
+	}
+
+	public void setLastName(String lastName) {
+		this.lastName = lastName;
+	}
+
+	public String getPhone() {
+		return phone;
+	}
+
+	public void setPhone(String phone) {
+		this.phone = phone;
+	}
 }

@@ -16,6 +16,7 @@ public class AlertResponseDto {
     private AlertStatus status;
     private InvestigationStatus investigationStatus;
     private String assignedToOfficer;
+    private String assignedOfficerName;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
@@ -66,6 +67,9 @@ public class AlertResponseDto {
 
     public String getAssignedToOfficer() { return assignedToOfficer; }
     public void setAssignedToOfficer(String assignedToOfficer) { this.assignedToOfficer = assignedToOfficer; }
+
+    public String getAssignedOfficerName() { return assignedOfficerName; }
+    public void setAssignedOfficerName(String assignedOfficerName) { this.assignedOfficerName = assignedOfficerName; }
 
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }

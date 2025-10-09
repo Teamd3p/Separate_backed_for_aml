@@ -10,7 +10,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.tss.aml.dto.response.ApiResponseDto;
-import com.tss.aml.dto.response.KycDocumentResponseDto;
 import com.tss.aml.dto.response.KycStatusSummaryDto;
 import com.tss.aml.entity.KycDocument;
 import com.tss.aml.service.KycComplianceReportService;

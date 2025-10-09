@@ -7,6 +7,7 @@ import com.tss.aml.dto.request.SarRequest;
 import com.tss.aml.entity.Alert;
 import com.tss.aml.entity.Sar;
 import com.tss.aml.entity.Transaction;
+import com.tss.aml.entity.enums.AlertStatus;
 
 public interface ComplianceOfficerService {
     // Alert Management
@@ -18,7 +19,22 @@ public interface ComplianceOfficerService {
     // Investigation
     Alert takeActionOnAlert(Long alertId, Long officerId, InvestigationActionRequest request);
 
-    // SAR
+	// SAR
     Sar generateSar(Long alertId, Long officerId, SarRequest request);
     Sar submitSar(Long sarId);
+
+    // New methods for enhanced compliance officer controller
+    com.tss.aml.dto.response.OfficerProfileDto getOfficerProfile(Long officerId);
+    com.tss.aml.dto.response.OfficerProfileDto updateOfficerProfile(Long officerId, com.tss.aml.dto.request.OfficerProfileUpdateRequest request);
+    void sendProfileUpdateOtp(String email);
+	void sendOfficerProfileUpdateOtp(String email);
+
+	List<Alert> getAlertHistoryByOfficerId(Long officerId);
+	List<Alert> getAlertHistoryByCustomerId(Long customerId);
+	List<String> getTriggeredRulesForAlert(Long alertId);
+
+	List<Alert> getAlertsByRiskScoreRange(Integer minRiskScore, Integer maxRiskScore);
+	List<Sar> getAllSars();
+
+	List<Alert> getAlertsByStatus(AlertStatus status);
 }

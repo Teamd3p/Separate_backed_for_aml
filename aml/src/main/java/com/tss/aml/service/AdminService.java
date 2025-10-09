@@ -17,45 +17,81 @@ import com.tss.aml.entity.Rule;
 import com.tss.aml.entity.SuspiciousKeyword;
 
 public interface AdminService {
-    // Compliance Officers
-    ComplianceOfficer createComplianceOfficer(ComplianceOfficerRequest request);
-    List<ComplianceOfficer> getAllComplianceOfficers();
-    void deleteComplianceOfficer(Long id);
+	// Compliance Officers
+	ComplianceOfficer createComplianceOfficer(ComplianceOfficerRequest request);
 
-    // Rules
-    Rule createRule(RuleRequest request);
-    Rule updateRule(Long id, RuleRequest request);
-    void deleteRule(Long id);
-    List<Rule> getAllRules();
+	List<ComplianceOfficer> getAllComplianceOfficers();
 
-    // Keywords
-    SuspiciousKeyword createKeyword(KeywordRequest request);
-    SuspiciousKeyword updateKeyword(Long id, KeywordRequest request);
-    void deleteKeyword(Long id);
-    List<SuspiciousKeyword> getAllKeywords();
+	void deleteComplianceOfficer(Long id);
 
-    // Risky Countries
-    RiskyCountry createRiskyCountry(RiskyCountryRequest request);
-    RiskyCountry updateRiskyCountry(String countryCode, RiskyCountryRequest request);
-    void deleteRiskyCountry(String countryCode);
-    List<RiskyCountry> getAllRiskyCountries();
+	// Rules
+	Rule createRule(RuleRequest request);
 
-    // Customer Management
-    List<Customer> getAllCustomers();
-    Customer getCustomerById(Long id);
-    Customer updateCustomer(Long id, CustomerUpdateRequest request);
-    void deleteCustomer(Long id);
+	Rule updateRule(Long id, RuleRequest request);
 
-    // Account Management
-    List<Account> getAllAccounts();
-    List<Account> getAccountsByCustomerId(Long customerId);
-    Account updateAccount(Long accountId, AccountUpdateRequest request);
-    void freezeAccount(Long accountId);
-    void unfreezeAccount(Long accountId);
+	void deleteRule(Long id);
 
-    // KYC Document Verification Management
-    List<KycDocument> getPendingDocuments();
-    List<KycDocument> getDocumentsRequiringManualReview();
-    KycDocument verifyDocument(Long documentId, Long officerId, String notes, boolean approved);
-    KycDocument rejectDocument(Long documentId, Long officerId, String rejectionReason);
+	List<Rule> getAllRules();
+
+	// Keywords
+	SuspiciousKeyword createKeyword(KeywordRequest request);
+
+	SuspiciousKeyword updateKeyword(Long id, KeywordRequest request);
+
+	void deleteKeyword(Long id);
+
+	List<SuspiciousKeyword> getAllKeywords();
+
+	// Risky Countries
+	RiskyCountry createRiskyCountry(RiskyCountryRequest request);
+
+	RiskyCountry updateRiskyCountry(String countryCode, RiskyCountryRequest request);
+
+	void deleteRiskyCountry(String countryCode);
+
+	List<RiskyCountry> getAllRiskyCountries();
+
+	// Customer Management
+	List<Customer> getAllCustomers();
+
+	Customer getCustomerById(Long id);
+
+	Customer updateCustomer(Long id, CustomerUpdateRequest request);
+
+	void deleteCustomer(Long id);
+
+	// Account Management
+	List<Account> getAllAccounts();
+
+	List<Account> getAccountsByCustomerId(Long customerId);
+
+	Account updateAccount(Long accountId, AccountUpdateRequest request);
+
+	void freezeAccount(Long accountId);
+
+	void unfreezeAccount(Long accountId);
+
+	// KYC Document Verification Management
+	List<KycDocument> getPendingDocuments();
+
+	List<KycDocument> getDocumentsRequiringManualReview();
+
+	KycDocument verifyDocument(Long documentId, Long officerId, String notes, boolean approved);
+
+	KycDocument rejectDocument(Long documentId, Long officerId, String rejectionReason);
+
+	// New methods for enhanced admin controller
+	com.tss.aml.dto.response.DashboardStatsDto getDashboardStats();
+
+	Long getAlertCountByCustomerId(Long customerId);
+
+	void updateAdminProfile(String firstName, String lastName);
+
+	String getSystemHealthStatus();
+
+	List<com.tss.aml.entity.AuditLog> getAllAuditLogs(int page, int size);
+
+	void updateCustomerAccountStatus(Long customerId, com.tss.aml.entity.enums.AccountStatus status, String reason);
+
+	List<com.tss.aml.entity.Rule> getRulesByType(com.tss.aml.entity.enums.RuleType ruleType);
 }

@@ -22,279 +22,329 @@ import com.tss.aml.repository.KycDocumentRepository;
 @Service
 public class KycComplianceReportService {
 
-    @Autowired
-    private KycDocumentRepository kycDocumentRepository;
-    
-    @Autowired
-    private CustomerRepository customerRepository;
-    
-    @Autowired
-    private AlertRepository alertRepository;
-    
-    @Autowired
-    private KycRuleEvaluator kycRuleEvaluator;
+	@Autowired
+	private KycDocumentRepository kycDocumentRepository;
 
-    public List<KycStatusSummaryDto> getAllCustomersKycStatus() {
-        List<Customer> customers = customerRepository.findAll();
-        
-        return customers.stream().map(customer -> {
-            List<KycDocument> documents = kycDocumentRepository.findByCustomerUserId(customer.getUserId());
-            boolean isKycComplete = isCustomerKycComplete(customer.getUserId());
-            
-            KycStatusSummaryDto summary = new KycStatusSummaryDto();
-            summary.setCustomerId(customer.getUserId());
-            summary.setCustomerName(customer.getFirstName() + " " + customer.getLastName());
-            summary.setKycComplete(isKycComplete);
-            summary.setTotalDocuments(documents.size());
-            summary.setVerifiedDocuments((int) documents.stream().filter(d -> d.getStatus() == KycStatus.VERIFIED).count());
-            summary.setPendingDocuments((int) documents.stream().filter(d -> d.getStatus() == KycStatus.PENDING).count());
-            summary.setRejectedDocuments((int) documents.stream().filter(d -> d.getStatus() == KycStatus.REJECTED).count());
-            summary.setHighRiskDocuments((int) documents.stream().filter(d -> d.getRiskScore() != null && d.getRiskScore() >= 70).count());
-            summary.setOverallKycStatus(determineOverallKycStatus(documents, isKycComplete));
-            
-            return summary;
-        }).collect(Collectors.toList());
-    }
+	@Autowired
+	private CustomerRepository customerRepository;
 
-    public KycRuleEvaluator.KycComplianceReport getDetailedComplianceReport(Long customerId) {
-        return kycRuleEvaluator.generateKycComplianceReport(customerId);
-    }
+	@Autowired
+	private AlertRepository alertRepository;
 
-    public KycComplianceDashboard getComplianceDashboard() {
-        List<KycDocument> allDocuments = kycDocumentRepository.findAll();
-        List<Customer> allCustomers = customerRepository.findAll();
-        
-        KycComplianceDashboard dashboard = new KycComplianceDashboard();
-        
-        // Overall statistics
-        dashboard.setTotalCustomers(allCustomers.size());
-        dashboard.setTotalDocuments(allDocuments.size());
-        
-        // KYC completion statistics
-        long completeKycCustomers = allCustomers.stream()
-            .filter(customer -> isCustomerKycComplete(customer.getUserId()))
-            .count();
-        dashboard.setCompleteKycCustomers((int) completeKycCustomers);
-        dashboard.setIncompleteKycCustomers((int) (allCustomers.size() - completeKycCustomers));
-        
-        // Document status breakdown
-        Map<KycStatus, Long> statusCounts = allDocuments.stream()
-            .collect(Collectors.groupingBy(KycDocument::getStatus, Collectors.counting()));
-        
-        dashboard.setPendingDocuments(statusCounts.getOrDefault(KycStatus.PENDING, 0L).intValue());
-        dashboard.setVerifiedDocuments(statusCounts.getOrDefault(KycStatus.VERIFIED, 0L).intValue());
-        dashboard.setRejectedDocuments(statusCounts.getOrDefault(KycStatus.REJECTED, 0L).intValue());
-        dashboard.setExpiredDocuments(statusCounts.getOrDefault(KycStatus.EXPIRED, 0L).intValue());
-        
-        // High-risk documents
-        int highRiskDocs = (int) allDocuments.stream()
-            .filter(d -> d.getRiskScore() != null && d.getRiskScore() >= 70)
-            .count();
-        dashboard.setHighRiskDocuments(highRiskDocs);
-        
-        // Documents requiring manual review
-        int manualReviewDocs = (int) allDocuments.stream()
-            .filter(KycDocument::isRequiresManualReview)
-            .count();
-        dashboard.setDocumentsRequiringManualReview(manualReviewDocs);
-        
-        // Expiring documents (next 30 days)
-        LocalDateTime thirtyDaysFromNow = LocalDateTime.now().plusDays(30);
-        int expiringDocs = (int) allDocuments.stream()
-            .filter(d -> d.getExpiryDate() != null && 
-                        d.getExpiryDate().isBefore(thirtyDaysFromNow) && 
-                        d.getExpiryDate().isAfter(LocalDateTime.now()) &&
-                        d.getStatus() == KycStatus.VERIFIED)
-            .count();
-        dashboard.setExpiringDocuments(expiringDocs);
-        
-        // KYC-related alerts
-        List<Alert> kycAlerts = alertRepository.findAll().stream()
-            .filter(alert -> alert.getRuleTriggered() != null && 
-                           alert.getRuleTriggered().contains("KYC"))
-            .collect(Collectors.toList());
-        
-        dashboard.setKycRelatedAlerts(kycAlerts.size());
-        dashboard.setOpenKycAlerts((int) kycAlerts.stream()
-            .filter(alert -> alert.getStatus() == AlertStatus.OPEN)
-            .count());
-        
-        // Document type distribution
-        Map<DocumentType, Long> docTypeCounts = allDocuments.stream()
-            .collect(Collectors.groupingBy(KycDocument::getDocType, Collectors.counting()));
-        dashboard.setDocumentTypeDistribution(docTypeCounts);
-        
-        // Compliance score calculation
-        double complianceScore = calculateOverallComplianceScore(dashboard);
-        dashboard.setOverallComplianceScore(complianceScore);
-        
-        return dashboard;
-    }
+	@Autowired
+	private KycRuleEvaluator kycRuleEvaluator;
 
-    public List<KycDocument> getDocumentsNeedingAttention() {
-        LocalDateTime thirtyDaysFromNow = LocalDateTime.now().plusDays(30);
-        LocalDateTime sevenDaysAgo = LocalDateTime.now().minusDays(7);
-        
-        return kycDocumentRepository.findAll().stream()
-            .filter(doc -> 
-                // High risk documents
-                (doc.getRiskScore() != null && doc.getRiskScore() >= 70) ||
-                // Documents requiring manual review
-                doc.isRequiresManualReview() ||
-                // Expiring soon
-                (doc.getExpiryDate() != null && doc.getExpiryDate().isBefore(thirtyDaysFromNow) && 
-                 doc.getExpiryDate().isAfter(LocalDateTime.now()) && doc.getStatus() == KycStatus.VERIFIED) ||
-                // Old pending documents
-                (doc.getStatus() == KycStatus.PENDING && doc.getUploadTimestamp().isBefore(sevenDaysAgo))
-            )
-            .collect(Collectors.toList());
-    }
+	public List<KycStatusSummaryDto> getAllCustomersKycStatus() {
+		List<Customer> customers = customerRepository.findAll();
 
-    private boolean isCustomerKycComplete(Long customerId) {
-        List<KycDocument> documents = kycDocumentRepository.findByCustomerUserId(customerId);
-        
-        long verifiedCount = documents.stream()
-            .filter(doc -> doc.getStatus() == KycStatus.VERIFIED)
-            .count();
-        
-        // Check if customer has required document types
-        List<DocumentType> verifiedTypes = documents.stream()
-            .filter(doc -> doc.getStatus() == KycStatus.VERIFIED)
-            .map(KycDocument::getDocType)
-            .distinct()
-            .collect(Collectors.toList());
-        
-        // Minimum requirements: At least 2 verified documents including PAN and one ID proof
-        boolean hasPan = verifiedTypes.contains(DocumentType.PAN);
-        boolean hasIdProof = verifiedTypes.stream()
-            .anyMatch(type -> type == DocumentType.AADHAAR || type == DocumentType.PASSPORT || 
-                             type == DocumentType.DRIVING_LICENSE || type == DocumentType.VOTER_ID);
-        
-        return verifiedCount >= 2 && hasPan && hasIdProof;
-    }
+		return customers.stream().map(customer -> {
+			List<KycDocument> documents = kycDocumentRepository.findByCustomerUserId(customer.getUserId());
+			boolean isKycComplete = isCustomerKycComplete(customer.getUserId());
 
-    private String determineOverallKycStatus(List<KycDocument> documents, boolean isComplete) {
-        if (isComplete) {
-            return "COMPLETE";
-        }
-        
-        boolean hasRejected = documents.stream().anyMatch(d -> d.getStatus() == KycStatus.REJECTED);
-        boolean hasExpired = documents.stream().anyMatch(d -> d.getStatus() == KycStatus.EXPIRED);
-        boolean hasPending = documents.stream().anyMatch(d -> d.getStatus() == KycStatus.PENDING);
-        
-        if (hasRejected) {
-            return "REJECTED";
-        } else if (hasExpired) {
-            return "EXPIRED";
-        } else if (hasPending) {
-            return "PENDING";
-        } else {
-            return "INCOMPLETE";
-        }
-    }
+			KycStatusSummaryDto summary = new KycStatusSummaryDto();
+			summary.setCustomerId(customer.getUserId());
+			summary.setCustomerName(customer.getFirstName() + " " + customer.getLastName());
+			summary.setKycComplete(isKycComplete);
+			summary.setTotalDocuments(documents.size());
+			summary.setVerifiedDocuments(
+					(int) documents.stream().filter(d -> d.getStatus() == KycStatus.VERIFIED).count());
+			summary.setPendingDocuments(
+					(int) documents.stream().filter(d -> d.getStatus() == KycStatus.PENDING).count());
+			summary.setRejectedDocuments(
+					(int) documents.stream().filter(d -> d.getStatus() == KycStatus.REJECTED).count());
+			summary.setHighRiskDocuments(
+					(int) documents.stream().filter(d -> d.getRiskScore() != null && d.getRiskScore() >= 70).count());
+			summary.setOverallKycStatus(determineOverallKycStatus(documents, isKycComplete));
 
-    private double calculateOverallComplianceScore(KycComplianceDashboard dashboard) {
-        if (dashboard.getTotalCustomers() == 0) {
-            return 0.0;
-        }
-        
-        double score = 0.0;
-        
-        // Base score from KYC completion rate
-        double completionRate = (double) dashboard.getCompleteKycCustomers() / dashboard.getTotalCustomers();
-        score += completionRate * 60; // 60% weight for completion
-        
-        // Penalty for high-risk documents
-        if (dashboard.getTotalDocuments() > 0) {
-            double highRiskRate = (double) dashboard.getHighRiskDocuments() / dashboard.getTotalDocuments();
-            score -= highRiskRate * 20; // Penalty for high-risk documents
-        }
-        
-        // Penalty for rejected documents
-        if (dashboard.getTotalDocuments() > 0) {
-            double rejectedRate = (double) dashboard.getRejectedDocuments() / dashboard.getTotalDocuments();
-            score -= rejectedRate * 15; // Penalty for rejected documents
-        }
-        
-        // Bonus for low pending documents
-        if (dashboard.getTotalDocuments() > 0) {
-            double pendingRate = (double) dashboard.getPendingDocuments() / dashboard.getTotalDocuments();
-            if (pendingRate < 0.1) { // Less than 10% pending
-                score += 10;
-            }
-        }
-        
-        // Penalty for documents requiring manual review
-        if (dashboard.getTotalDocuments() > 0) {
-            double manualReviewRate = (double) dashboard.getDocumentsRequiringManualReview() / dashboard.getTotalDocuments();
-            score -= manualReviewRate * 10;
-        }
-        
-        return Math.max(0.0, Math.min(100.0, score));
-    }
+			return summary;
+		}).collect(Collectors.toList());
+	}
 
-    // Inner class for dashboard data
-    public static class KycComplianceDashboard {
-        private int totalCustomers;
-        private int completeKycCustomers;
-        private int incompleteKycCustomers;
-        private int totalDocuments;
-        private int pendingDocuments;
-        private int verifiedDocuments;
-        private int rejectedDocuments;
-        private int expiredDocuments;
-        private int highRiskDocuments;
-        private int documentsRequiringManualReview;
-        private int expiringDocuments;
-        private int kycRelatedAlerts;
-        private int openKycAlerts;
-        private Map<DocumentType, Long> documentTypeDistribution;
-        private double overallComplianceScore;
-        
-        // Getters and setters
-        public int getTotalCustomers() { return totalCustomers; }
-        public void setTotalCustomers(int totalCustomers) { this.totalCustomers = totalCustomers; }
-        
-        public int getCompleteKycCustomers() { return completeKycCustomers; }
-        public void setCompleteKycCustomers(int completeKycCustomers) { this.completeKycCustomers = completeKycCustomers; }
-        
-        public int getIncompleteKycCustomers() { return incompleteKycCustomers; }
-        public void setIncompleteKycCustomers(int incompleteKycCustomers) { this.incompleteKycCustomers = incompleteKycCustomers; }
-        
-        public int getTotalDocuments() { return totalDocuments; }
-        public void setTotalDocuments(int totalDocuments) { this.totalDocuments = totalDocuments; }
-        
-        public int getPendingDocuments() { return pendingDocuments; }
-        public void setPendingDocuments(int pendingDocuments) { this.pendingDocuments = pendingDocuments; }
-        
-        public int getVerifiedDocuments() { return verifiedDocuments; }
-        public void setVerifiedDocuments(int verifiedDocuments) { this.verifiedDocuments = verifiedDocuments; }
-        
-        public int getRejectedDocuments() { return rejectedDocuments; }
-        public void setRejectedDocuments(int rejectedDocuments) { this.rejectedDocuments = rejectedDocuments; }
-        
-        public int getExpiredDocuments() { return expiredDocuments; }
-        public void setExpiredDocuments(int expiredDocuments) { this.expiredDocuments = expiredDocuments; }
-        
-        public int getHighRiskDocuments() { return highRiskDocuments; }
-        public void setHighRiskDocuments(int highRiskDocuments) { this.highRiskDocuments = highRiskDocuments; }
-        
-        public int getDocumentsRequiringManualReview() { return documentsRequiringManualReview; }
-        public void setDocumentsRequiringManualReview(int documentsRequiringManualReview) { this.documentsRequiringManualReview = documentsRequiringManualReview; }
-        
-        public int getExpiringDocuments() { return expiringDocuments; }
-        public void setExpiringDocuments(int expiringDocuments) { this.expiringDocuments = expiringDocuments; }
-        
-        public int getKycRelatedAlerts() { return kycRelatedAlerts; }
-        public void setKycRelatedAlerts(int kycRelatedAlerts) { this.kycRelatedAlerts = kycRelatedAlerts; }
-        
-        public int getOpenKycAlerts() { return openKycAlerts; }
-        public void setOpenKycAlerts(int openKycAlerts) { this.openKycAlerts = openKycAlerts; }
-        
-        public Map<DocumentType, Long> getDocumentTypeDistribution() { return documentTypeDistribution; }
-        public void setDocumentTypeDistribution(Map<DocumentType, Long> documentTypeDistribution) { this.documentTypeDistribution = documentTypeDistribution; }
-        
-        public double getOverallComplianceScore() { return overallComplianceScore; }
-        public void setOverallComplianceScore(double overallComplianceScore) { this.overallComplianceScore = overallComplianceScore; }
-    }
+	public KycRuleEvaluator.KycComplianceReport getDetailedComplianceReport(Long customerId) {
+		return kycRuleEvaluator.generateKycComplianceReport(customerId);
+	}
+
+	public KycComplianceDashboard getComplianceDashboard() {
+		List<KycDocument> allDocuments = kycDocumentRepository.findAll();
+		List<Customer> allCustomers = customerRepository.findAll();
+
+		KycComplianceDashboard dashboard = new KycComplianceDashboard();
+
+		// Overall statistics
+		dashboard.setTotalCustomers(allCustomers.size());
+		dashboard.setTotalDocuments(allDocuments.size());
+
+		// KYC completion statistics
+		long completeKycCustomers = allCustomers.stream()
+				.filter(customer -> isCustomerKycComplete(customer.getUserId())).count();
+		dashboard.setCompleteKycCustomers((int) completeKycCustomers);
+		dashboard.setIncompleteKycCustomers((int) (allCustomers.size() - completeKycCustomers));
+
+		// Document status breakdown
+		Map<KycStatus, Long> statusCounts = allDocuments.stream()
+				.collect(Collectors.groupingBy(KycDocument::getStatus, Collectors.counting()));
+
+		dashboard.setPendingDocuments(statusCounts.getOrDefault(KycStatus.PENDING, 0L).intValue());
+		dashboard.setVerifiedDocuments(statusCounts.getOrDefault(KycStatus.VERIFIED, 0L).intValue());
+		dashboard.setRejectedDocuments(statusCounts.getOrDefault(KycStatus.REJECTED, 0L).intValue());
+		dashboard.setExpiredDocuments(statusCounts.getOrDefault(KycStatus.EXPIRED, 0L).intValue());
+
+		// High-risk documents
+		int highRiskDocs = (int) allDocuments.stream().filter(d -> d.getRiskScore() != null && d.getRiskScore() >= 70)
+				.count();
+		dashboard.setHighRiskDocuments(highRiskDocs);
+
+		// KYC-related alerts
+		List<Alert> kycAlerts = alertRepository.findAll().stream()
+				.filter(alert -> alert.getRuleTriggered() != null && alert.getRuleTriggered().contains("KYC"))
+				.collect(Collectors.toList());
+
+		dashboard.setKycRelatedAlerts(kycAlerts.size());
+		dashboard.setOpenKycAlerts(
+				(int) kycAlerts.stream().filter(alert -> alert.getStatus() == AlertStatus.OPEN).count());
+
+		// Document type distribution
+		Map<DocumentType, Long> docTypeCounts = allDocuments.stream()
+				.collect(Collectors.groupingBy(KycDocument::getDocType, Collectors.counting()));
+		dashboard.setDocumentTypeDistribution(docTypeCounts);
+
+		// Compliance score calculation
+		double complianceScore = calculateOverallComplianceScore(dashboard);
+		dashboard.setOverallComplianceScore(complianceScore);
+
+		return dashboard;
+	}
+
+	public List<KycDocument> getDocumentsNeedingAttention() {
+		LocalDateTime thirtyDaysFromNow = LocalDateTime.now().plusDays(30);
+		LocalDateTime sevenDaysAgo = LocalDateTime.now().minusDays(7);
+
+		return kycDocumentRepository.findAll().stream().filter(doc ->
+		// High risk documents
+		(doc.getRiskScore() != null && doc.getRiskScore() >= 70) ||
+		// Documents requiring manual review
+
+				(doc.getStatus() == KycStatus.PENDING && doc.getUploadTimestamp().isBefore(sevenDaysAgo)))
+				.collect(Collectors.toList());
+	}
+
+	private boolean isCustomerKycComplete(Long customerId) {
+		List<KycDocument> documents = kycDocumentRepository.findByCustomerUserId(customerId);
+
+		long verifiedCount = documents.stream().filter(doc -> doc.getStatus() == KycStatus.VERIFIED).count();
+
+		// Check if customer has required document types
+		List<DocumentType> verifiedTypes = documents.stream().filter(doc -> doc.getStatus() == KycStatus.VERIFIED)
+				.map(KycDocument::getDocType).distinct().collect(Collectors.toList());
+
+		// Minimum requirements: At least 2 verified documents including PAN and one ID
+		// proof
+		boolean hasPan = verifiedTypes.contains(DocumentType.PAN);
+		boolean hasIdProof = verifiedTypes.stream()
+				.anyMatch(type -> type == DocumentType.AADHAAR || type == DocumentType.PASSPORT
+						|| type == DocumentType.DRIVING_LICENSE || type == DocumentType.VOTER_ID);
+
+		return verifiedCount >= 2 && hasPan && hasIdProof;
+	}
+
+	private String determineOverallKycStatus(List<KycDocument> documents, boolean isComplete) {
+		if (isComplete) {
+			return "COMPLETE";
+		}
+
+		boolean hasRejected = documents.stream().anyMatch(d -> d.getStatus() == KycStatus.REJECTED);
+		boolean hasExpired = documents.stream().anyMatch(d -> d.getStatus() == KycStatus.EXPIRED);
+		boolean hasPending = documents.stream().anyMatch(d -> d.getStatus() == KycStatus.PENDING);
+
+		if (hasRejected) {
+			return "REJECTED";
+		} else if (hasExpired) {
+			return "EXPIRED";
+		} else if (hasPending) {
+			return "PENDING";
+		} else {
+			return "INCOMPLETE";
+		}
+	}
+
+	private double calculateOverallComplianceScore(KycComplianceDashboard dashboard) {
+		if (dashboard.getTotalCustomers() == 0) {
+			return 0.0;
+		}
+
+		double score = 0.0;
+
+		// Base score from KYC completion rate
+		double completionRate = (double) dashboard.getCompleteKycCustomers() / dashboard.getTotalCustomers();
+		score += completionRate * 60; // 60% weight for completion
+
+		// Penalty for high-risk documents
+		if (dashboard.getTotalDocuments() > 0) {
+			double highRiskRate = (double) dashboard.getHighRiskDocuments() / dashboard.getTotalDocuments();
+			score -= highRiskRate * 20; // Penalty for high-risk documents
+		}
+
+		// Penalty for rejected documents
+		if (dashboard.getTotalDocuments() > 0) {
+			double rejectedRate = (double) dashboard.getRejectedDocuments() / dashboard.getTotalDocuments();
+			score -= rejectedRate * 15; // Penalty for rejected documents
+		}
+
+		// Bonus for low pending documents
+		if (dashboard.getTotalDocuments() > 0) {
+			double pendingRate = (double) dashboard.getPendingDocuments() / dashboard.getTotalDocuments();
+			if (pendingRate < 0.1) { // Less than 10% pending
+				score += 10;
+			}
+		}
+
+		// Penalty for documents requiring manual review
+		if (dashboard.getTotalDocuments() > 0) {
+			double manualReviewRate = (double) dashboard.getDocumentsRequiringManualReview()
+					/ dashboard.getTotalDocuments();
+			score -= manualReviewRate * 10;
+		}
+
+		return Math.max(0.0, Math.min(100.0, score));
+	}
+
+	// Inner class for dashboard data
+	public static class KycComplianceDashboard {
+		private int totalCustomers;
+		private int completeKycCustomers;
+		private int incompleteKycCustomers;
+		private int totalDocuments;
+		private int pendingDocuments;
+		private int verifiedDocuments;
+		private int rejectedDocuments;
+		private int expiredDocuments;
+		private int highRiskDocuments;
+		private int documentsRequiringManualReview;
+		private int expiringDocuments;
+		private int kycRelatedAlerts;
+		private int openKycAlerts;
+		private Map<DocumentType, Long> documentTypeDistribution;
+		private double overallComplianceScore;
+
+		// Getters and setters
+		public int getTotalCustomers() {
+			return totalCustomers;
+		}
+
+		public void setTotalCustomers(int totalCustomers) {
+			this.totalCustomers = totalCustomers;
+		}
+
+		public int getCompleteKycCustomers() {
+			return completeKycCustomers;
+		}
+
+		public void setCompleteKycCustomers(int completeKycCustomers) {
+			this.completeKycCustomers = completeKycCustomers;
+		}
+
+		public int getIncompleteKycCustomers() {
+			return incompleteKycCustomers;
+		}
+
+		public void setIncompleteKycCustomers(int incompleteKycCustomers) {
+			this.incompleteKycCustomers = incompleteKycCustomers;
+		}
+
+		public int getTotalDocuments() {
+			return totalDocuments;
+		}
+
+		public void setTotalDocuments(int totalDocuments) {
+			this.totalDocuments = totalDocuments;
+		}
+
+		public int getPendingDocuments() {
+			return pendingDocuments;
+		}
+
+		public void setPendingDocuments(int pendingDocuments) {
+			this.pendingDocuments = pendingDocuments;
+		}
+
+		public int getVerifiedDocuments() {
+			return verifiedDocuments;
+		}
+
+		public void setVerifiedDocuments(int verifiedDocuments) {
+			this.verifiedDocuments = verifiedDocuments;
+		}
+
+		public int getRejectedDocuments() {
+			return rejectedDocuments;
+		}
+
+		public void setRejectedDocuments(int rejectedDocuments) {
+			this.rejectedDocuments = rejectedDocuments;
+		}
+
+		public int getExpiredDocuments() {
+			return expiredDocuments;
+		}
+
+		public void setExpiredDocuments(int expiredDocuments) {
+			this.expiredDocuments = expiredDocuments;
+		}
+
+		public int getHighRiskDocuments() {
+			return highRiskDocuments;
+		}
+
+		public void setHighRiskDocuments(int highRiskDocuments) {
+			this.highRiskDocuments = highRiskDocuments;
+		}
+
+		public int getDocumentsRequiringManualReview() {
+			return documentsRequiringManualReview;
+		}
+
+		public void setDocumentsRequiringManualReview(int documentsRequiringManualReview) {
+			this.documentsRequiringManualReview = documentsRequiringManualReview;
+		}
+
+		public int getExpiringDocuments() {
+			return expiringDocuments;
+		}
+
+		public void setExpiringDocuments(int expiringDocuments) {
+			this.expiringDocuments = expiringDocuments;
+		}
+
+		public int getKycRelatedAlerts() {
+			return kycRelatedAlerts;
+		}
+
+		public void setKycRelatedAlerts(int kycRelatedAlerts) {
+			this.kycRelatedAlerts = kycRelatedAlerts;
+		}
+
+		public int getOpenKycAlerts() {
+			return openKycAlerts;
+		}
+
+		public void setOpenKycAlerts(int openKycAlerts) {
+			this.openKycAlerts = openKycAlerts;
+		}
+
+		public Map<DocumentType, Long> getDocumentTypeDistribution() {
+			return documentTypeDistribution;
+		}
+
+		public void setDocumentTypeDistribution(Map<DocumentType, Long> documentTypeDistribution) {
+			this.documentTypeDistribution = documentTypeDistribution;
+		}
+
+		public double getOverallComplianceScore() {
+			return overallComplianceScore;
+		}
+
+		public void setOverallComplianceScore(double overallComplianceScore) {
+			this.overallComplianceScore = overallComplianceScore;
+		}
+	}
 }

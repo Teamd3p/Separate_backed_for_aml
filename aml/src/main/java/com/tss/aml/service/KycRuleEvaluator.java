@@ -75,7 +75,6 @@ public class KycRuleEvaluator {
 
     private void evaluateExpiredDocumentsRule(Transaction transaction, Customer customer, List<KycDocument> documents) {
         List<KycDocument> expiredDocs = documents.stream()
-            .filter(doc -> doc.getExpiryDate() != null && doc.getExpiryDate().isBefore(LocalDateTime.now()))
             .filter(doc -> doc.getStatus() == KycStatus.VERIFIED)
             .toList();
         

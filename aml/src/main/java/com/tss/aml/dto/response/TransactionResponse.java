@@ -20,6 +20,7 @@ public class TransactionResponse {
     private String counterpartyName;
     private String counterpartyAccount;
     private String countryCode;
+    private Integer riskScore;
 
     // Constructors
     public TransactionResponse() {}
@@ -27,7 +28,7 @@ public class TransactionResponse {
     public TransactionResponse(Long transactionId, String senderAccountNumber, String receiverAccountNumber,
                               BigDecimal amount, String currency, String description, TransactionType transactionType,
                               TransactionStatus status, LocalDateTime timestamp, String counterpartyName,
-                              String counterpartyAccount, String countryCode) {
+                              String counterpartyAccount, String countryCode, Integer riskScore) {
         this.transactionId = transactionId;
         this.senderAccountNumber = senderAccountNumber;
         this.receiverAccountNumber = receiverAccountNumber;
@@ -40,6 +41,7 @@ public class TransactionResponse {
         this.counterpartyName = counterpartyName;
         this.counterpartyAccount = counterpartyAccount;
         this.countryCode = countryCode;
+        this.riskScore = riskScore;
     }
 
     // Getters and Setters
@@ -78,4 +80,7 @@ public class TransactionResponse {
 
     public String getCountryCode() { return countryCode; }
     public void setCountryCode(String countryCode) { this.countryCode = countryCode; }
+
+    public Integer getRiskScore() { return riskScore; }
+    public void setRiskScore(Integer riskScore) { this.riskScore = riskScore; }
 }

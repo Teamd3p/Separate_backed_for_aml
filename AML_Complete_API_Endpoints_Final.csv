@@ -1,0 +1,74 @@
+Module,Controller,HTTP Method,Endpoint,Description,Request DTO,Response DTO,Roles,Status
+Authentication,AuthController,POST,/api/auth/register,Register new user,RegisterRequest,RegisterResponseDto,PUBLIC,Existing
+Authentication,AuthController,POST,/api/auth/login,User login,LoginRequest,LoginResponseDto,PUBLIC,Existing
+Authentication,AuthController,POST,/api/auth/verify-otp,Verify OTP,OtpVerificationRequest,ApiResponseDto,PUBLIC,Existing
+Authentication,AuthController,POST,/api/auth/resend-otp,Resend OTP,ResendOtpRequest,ApiResponseDto,PUBLIC,Existing
+Authentication,AuthController,POST,/api/auth/forgot-password,Forgot password,ForgotPasswordRequest,ApiResponseDto,PUBLIC,Existing
+Authentication,AuthController,POST,/api/auth/reset-password,Reset password,ResetPasswordRequest,ApiResponseDto,PUBLIC,Existing
+Account Management,AccountController,POST,/api/accounts/create,Create new account,AccountCreationRequest,ApiResponseDto,CUSTOMER,Existing
+Account Management,AccountController,GET,/api/accounts/{accountNumber}/balance,Get account balance,None,ApiResponseDto,CUSTOMER,Existing
+Transaction Management,TransactionController,POST,/api/transactions/transfer,Transfer funds,TransferRequest,TransactionResponse,CUSTOMER,Existing
+Transaction Management,TransactionController,POST,/api/transactions/deposit,Deposit funds,DepositRequest,TransactionResponse,CUSTOMER,Existing
+Transaction Management,TransactionController,POST,/api/transactions/withdraw,Withdraw funds,WithdrawalRequest,TransactionResponse,CUSTOMER,Existing
+Transaction Management,TransactionController,GET,/api/transactions/history/{accountNumber},Get transaction history,None,List<TransactionHistoryResponseDto>,CUSTOMER,Existing
+Transaction Management,TransactionController,GET,/api/transactions/{transactionId},Get transaction details,None,TransactionResponse,CUSTOMER,Existing
+Customer Management,CustomerController,GET,/api/customers/transactions,Get customer transactions,None,ApiResponseDto<List<TransactionResponse>>,CUSTOMER,New
+Customer Management,CustomerController,GET,/api/customers/transactions/flagged,Get flagged transactions,None,ApiResponseDto<List<TransactionResponse>>,CUSTOMER,New
+Customer Management,CustomerController,GET,/api/customers/transactions/counts,Get transaction counts,None,ApiResponseDto<TransactionCountDto>,CUSTOMER,New
+Customer Management,CustomerController,GET,/api/customers/alerts,Get customer alerts,None,ApiResponseDto<List<AlertResponseDto>>,CUSTOMER,New
+Customer Management,CustomerController,GET,/api/customers/kyc-documents,Get KYC document history,None,ApiResponseDto<List<KycDocumentDto>>,CUSTOMER,New
+Customer Management,CustomerController,GET,/api/customers/profile,Get customer profile,None,ApiResponseDto<CustomerProfileDto>,CUSTOMER,New
+Customer Management,CustomerController,PUT,/api/customers/profile,Update customer profile,CustomerProfileUpdateRequest,ApiResponseDto<CustomerProfileDto>,CUSTOMER,New
+Customer Management,CustomerController,POST,/api/customers/profile/send-otp,Send profile update OTP,None,ApiResponseDto<String>,CUSTOMER,New
+Customer Management,CustomerController,POST,/api/customers/helpdesk/tickets,Create helpdesk ticket,HelpDeskTicketRequest,ApiResponseDto<HelpDeskTicketDto>,CUSTOMER,New
+Customer Management,CustomerController,GET,/api/customers/helpdesk/tickets,Get customer tickets,None,ApiResponseDto<List<HelpDeskTicketDto>>,CUSTOMER,New
+Customer Management,CustomerController,PUT,/api/customers/helpdesk/tickets/{ticketId},Update ticket description,String,ApiResponseDto<HelpDeskTicketDto>,CUSTOMER,New
+Admin Management,AdminController,POST,/api/admin/officers,Create compliance officer,ComplianceOfficerRequest,ComplianceOfficerResponseDto,ADMIN,Existing
+Admin Management,AdminController,GET,/api/admin/officers,Get all officers,None,List<ComplianceOfficerResponseDto>,ADMIN,Existing
+Admin Management,AdminController,PUT,/api/admin/officers/{officerId},Update officer,ComplianceOfficerRequest,ComplianceOfficerResponseDto,ADMIN,Existing
+Admin Management,AdminController,DELETE,/api/admin/officers/{officerId},Delete officer,None,ApiResponseDto,ADMIN,Existing
+Admin Management,AdminController,POST,/api/admin/rules,Create AML rule,RuleRequest,ApiResponseDto,ADMIN,Existing
+Admin Management,AdminController,GET,/api/admin/rules,Get all rules,None,List<Rule>,ADMIN,Existing
+Admin Management,AdminController,PUT,/api/admin/rules/{ruleId},Update rule,RuleRequest,ApiResponseDto,ADMIN,Existing
+Admin Management,AdminController,DELETE,/api/admin/rules/{ruleId},Delete rule,None,ApiResponseDto,ADMIN,Existing
+Admin Management,AdminController,POST,/api/admin/keywords,Add suspicious keyword,KeywordRequest,ApiResponseDto,ADMIN,Existing
+Admin Management,AdminController,GET,/api/admin/keywords,Get all keywords,None,List<SuspiciousKeyword>,ADMIN,Existing
+Admin Management,AdminController,DELETE,/api/admin/keywords/{keywordId},Delete keyword,None,ApiResponseDto,ADMIN,Existing
+Admin Management,AdminController,POST,/api/admin/risky-countries,Add risky country,RiskyCountryRequest,ApiResponseDto,ADMIN,Existing
+Admin Management,AdminController,GET,/api/admin/risky-countries,Get risky countries,None,List<RiskyCountry>,ADMIN,Existing
+Admin Management,AdminController,DELETE,/api/admin/risky-countries/{countryId},Delete risky country,None,ApiResponseDto,ADMIN,Existing
+Admin Management,AdminController,GET,/api/admin/dashboard/stats,Get dashboard statistics,None,ApiResponseDto<DashboardStatsDto>,ADMIN,New
+Admin Management,AdminController,GET,/api/admin/alerts/count/{customerId},Get alert count by customer,None,ApiResponseDto<Long>,ADMIN,New
+Admin Management,AdminController,GET,/api/admin/audit-logs,Get audit logs,None,ApiResponseDto<List<AuditLog>>,ADMIN,New
+Admin Management,AdminController,PUT,/api/admin/customers/{customerId}/status,Update customer account status,AccountStatusUpdateRequest,ApiResponseDto,ADMIN,New
+Admin Management,AdminController,GET,/api/admin/rules/type/{ruleType},Get rules by type,None,ApiResponseDto<List<Rule>>,ADMIN,New
+Admin Management,AdminController,GET,/api/admin/system/health,Get system health status,None,ApiResponseDto<String>,ADMIN,New
+Admin Management,AdminController,GET,/api/admin/helpdesk/tickets,Get all helpdesk tickets,None,ApiResponseDto<List<HelpDeskTicketDto>>,ADMIN,New
+Admin Management,AdminController,PUT,/api/admin/helpdesk/tickets/{ticketId}/assign,Assign helpdesk ticket,None,ApiResponseDto<HelpDeskTicketDto>,ADMIN,New
+Admin Management,AdminController,PUT,/api/admin/helpdesk/tickets/{ticketId}/resolve,Resolve helpdesk ticket,String,ApiResponseDto<HelpDeskTicketDto>,ADMIN,New
+Admin Management,AdminController,DELETE,/api/admin/helpdesk/tickets/{ticketId},Delete helpdesk ticket,None,ApiResponseDto,ADMIN,New
+Admin Management,AdminController,GET,/api/admin/customers,Get all customers,None,ApiResponseDto<List<Customer>>,ADMIN,New
+Admin Management,AdminController,GET,/api/admin/customers/{customerId},Get customer by ID,None,ApiResponseDto<Customer>,ADMIN,New
+Compliance Management,ComplianceOfficerController,GET,/api/compliance/alerts,Get all alerts,None,List<AlertDTO>,COMPLIANCE_OFFICER,Existing
+Compliance Management,ComplianceOfficerController,POST,/api/compliance/alerts/{alertId}/assign,Assign alert to officer,None,AlertDTO,COMPLIANCE_OFFICER,Existing
+Compliance Management,ComplianceOfficerController,GET,/api/compliance/alerts/{alertId},Get alert details,None,AlertDTO,COMPLIANCE_OFFICER,Existing
+Compliance Management,ComplianceOfficerController,GET,/api/compliance/customers/{customerId}/transactions,Get customer transactions,None,List<TransactionDTO>,COMPLIANCE_OFFICER,Existing
+Compliance Management,ComplianceOfficerController,POST,/api/compliance/alerts/{alertId}/action,Take action on alert,InvestigationActionRequest,AlertDTO,COMPLIANCE_OFFICER,Existing
+Compliance Management,ComplianceOfficerController,POST,/api/compliance/alerts/{alertId}/sar,Generate SAR,SarRequest,SarDTO,COMPLIANCE_OFFICER,Existing
+Compliance Management,ComplianceOfficerController,POST,/api/compliance/sars/{sarId}/submit,Submit SAR,None,SarDTO,COMPLIANCE_OFFICER,Existing
+Compliance Management,ComplianceOfficerController,GET,/api/compliance/alerts/status/{status},Get alerts by status,None,List<AlertResponseDto>,COMPLIANCE_OFFICER,New
+Compliance Management,ComplianceOfficerController,GET,/api/compliance/alerts/risk-score,Get alerts by risk score range,None,List<AlertResponseDto>,COMPLIANCE_OFFICER,New
+Compliance Management,ComplianceOfficerController,GET,/api/compliance/sars,Get all SARs,None,List<SarDTO>,COMPLIANCE_OFFICER,New
+Compliance Management,ComplianceOfficerController,GET,/api/compliance/alerts/{alertId}/rules,Get triggered rules for alert,None,List<String>,COMPLIANCE_OFFICER,New
+Compliance Management,ComplianceOfficerController,GET,/api/compliance/alerts/history/customer/{customerId},Get alert history by customer,None,List<AlertResponseDto>,COMPLIANCE_OFFICER,New
+Compliance Management,ComplianceOfficerController,GET,/api/compliance/alerts/history/officer,Get alert history by officer,None,List<AlertResponseDto>,COMPLIANCE_OFFICER,New
+KYC Management,KycDocumentController,POST,/api/kyc/upload,Upload KYC document,MultipartFile,KycDocumentDto,CUSTOMER,Existing
+KYC Management,KycDocumentController,GET,/api/kyc/customer/{customerId},Get customer documents,None,List<KycDocumentDto>,CUSTOMER,Existing
+KYC Management,KycDocumentController,GET,/api/kyc/customer/{customerId}/status,Get KYC status,None,KycStatusDto,CUSTOMER,Existing
+KYC Management,KycDocumentController,GET,/api/kyc/pending,Get pending documents,None,List<KycDocumentDto>,COMPLIANCE_OFFICER,Existing
+KYC Management,KycDocumentController,POST,/api/kyc/verify,Verify document,KycVerificationRequest,KycDocumentDto,COMPLIANCE_OFFICER,Existing
+KYC Management,KycDocumentController,GET,/api/kyc/manual-review,Get manual review documents,None,List<KycDocumentDto>,COMPLIANCE_OFFICER,Existing
+KYC Management,KycDocumentController,GET,/api/kyc/high-risk,Get high-risk documents,None,List<KycDocumentDto>,COMPLIANCE_OFFICER,Existing
+KYC Management,KycDocumentController,GET,/api/kyc/expiring,Get expiring documents,None,List<KycDocumentDto>,COMPLIANCE_OFFICER,Existing
+KYC Management,KycDocumentController,GET,/api/kyc/compliance/dashboard,Get KYC compliance dashboard,None,KycComplianceDashboardDto,COMPLIANCE_OFFICER,Existing
+KYC Management,KycDocumentController,GET,/api/kyc/compliance/report,Get KYC compliance report,None,KycComplianceReportDto,COMPLIANCE_OFFICER,Existing

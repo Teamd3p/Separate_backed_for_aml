@@ -44,4 +44,6 @@ public interface KycDocumentRepository extends JpaRepository<KycDocument, Long> 
     List<KycDocument> findHighRiskDocuments(@Param("minScore") Integer minScore);
 
 	List<KycDocument> findByRequiresManualReviewTrue();
+
+	Long countByStatus(KycStatus pending);
 }

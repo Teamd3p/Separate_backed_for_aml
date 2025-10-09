@@ -68,6 +68,18 @@ public class AdminServiceImpl implements AdminService {
     
     @Autowired
     private KycDocumentRepository kycDocumentRepo;
+    
+    @Autowired
+    private com.tss.aml.repository.TransactionRepository transactionRepo;
+    
+    @Autowired
+    private com.tss.aml.repository.AlertRepository alertRepo;
+    
+    @Autowired
+    private com.tss.aml.repository.AuditLogRepository auditLogRepo;
+    
+    @Autowired
+    private com.tss.aml.service.AuditService auditService;
 
     private Admin getCurrentAdmin() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
@@ -361,7 +373,7 @@ public class AdminServiceImpl implements AdminService {
         document.setVerificationTimestamp(LocalDateTime.now());
         document.setStatus(approved ? KycStatus.VERIFIED : KycStatus.REJECTED);
         document.setValidated(approved);
-        document.setRequiresManualReview(false);
+       // document.setRequiresManualReview(false);
         
         return kycDocumentRepo.save(document);
     }
@@ -369,5 +381,86 @@ public class AdminServiceImpl implements AdminService {
     @Override
     public KycDocument rejectDocument(Long documentId, Long officerId, String rejectionReason) {
         return verifyDocument(documentId, officerId, rejectionReason, false);
+    }
+
+    // New methods for enhanced admin controller
+    @Override
+    public com.tss.aml.dto.response.DashboardStatsDto getDashboardStats() {
+        com.tss.aml.dto.response.DashboardStatsDto stats = new com.tss.aml.dto.response.DashboardStatsDto();
+        
+        stats.setTotalCustomers(customerRepo.count());
+        stats.setActiveCustomers(customerRepo.countByAccountStatus(AccountStatus.ACTIVE));
+        stats.setTotalTransactions(transactionRepo.count());
+        stats.setPendingAlerts(alertRepo.countByStatus(com.tss.aml.entity.enums.AlertStatus.PENDING));
+        stats.setHighRiskAlerts(alertRepo.countByRiskScoreGreaterThanEqual(85));
+        stats.setTotalComplianceOfficers(complianceOfficerRepo.count());
+        stats.setPendingKycDocuments(kycDocumentRepo.countByStatus(KycStatus.PENDING));
+        stats.setActiveRules(ruleRepo.countByIsActiveTrue());
+        
+        return stats;
+    }
+
+    @Override
+    public Long getAlertCountByCustomerId(Long customerId) {
+        return alertRepo.countByCustomerUserId(customerId);
+    }
+
+    @Override
+    public void updateAdminProfile(String firstName, String lastName) {
+        Admin admin = getCurrentAdmin();
+        if (admin == null) {
+            throw new RuntimeException("Admin not found");
+        }
+        
+        admin.setFirstName(firstName);
+        admin.setLastName(lastName);
+//        admin.setDepartment(department);
+        adminRepo.save(admin);
+    }
+
+    @Override
+    public String getSystemHealthStatus() {
+        // Simple health check - can be expanded
+        try {
+            customerRepo.count();
+            transactionRepo.count();
+            alertRepo.count();
+            return "HEALTHY";
+        } catch (Exception e) {
+            return "UNHEALTHY: " + e.getMessage();
+        }
+    }
+
+    @Override
+    public List<com.tss.aml.entity.AuditLog> getAllAuditLogs(int page, int size) {
+        org.springframework.data.domain.Pageable pageable = org.springframework.data.domain.PageRequest.of(page, size);
+        return auditLogRepo.findAllByOrderByTimestampDesc(pageable).getContent();
+    }
+
+    @Override
+    public void updateCustomerAccountStatus(Long customerId, com.tss.aml.entity.enums.AccountStatus status, String reason) {
+        Account customer = accountRepo.findById(customerId)
+            .orElseThrow(() -> new RuntimeException("Customer not found"));
+        
+        customer.setStatus(status);
+        accountRepo.save(customer);
+        
+        // Log the action
+        auditService.logAction(
+            com.tss.aml.entity.enums.AuditAction.ACCOUNT_STATUS_UPDATE,
+            com.tss.aml.entity.enums.AuditResourceType.CUSTOMER,
+            customerId,
+            getCurrentAdmin().getUserId(),
+            null,
+            "Account status updated to " + status + ". Reason: " + reason,
+            null,
+            null,
+            com.tss.aml.entity.enums.AuditStatus.SUCCESS
+        );
+    }
+
+    @Override
+    public List<com.tss.aml.entity.Rule> getRulesByType(com.tss.aml.entity.enums.RuleType ruleType) {
+        return ruleRepo.findByRuleTypeAndIsActiveTrue(ruleType);
     }
 }
