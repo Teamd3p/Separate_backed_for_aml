@@ -392,7 +392,7 @@ public class AdminServiceImpl implements AdminService {
         stats.setTotalCustomers(customerRepo.count());
         stats.setActiveCustomers(customerRepo.countByStatus(UserStatus.ACTIVE));
         stats.setTotalTransactions(transactionRepo.count());
-        stats.setPendingAlerts(alertRepo.countByStatus(com.tss.aml.entity.enums.AlertStatus.PENDING));
+        stats.setPendingAlerts(alertRepo.countByStatus(com.tss.aml.entity.enums.AlertStatus.OPEN));
         stats.setHighRiskAlerts(alertRepo.countByRiskScoreGreaterThanEqual(85));
         stats.setTotalComplianceOfficers(complianceOfficerRepo.count());
         stats.setPendingKycDocuments(kycDocumentRepo.countByStatus(KycStatus.PENDING));

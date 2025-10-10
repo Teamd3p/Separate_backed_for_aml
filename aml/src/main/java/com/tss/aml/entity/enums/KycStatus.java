@@ -1,5 +1,5 @@
 package com.tss.aml.entity.enums;
 
 public enum KycStatus {
-    PENDING, VERIFIED, REJECTED, EXPIRED
+    PENDING, VERIFIED, REJECTED, EXPIRED, MANUAL_REVIEW
 }

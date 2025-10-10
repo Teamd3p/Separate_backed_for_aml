@@ -25,9 +25,9 @@ public class AlertServiceImpl implements AlertService {
         Alert alert = new Alert();
         alert.setCustomer(transaction.getCustomer());
         alert.setTransaction(transaction);
-        alert.setRuleTriggered(String.join(", ", result.getTriggeredRuleNames()));
-        alert.setRiskScore(result.getTotalRiskScore());
-        alert.setStatus(AlertStatus.PENDING); // Awaiting investigation
+        alert.setRuleTriggered(String.join(", ", result.getTriggeredRules()));
+        alert.setRiskScore(result.getRiskScore());
+        alert.setStatus(AlertStatus.OPEN); // Awaiting investigation
         // assignedTo remains null until assigned by system or admin
 
         return alertRepository.save(alert);
@@ -40,7 +40,7 @@ public class AlertServiceImpl implements AlertService {
         alert.setTransaction(transaction);
         alert.setRuleTriggered(String.join(", ", triggeredRules));
         alert.setRiskScore(riskScore);
-        alert.setStatus(AlertStatus.PENDING); // Awaiting investigation
+        alert.setStatus(AlertStatus.OPEN); // Awaiting investigation
         // assignedTo remains null until assigned by system or admin
 
         return alertRepository.save(alert);

@@ -2,6 +2,7 @@ package com.tss.aml.rule;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,98 +24,90 @@ public class KeywordRuleEvaluator implements RuleEvaluator {
 
 	@Override
 	public boolean supports(String ruleType) {
-		return "KEYWORD".equals(ruleType);
+		return "KEYWORD".equalsIgnoreCase(ruleType);
 	}
 
 	@Override
 	public boolean evaluate(Transaction tx, Rule rule) {
-		String desc = tx.getDescription();
-		if (desc == null || desc.isEmpty()) {
-			logger.debug("✅ KEYWORD PASSED: {} | No description", rule.getName());
-			return false;
+		int scaledRisk = calculateKeywordRisk(tx, rule);
+		boolean triggered = scaledRisk > 0;
+		if (triggered) {
+			logger.warn("⚠️ KEYWORD TRIGGERED: {} | Scaled Risk: {} (ruleImpact={})", rule.getName(), scaledRisk,
+					Optional.ofNullable(rule).map(Rule::getRiskScoreImpact).orElse(0));
+		} else {
+			logger.debug("✅ KEYWORD PASSED: {} | No matches", rule.getName());
 		}
-
-		String lowerDesc = " " + desc.toLowerCase() + " "; // For word boundaries
-		List<SuspiciousKeyword> keywords = keywordRepository.findByIsActiveTrue();
-		int matchedCount = 0;
-		int maxSeverity = 0;
-		List<String> foundKeywords = new ArrayList<>();
-
-		for (SuspiciousKeyword kw : keywords) {
-			String word = kw.getWord().toLowerCase();
-			// Handle multi-word keywords (e.g., "crypto mixer")
-			if (lowerDesc.contains(word)) {
-				matchedCount++;
-				maxSeverity = Math.max(maxSeverity, kw.getSeverity());
-				foundKeywords.add(kw.getWord());
-
-				// Optional: Stop early if severity is critical
-				if (kw.getSeverity() >= 9)
-					break;
-			}
-		}
-
-		if (matchedCount > 0) {
-			logger.warn("⚠️ KEYWORD TRIGGERED: {} | Found {} keywords: {} (Max Severity: {})", rule.getName(),
-					matchedCount, foundKeywords, maxSeverity);
-
-			return true;
-		}
-
-		logger.debug("✅ KEYWORD PASSED: {} | No matches in '{}'", rule.getName(), desc);
-		return false;
+		return triggered;
 	}
 
-	public int calculateKeywordRisk(Transaction transaction, Rule rule) {
-		String desc = transaction.getDescription();
-		if (desc == null || desc.isEmpty()) {
+	/**
+	 * Returns a scaled risk value in range [0 .. rule.getRiskScoreImpact()] - Uses
+	 * normalization of both description and keyword (removes punctuation, lowers
+	 * case) - Matches multi-word phrases reliably
+	 */
+	public int calculateKeywordRisk(Transaction tx, Rule rule) {
+		if (tx == null)
+			return 0;
+		String descRaw = Optional.ofNullable(tx.getDescription()).orElse("").trim();
+		if (descRaw.isEmpty())
+			return 0;
+
+		// Normalise description: keep letters/numbers, replace other chars with single
+		// space
+		String normalizedDesc = (" " + descRaw.toLowerCase().replaceAll("[^\\p{L}\\p{N}]+", " ").trim() + " ");
+
+		List<SuspiciousKeyword> keywords = keywordRepository.findByIsActiveTrue();
+		if (keywords == null || keywords.isEmpty()) {
+			logger.debug("No active suspicious keywords configured.");
 			return 0;
 		}
 
-		String lowerDesc = " " + desc.toLowerCase() + " "; // Word boundary padding
-		List<SuspiciousKeyword> activeKeywords = keywordRepository.findByIsActiveTrue();
-
-		int maxSeverity = 0;
 		int matchCount = 0;
-		boolean hasCriticalKeyword = false;
+		int maxSeverity = 0;
+		List<String> matched = new ArrayList<>();
 
-		for (SuspiciousKeyword kw : activeKeywords) {
-			String word = kw.getWord().toLowerCase();
-			// Handle multi-word phrases (e.g., "crypto mixer")
-			if (lowerDesc.contains(word)) {
+		for (SuspiciousKeyword kw : keywords) {
+			String w = Optional.ofNullable(kw.getWord()).orElse("").trim().toLowerCase();
+			if (w.isEmpty())
+				continue;
+
+			String normalizedKw = (" " + w.replaceAll("[^\\p{L}\\p{N}]+", " ").trim() + " ");
+			if (normalizedDesc.contains(normalizedKw)) {
 				matchCount++;
-				maxSeverity = Math.max(maxSeverity, kw.getSeverity());
-				if (kw.getSeverity() >= 9) {
-					hasCriticalKeyword = true;
-				}
+				matched.add(kw.getWord());
+				Integer sev = kw.getSeverity() == null ? 0 : kw.getSeverity();
+				maxSeverity = Math.max(maxSeverity, sev);
 			}
 		}
 
 		if (matchCount == 0) {
+			logger.debug("Keyword check: no matches for transaction '{}'", descRaw);
 			return 0;
 		}
 
-		// Base score from max severity (scale 1-10 → 50-95)
-		int baseScore = 50 + (maxSeverity * 4); // e.g., severity 10 → 90
+		// Raw severity → 0..100 mapping. (severity 1→10, 10→100)
+		int raw = Math.min(100, Math.max(0, maxSeverity));
 
-		// Boost for multiple matches
-		if (matchCount >= 3) {
-			baseScore += 10;
-		} else if (matchCount == 2) {
-			baseScore += 5;
-		}
+		// small boost for multiple matches
+		if (matchCount == 2)
+			raw = Math.min(100, raw + 5);
+		else if (matchCount >= 3)
+			raw = Math.min(100, raw + 10);
 
-		// Critical keyword override
-		if (hasCriticalKeyword) {
-			baseScore = Math.max(baseScore, 90);
-		}
+		// Scale the 0..100 raw keyword score to the rule's configured impact (so
+		// weighting is consistent)
+		int ruleImpact = (rule != null && rule.getRiskScoreImpact() > 0) ? rule.getRiskScoreImpact() : 10;
+		int scaled = (int) Math.round((raw / 10.0) * ruleImpact);
 
-		// Cap at 100
-		return Math.min(100, baseScore);
+		logger.warn("Keyword matches: {} | matchCount={} | maxSeverity={} | raw={} | scaled={}", matched, matchCount,
+				maxSeverity, raw, scaled);
+
+		return Math.max(0, Math.min(scaled, ruleImpact));
 	}
 
 	@Override
 	public int getRiskScoreImpact(Rule rule) {
-		return rule.getRiskScoreImpact();
+		// Return configured impact (default 100 if absent)
+		return Optional.ofNullable(rule).map(Rule::getRiskScoreImpact).orElse(100);
 	}
 }

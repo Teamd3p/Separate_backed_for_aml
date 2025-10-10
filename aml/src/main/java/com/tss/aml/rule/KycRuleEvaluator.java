@@ -1,4 +1,4 @@
-package com.tss.aml.service;
+package com.tss.aml.rule;
 
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
@@ -19,7 +19,7 @@ import com.tss.aml.repository.AlertRepository;
 import com.tss.aml.repository.KycDocumentRepository;
 
 @Service
-public class KycRuleEvaluator {
+public class KycRuleEvaluator  {
 
     @Autowired
     private KycDocumentRepository kycDocumentRepository;

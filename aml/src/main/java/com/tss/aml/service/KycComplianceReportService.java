@@ -18,6 +18,7 @@ import com.tss.aml.entity.enums.KycStatus;
 import com.tss.aml.repository.AlertRepository;
 import com.tss.aml.repository.CustomerRepository;
 import com.tss.aml.repository.KycDocumentRepository;
+import com.tss.aml.rule.KycRuleEvaluator;
 
 @Service
 public class KycComplianceReportService {

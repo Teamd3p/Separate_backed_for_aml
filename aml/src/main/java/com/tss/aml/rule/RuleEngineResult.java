@@ -1,44 +1,26 @@
 package com.tss.aml.rule;
-
 import java.util.List;
 
 public class RuleEngineResult {
-	private final boolean suspicious;
-	private final int totalRiskScore;
-	private final List<String> triggeredRuleNames;
+    private final boolean suspicious;
+    private final int riskScore;
+    private final List<String> triggeredRules;
 
-	public RuleEngineResult(boolean suspicious, int totalRiskScore, List<String> triggeredRuleNames) {
-		this.suspicious = suspicious;
-		this.totalRiskScore = totalRiskScore;
-		this.triggeredRuleNames = triggeredRuleNames;
-	}
+    private RuleEngineResult(boolean suspicious, int riskScore, List<String> triggeredRules) {
+        this.suspicious = suspicious;
+        this.riskScore = riskScore;
+        this.triggeredRules = triggeredRules;
+    }
 
-	public static RuleEngineResult clean() {
-		return new RuleEngineResult(false, 0, java.util.Collections.emptyList());
-	}
+    public static RuleEngineResult suspicious(int riskScore, List<String> triggeredRules) {
+        return new RuleEngineResult(true, riskScore, triggeredRules);
+    }
 
-	public static RuleEngineResult suspicious(int score, List<String> rules) {
-		return new RuleEngineResult(true, score, rules);
-	}
+    public static RuleEngineResult clean(int riskScore, List<String> triggeredRules) {
+        return new RuleEngineResult(false, riskScore, triggeredRules);
+    }
 
-	// Getters
-	public boolean isSuspicious() {
-		return suspicious;
-	}
-
-	public int getTotalRiskScore() {
-		return totalRiskScore;
-	}
-
-	public List<String> getTriggeredRuleNames() {
-		return triggeredRuleNames;
-	}
-
-	public List<String> getTriggeredRules() {
-		return triggeredRuleNames;
-	}
-
-	public int getRiskScore() {
-		return totalRiskScore;
-	}
+    public boolean isSuspicious() { return suspicious; }
+    public int getRiskScore() { return riskScore; }
+    public List<String> getTriggeredRules() { return triggeredRules; }
 }

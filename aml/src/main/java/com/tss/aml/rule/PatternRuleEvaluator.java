@@ -1,52 +1,55 @@
 package com.tss.aml.rule;
 
-import java.math.BigDecimal;
-import java.time.LocalDateTime;
-import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import com.tss.aml.entity.Rule;
 import com.tss.aml.entity.Transaction;
-import com.tss.aml.repository.TransactionRepository;
+import com.tss.aml.util.ObjectMapperHolder;
+import com.tss.aml.util.RuleUtils;
+
+import java.util.regex.Pattern;
 
 @Component
 public class PatternRuleEvaluator implements RuleEvaluator {
 
-	@Autowired
-	private TransactionRepository transactionRepository;
+	private static final Logger logger = LoggerFactory.getLogger(PatternRuleEvaluator.class);
 
 	@Override
 	public boolean supports(String ruleType) {
-		return "PATTERN".equals(ruleType);
+		return "PATTERN".equalsIgnoreCase(ruleType);
 	}
 
 	@Override
 	public boolean evaluate(Transaction tx, Rule rule) {
 		try {
-			Map<String, Object> cond = com.tss.aml.util.ObjectMapperHolder.readMap(rule.getConditions());
-			BigDecimal belowThreshold = new BigDecimal(cond.get("belowAmount").toString());
-			int minCount = ((Number) cond.get("minTransactions")).intValue();
-			int timeWindowHours = ((Number) cond.get("timeWindowHours")).intValue();
-
-			// Check if this tx is below threshold
-			if (tx.getAmount().compareTo(belowThreshold) >= 0)
+			if (tx == null)
 				return false;
-
-			LocalDateTime cutoff = tx.getTimestamp().minusHours(timeWindowHours);
-			List<BigDecimal> amounts = transactionRepository.findAmountsByCustomerIdAndTimestampAfterAndAmountLessThan(
-					tx.getCustomer().getUserId(), cutoff, belowThreshold);
-
-			return amounts.size() >= minCount;
+			Map<String, Object> cond = ObjectMapperHolder.readMap(rule.getConditions());
+			String regex = RuleUtils.getString(cond, "regex");
+			if (regex == null || regex.trim().isEmpty()) {
+				logger.warn("Skipping PATTERN rule {} due to missing regex", rule.getName());
+				return false;
+			}
+			String text = Optional.ofNullable(tx.getDescription()).orElse("");
+			boolean triggered = Pattern.compile(regex, Pattern.CASE_INSENSITIVE).matcher(text).find();
+			if (triggered)
+				logger.warn("⚠️ PATTERN TRIGGERED: {} | regex={}", rule.getName(), regex);
+			else
+				logger.debug("✅ PATTERN PASSED: {}", rule.getName());
+			return triggered;
 		} catch (Exception e) {
+			logger.error("❌ Error evaluating pattern rule {}: {}", rule.getName(), e.getMessage());
 			return false;
 		}
 	}
 
 	@Override
 	public int getRiskScoreImpact(Rule rule) {
-		return rule.getRiskScoreImpact();
+		return Optional.ofNullable(rule).map(Rule::getRiskScoreImpact).orElse(40);
 	}
 }

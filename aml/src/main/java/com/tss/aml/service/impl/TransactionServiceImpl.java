@@ -37,6 +37,8 @@ import jakarta.transaction.Transactional;
 public class TransactionServiceImpl implements TransactionService {
 
 	private static final Logger logger = LoggerFactory.getLogger(TransactionServiceImpl.class);
+	private static final int BLOCK_THRESHOLD = 90;
+	private static final int FLAG_THRESHOLD = 60;
 
 	@Autowired
 	private TransactionRepository transactionRepository;
@@ -58,11 +60,8 @@ public class TransactionServiceImpl implements TransactionService {
 
 	@Override
 	public Transaction processTransaction(Transaction transaction) {
-		logger.info("🔄 Processing transaction: {} | Amount: {} {} | Type: {}", 
-			transaction.getTransactionId(), 
-			transaction.getAmount(), 
-			transaction.getCurrency(),
-			transaction.getTransactionType());
+		logger.info("🔄 Processing transaction: {} | Amount: {} {} | Type: {}", transaction.getTransactionId(),
+				transaction.getAmount(), transaction.getCurrency(), transaction.getTransactionType());
 
 		// Save transaction first
 		transaction.setStatus(TransactionStatus.PENDING);
@@ -75,36 +74,36 @@ public class TransactionServiceImpl implements TransactionService {
 
 		// Normalize risk score to 0-100 range and set status based on thresholds
 		int normalizedRisk = result.getRiskScore(); // Already normalized in RuleEngineService
-		
+
 		logger.info("📊 Risk assessment complete - Normalized Risk: {}/100", normalizedRisk);
-		
-		if (!result.isSuspicious()) {
-			transaction.setStatus(TransactionStatus.COMPLETED);
-			logger.info("✅ TRANSACTION COMPLETED - Low risk score: {}", normalizedRisk);
-		} else if (result.getTotalRiskScore() >= 85) {
-			transaction.setStatus(TransactionStatus.BLOCKED);
-			logger.warn("🚫 TRANSACTION BLOCKED - High risk score: {}", normalizedRisk);
+
+
+		if (normalizedRisk > BLOCK_THRESHOLD) {
+		    transaction.setStatus(TransactionStatus.BLOCKED);
+		    logger.warn("🚫 TRANSACTION BLOCKED - High risk score: {}", normalizedRisk);
+		} else if (normalizedRisk > FLAG_THRESHOLD) {
+		    transaction.setStatus(TransactionStatus.FLAGGED);
+		    logger.warn("⚠️ TRANSACTION FLAGGED - Medium risk score: {}", normalizedRisk);
 		} else {
-			transaction.setStatus(TransactionStatus.FLAGGED);
-			logger.warn("⚠️ TRANSACTION FLAGGED - Medium risk score: {}", normalizedRisk);
+		    transaction.setStatus(TransactionStatus.COMPLETED);
+		    logger.info("✅ TRANSACTION COMPLETED - Low risk score: {}", normalizedRisk);
 		}
+
 
 		transaction.setRiskScore(normalizedRisk);
 		transaction = transactionRepository.save(transaction);
 
 		// Create alert if suspicious
 		if (result.isSuspicious()) {
-			logger.warn("🚨 Creating alert for suspicious transaction: {} | Triggered rules: {}", 
-				transaction.getTransactionId(), result.getTriggeredRules());
+			logger.warn("🚨 Creating alert for suspicious transaction: {} | Triggered rules: {}",
+					transaction.getTransactionId(), result.getTriggeredRules());
 			alertService.createAlertForTransaction(transaction, result);
 		} else {
 			logger.info("✅ No alert needed - transaction is clean");
 		}
 
-		logger.info("✅ Transaction processing complete: {} | Final Status: {} | Risk Score: {}", 
-			transaction.getTransactionId(), 
-			transaction.getStatus(), 
-			transaction.getRiskScore());
+		logger.info("✅ Transaction processing complete: {} | Final Status: {} | Risk Score: {}",
+				transaction.getTransactionId(), transaction.getStatus(), transaction.getRiskScore());
 
 		return transaction;
 	}
@@ -154,34 +153,29 @@ public class TransactionServiceImpl implements TransactionService {
 			CurrencyConversionResult conversionResult = null;
 			BigDecimal finalAmount = transferRequest.getAmount();
 			BigDecimal totalDeductionFromSender = transferRequest.getAmount();
-			
+
 			if (!senderAccount.getCurrency().equals(receiverAccount.getCurrency())) {
-				logger.info("💱 Cross-currency transfer detected: {} {} → {} {}", 
-					transferRequest.getAmount(), senderAccount.getCurrency(), 
-					"?", receiverAccount.getCurrency());
-				
+				logger.info("💱 Cross-currency transfer detected: {} {} → {} {}", transferRequest.getAmount(),
+						senderAccount.getCurrency(), "?", receiverAccount.getCurrency());
+
 				// Convert from sender currency to receiver currency
-				conversionResult = currencyService.convertCurrency(
-					senderAccount.getCurrency(), 
-					receiverAccount.getCurrency(), 
-					transferRequest.getAmount()
-				);
-				
+				conversionResult = currencyService.convertCurrency(senderAccount.getCurrency(),
+						receiverAccount.getCurrency(), transferRequest.getAmount());
+
 				finalAmount = conversionResult.getNetAmount(); // Amount after conversion fee
 				totalDeductionFromSender = transferRequest.getAmount().add(conversionResult.getConversionFee());
-				
+
 				// Check if sender has sufficient balance including conversion fee
 				if (senderAccount.getBalance().compareTo(totalDeductionFromSender) < 0) {
-					auditService.logFailure(AuditAction.TRANSFER_FUNDS, AuditResourceType.TRANSACTION, null, userId, null,
-							"Insufficient balance for transfer including conversion fee", ipAddress);
-					throw new UserApiException("Insufficient balance for transfer including conversion fee of " + 
-						conversionResult.getConversionFee() + " " + senderAccount.getCurrency());
+					auditService.logFailure(AuditAction.TRANSFER_FUNDS, AuditResourceType.TRANSACTION, null, userId,
+							null, "Insufficient balance for transfer including conversion fee", ipAddress);
+					throw new UserApiException("Insufficient balance for transfer including conversion fee of "
+							+ conversionResult.getConversionFee() + " " + senderAccount.getCurrency());
 				}
-				
-				logger.info("✅ Currency conversion: {} {} = {} {} (Fee: {} {})", 
-					transferRequest.getAmount(), senderAccount.getCurrency(),
-					finalAmount, receiverAccount.getCurrency(),
-					conversionResult.getConversionFee(), senderAccount.getCurrency());
+
+				logger.info("✅ Currency conversion: {} {} = {} {} (Fee: {} {})", transferRequest.getAmount(),
+						senderAccount.getCurrency(), finalAmount, receiverAccount.getCurrency(),
+						conversionResult.getConversionFee(), senderAccount.getCurrency());
 			}
 
 			// Create transaction
@@ -197,7 +191,7 @@ public class TransactionServiceImpl implements TransactionService {
 			transaction.setCounterpartyName(
 					receiverAccount.getCustomer().getFirstName() + " " + receiverAccount.getCustomer().getLastName());
 			transaction.setCounterpartyAccount(receiverAccount.getAccountNumber());
-			
+
 			// Set currency conversion details if applicable
 			if (conversionResult != null) {
 				transaction.setOriginalCurrency(senderAccount.getCurrency());
@@ -418,28 +412,26 @@ public class TransactionServiceImpl implements TransactionService {
 	@Override
 	public TransactionCountDto getTransactionCountsByCustomerId(Long customerId) {
 		List<Transaction> transactions = transactionRepository.findByCustomerUserIdOrderByTimestampDesc(customerId);
-		
+
 		long totalCount = transactions.size();
 		long completedCount = transactions.stream().filter(t -> t.getStatus() == TransactionStatus.COMPLETED).count();
 		long pendingCount = transactions.stream().filter(t -> t.getStatus() == TransactionStatus.PENDING).count();
 		long flaggedCount = transactions.stream().filter(t -> t.getStatus() == TransactionStatus.FLAGGED).count();
 		long blockedCount = transactions.stream().filter(t -> t.getStatus() == TransactionStatus.BLOCKED).count();
-		
+
 		TransactionCountDto countDto = new TransactionCountDto();
 		countDto.setTotalTransactions(totalCount);
 		countDto.setCompletedTransactions(completedCount);
 		countDto.setPendingTransactions(pendingCount);
 		countDto.setFlaggedTransactions(flaggedCount);
 		countDto.setBlockedTransactions(blockedCount);
-		
+
 		return countDto;
 	}
 
 	@Override
 	public List<Transaction> getFlaggedTransactionsByCustomerId(Long customerId) {
-		return transactionRepository.findByCustomerUserIdAndStatusInOrderByTimestampDesc(
-			customerId, 
-			List.of(TransactionStatus.FLAGGED)
-		);
+		return transactionRepository.findByCustomerUserIdAndStatusInOrderByTimestampDesc(customerId,
+				List.of(TransactionStatus.FLAGGED));
 	}
 }

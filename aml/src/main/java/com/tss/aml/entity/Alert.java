@@ -47,7 +47,7 @@ public class Alert {
 
 	@Enumerated(EnumType.STRING)
 	@NotNull
-	private AlertStatus status = AlertStatus.PENDING;
+	private AlertStatus status = AlertStatus.OPEN;
 
 	private LocalDateTime createdAt = LocalDateTime.now();
 
