@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 
 import com.tss.aml.dto.response.CurrencyConversionResult;
 import com.tss.aml.entity.CurrencyExchange;
+import com.tss.aml.entity.enums.RateSource;
 import com.tss.aml.exception.UserApiException;
 import com.tss.aml.repository.CurrencyExchangeRepository;
 import com.tss.aml.service.CurrencyService;
@@ -63,7 +64,7 @@ public class CurrencyServiceImpl implements CurrencyService {
         );
         
         result.setConversionId(UUID.randomUUID().toString());
-        result.setRateSource(exchangeRate.getRateSource());
+        result.setRateSource(exchangeRate.getRateSource().name());
         
         logger.info("✅ Conversion complete: {} {} = {} {} (Fee: {} {})", 
                    amount, fromCurrency, 
@@ -95,7 +96,7 @@ public class CurrencyServiceImpl implements CurrencyService {
             calculated.setConversionFeePercent(reverse.getConversionFeePercent());
             calculated.setMinimumFee(reverse.getMinimumFee());
             calculated.setMaximumFee(reverse.getMaximumFee());
-            calculated.setRateSource("CALCULATED_REVERSE");
+            calculated.setRateSource(RateSource.MANUAL);
             return calculated;
         }
         

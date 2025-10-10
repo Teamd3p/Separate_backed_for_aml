@@ -397,13 +397,13 @@ public class TransactionServiceImpl implements TransactionService {
 
 	@Override
 	public List<Transaction> getTransactionsByCustomerId(Long customerId) {
-		return transactionRepository.findByCustomerUserIdOrderByCreatedAtDesc(customerId);
+		return transactionRepository.findByCustomerUserIdOrderByTimestampDesc(customerId);
 	}
 
-	@Override
-	public List<Transaction> getTransactionsByCustomerIdAndAccountNumber(Long customerId, String accountNumber) {
-		return transactionRepository.findByCustomerUserIdAndAccountNumberOrderByCreatedAtDesc(customerId, accountNumber);
-	}
+//	@Override
+//	public List<Transaction> getTransactionsByCustomerIdAndAccountNumber(Long customerId, String accountNumber) {
+//		return transactionRepository.findByAccountNumber( accountNumber);
+//	}
 
 	@Override
 	public Transaction getTransactionByIdAndCustomerId(Long transactionId, Long customerId) {
@@ -412,12 +412,12 @@ public class TransactionServiceImpl implements TransactionService {
 
 	@Override
 	public List<Transaction> getTransactionsByCustomerIdAndStatus(Long customerId, List<TransactionStatus> statuses) {
-		return transactionRepository.findByCustomerUserIdAndStatusInOrderByCreatedAtDesc(customerId, statuses);
+		return transactionRepository.findByCustomerUserIdAndStatusInOrderByTimestampDesc(customerId, statuses);
 	}
 
 	@Override
 	public TransactionCountDto getTransactionCountsByCustomerId(Long customerId) {
-		List<Transaction> transactions = transactionRepository.findByCustomerUserIdOrderByCreatedAtDesc(customerId);
+		List<Transaction> transactions = transactionRepository.findByCustomerUserIdOrderByTimestampDesc(customerId);
 		
 		long totalCount = transactions.size();
 		long completedCount = transactions.stream().filter(t -> t.getStatus() == TransactionStatus.COMPLETED).count();
@@ -437,7 +437,7 @@ public class TransactionServiceImpl implements TransactionService {
 
 	@Override
 	public List<Transaction> getFlaggedTransactionsByCustomerId(Long customerId) {
-		return transactionRepository.findByCustomerUserIdAndStatusInOrderByCreatedAtDesc(
+		return transactionRepository.findByCustomerUserIdAndStatusInOrderByTimestampDesc(
 			customerId, 
 			List.of(TransactionStatus.FLAGGED)
 		);

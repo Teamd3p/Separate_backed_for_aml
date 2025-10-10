@@ -17,7 +17,7 @@ public interface TransactionService {
     
     // New methods for customer controller
     List<Transaction> getTransactionsByCustomerId(Long customerId);
-    List<Transaction> getTransactionsByCustomerIdAndAccountNumber(Long customerId, String accountNumber);
+//    List<Transaction> getTransactionsByCustomerIdAndAccountNumber(Long customerId, String accountNumber);
     Transaction getTransactionByIdAndCustomerId(Long transactionId, Long customerId);
     List<Transaction> getTransactionsByCustomerIdAndStatus(Long customerId, List<TransactionStatus> statuses);
     TransactionCountDto getTransactionCountsByCustomerId(Long customerId);

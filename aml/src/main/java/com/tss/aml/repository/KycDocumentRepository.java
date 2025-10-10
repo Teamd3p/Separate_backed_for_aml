@@ -43,7 +43,7 @@ public interface KycDocumentRepository extends JpaRepository<KycDocument, Long> 
     @Query("SELECT k FROM KycDocument k WHERE k.riskScore >= :minScore ORDER BY k.riskScore DESC")
     List<KycDocument> findHighRiskDocuments(@Param("minScore") Integer minScore);
 
-	List<KycDocument> findByRequiresManualReviewTrue();
+	List<KycDocument> findByValidatedFalse();
 
 	Long countByStatus(KycStatus pending);
 }

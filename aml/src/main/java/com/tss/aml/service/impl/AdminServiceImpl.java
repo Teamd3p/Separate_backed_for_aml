@@ -26,6 +26,7 @@ import com.tss.aml.entity.Rule;
 import com.tss.aml.entity.SuspiciousKeyword;
 import com.tss.aml.entity.User;
 import com.tss.aml.entity.enums.AccountStatus;
+import com.tss.aml.entity.enums.UserStatus;
 import com.tss.aml.entity.enums.AccountType;
 import com.tss.aml.entity.enums.KycStatus;
 import com.tss.aml.repository.AccountRepository;
@@ -357,7 +358,7 @@ public class AdminServiceImpl implements AdminService {
     
     @Override
     public List<KycDocument> getDocumentsRequiringManualReview() {
-        return kycDocumentRepo.findByRequiresManualReviewTrue();
+        return kycDocumentRepo.findByValidatedFalse();
     }
     
     @Override
@@ -373,7 +374,7 @@ public class AdminServiceImpl implements AdminService {
         document.setVerificationTimestamp(LocalDateTime.now());
         document.setStatus(approved ? KycStatus.VERIFIED : KycStatus.REJECTED);
         document.setValidated(approved);
-       // document.setRequiresManualReview(false);
+        document.setRequiresManualReview(false);
         
         return kycDocumentRepo.save(document);
     }
@@ -389,7 +390,7 @@ public class AdminServiceImpl implements AdminService {
         com.tss.aml.dto.response.DashboardStatsDto stats = new com.tss.aml.dto.response.DashboardStatsDto();
         
         stats.setTotalCustomers(customerRepo.count());
-        stats.setActiveCustomers(customerRepo.countByAccountStatus(AccountStatus.ACTIVE));
+        stats.setActiveCustomers(customerRepo.countByStatus(UserStatus.ACTIVE));
         stats.setTotalTransactions(transactionRepo.count());
         stats.setPendingAlerts(alertRepo.countByStatus(com.tss.aml.entity.enums.AlertStatus.PENDING));
         stats.setHighRiskAlerts(alertRepo.countByRiskScoreGreaterThanEqual(85));
@@ -439,11 +440,15 @@ public class AdminServiceImpl implements AdminService {
 
     @Override
     public void updateCustomerAccountStatus(Long customerId, com.tss.aml.entity.enums.AccountStatus status, String reason) {
-        Account customer = accountRepo.findById(customerId)
-            .orElseThrow(() -> new RuntimeException("Customer not found"));
+        List<Account> accounts = accountRepo.findByCustomerUserId(customerId);
+        if (accounts.isEmpty()) {
+            throw new RuntimeException("No accounts found for customer");
+        }
         
-        customer.setStatus(status);
-        accountRepo.save(customer);
+        for (Account account : accounts) {
+            account.setStatus(status);
+            accountRepo.save(account);
+        }
         
         // Log the action
         auditService.logAction(
@@ -461,6 +466,6 @@ public class AdminServiceImpl implements AdminService {
 
     @Override
     public List<com.tss.aml.entity.Rule> getRulesByType(com.tss.aml.entity.enums.RuleType ruleType) {
-        return ruleRepo.findByRuleTypeAndIsActiveTrue(ruleType);
+        return ruleRepo.findByTypeAndIsActiveTrue(ruleType);
     }
 }

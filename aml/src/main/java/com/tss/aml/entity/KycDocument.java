@@ -71,11 +71,17 @@ public class KycDocument {
 	@Column(name = "verification_timestamp")
 	private LocalDateTime verificationTimestamp;
 
+	@Column(name = "expiry_date")
+	private LocalDateTime expiryDate;
+
 	@Column(name = "risk_score")
 	private Integer riskScore; // Document risk assessment score
 
 	@Column(name = "is_validated")
-	private boolean isValidated = false;
+	private boolean validated = false;
+
+	@Column(name = "requires_manual_review")
+	private boolean requiresManualReview = false;
 
 	public KycDocument(Customer customer, DocumentType docType, String fileName, String fileUrl) {
 		this.customer = customer;

@@ -39,6 +39,6 @@ public class RuleServiceImpl implements RuleService {
 
     @Override
     public List<Rule> getRulesByType(RuleType ruleType) {
-        return ruleRepository.findByRuleTypeAndIsActiveTrue(ruleType);
+        return ruleRepository.findByTypeAndIsActiveTrue(ruleType);
     }
 }

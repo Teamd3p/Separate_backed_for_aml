@@ -13,37 +13,43 @@ import com.tss.aml.entity.enums.TransactionStatus;
 import com.tss.aml.entity.enums.TransactionType;
 
 public interface TransactionRepository extends JpaRepository<Transaction, Long> {
-	long countByCustomerUserIdAndTimestampAfter(Long userId, LocalDateTime timestamp);
 
-	@Query("SELECT t.amount FROM Transaction t WHERE t.customer.userId = :customerId AND t.timestamp > :timestamp AND t.amount < :amount")
-	List<BigDecimal> findAmountsByCustomerIdAndTimestampAfterAndAmountLessThan(@Param("customerId") Long customerId,
-			@Param("timestamp") LocalDateTime timestamp, @Param("amount") BigDecimal amount);
+    // Count transactions for a customer after a given timestamp
+    long countByCustomerUserIdAndTimestampAfter(Long userId, LocalDateTime timestamp);
 
-	@Query("SELECT t FROM Transaction t WHERE t.senderAccount.accountNumber = :senderAccountNumber OR t.receiverAccount.accountNumber = :receiverAccountNumber")
-	List<Transaction> findBySenderAccountAccountNumberOrReceiverAccountAccountNumber(
-			@Param("senderAccountNumber") String senderAccountNumber,
-			@Param("receiverAccountNumber") String receiverAccountNumber);
+    // Find amounts for a customer after timestamp and below a certain amount
+    @Query("SELECT t.amount FROM Transaction t WHERE t.customer.userId = :customerId AND t.timestamp > :timestamp AND t.amount < :amount")
+    List<BigDecimal> findAmountsByCustomerIdAndTimestampAfterAndAmountLessThan(
+            @Param("customerId") Long customerId,
+            @Param("timestamp") LocalDateTime timestamp,
+            @Param("amount") BigDecimal amount);
 
-	List<Transaction> findByCustomerUserId(Long customerId);
+    // Find transactions by sender or receiver account number
+    @Query("SELECT t FROM Transaction t WHERE t.senderAccount.accountNumber = :senderAccountNumber OR t.receiverAccount.accountNumber = :receiverAccountNumber")
+    List<Transaction> findBySenderAccountAccountNumberOrReceiverAccountAccountNumber(
+            @Param("senderAccountNumber") String senderAccountNumber,
+            @Param("receiverAccountNumber") String receiverAccountNumber);
 
-	long countByCustomerUserIdAndTimestampAfterAndTransactionTypeAndAmountGreaterThanEqual(Long userId,
-			LocalDateTime timestamp, TransactionType type, BigDecimal amount);
+    // Find transactions for a customer
+    List<Transaction> findByCustomerUserId(Long customerId);
 
-	// New methods for customer transaction queries
-	List<Transaction> findByCustomerUserIdOrderByCreatedAtDesc(Long customerId);
+    // Count transactions with type and minimum amount
+    long countByCustomerUserIdAndTimestampAfterAndTransactionTypeAndAmountGreaterThanEqual(
+            Long userId, LocalDateTime timestamp, TransactionType type, BigDecimal amount);
 
-//	List<Transaction> findByCustomerUserIdAndAccountNumberOrderByCreatedAtDesc(Long customerId, String accountNumber);
+    // List transactions for a customer ordered by timestamp
+    List<Transaction> findByCustomerUserIdOrderByTimestampDesc(Long customerId);
 
-	Transaction findByTransactionIdAndCustomerUserId(Long transactionId, Long customerId);
+    // Find transaction by transactionId and customer
+    Transaction findByTransactionIdAndCustomerUserId(Long transactionId, Long customerId);
 
-	List<Transaction> findByCustomerUserIdAndStatusInOrderByCreatedAtDesc(Long customerId,
-			List<TransactionStatus> statuses);
+    // Find transactions for a customer filtered by status
+    List<Transaction> findByCustomerUserIdAndStatusInOrderByTimestampDesc(Long customerId, List<TransactionStatus> statuses);
 
-	Long countByCustomerId(Long customerId);
+    // Count transactions for a customer
+    long countByCustomerUserId(Long customerId);
 
-	Long countByCustomerIdAndStatus(Long customerId, TransactionStatus status);
+    // Count transactions for a customer filtered by status
+    long countByCustomerUserIdAndStatus(Long customerId, TransactionStatus status);
 
-	@Query("SELECT t FROM Transaction t WHERE t.customer.userId = :customerId AND (t.senderAccount.accountNumber = :accountNumber OR t.receiverAccount.accountNumber = :accountNumber) ORDER BY t.createdAt DESC")
-	List<Transaction> findByCustomerUserIdAndAccountNumberOrderByCreatedAtDesc(@Param("customerId") Long customerId,
-			@Param("accountNumber") String accountNumber);
 }

@@ -12,6 +12,7 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Service;
 
 import com.tss.aml.entity.CurrencyExchange;
+import com.tss.aml.entity.enums.RateSource;
 import com.tss.aml.repository.CurrencyExchangeRepository;
 
 @Service
@@ -95,7 +96,7 @@ public class CurrencyDataInitializationService implements CommandLineRunner {
         exchange.setMinimumFee(minFee);
         exchange.setMaximumFee(maxFee);
         exchange.setIsActive(true);
-        exchange.setRateSource("MANUAL");
+        exchange.setRateSource(RateSource.MANUAL);
         exchange.setLastUpdated(LocalDateTime.now());
         exchange.setCreatedAt(LocalDateTime.now());
         return exchange;

@@ -11,9 +11,9 @@ import com.tss.aml.entity.enums.RuleType;
 public interface RuleRepository extends JpaRepository<Rule, Long> {
     List<Rule> findByIsActiveTrue();
     
-    Optional<Rule> findByRuleNameAndIsActiveTrue(String ruleName);
+    Optional<Rule> findByNameAndIsActiveTrue(String ruleName);
     
     // New methods for admin dashboard and compliance
     long countByIsActiveTrue();
-    List<Rule> findByRuleTypeAndIsActiveTrue(RuleType ruleType);
+    List<Rule> findByTypeAndIsActiveTrue(RuleType ruleType);
 }
