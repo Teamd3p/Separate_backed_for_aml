@@ -154,7 +154,7 @@ public class AuthServiceImpl implements AuthService {
         customer.setStreet(registerRequest.getStreet());
         customer.setCity(registerRequest.getCity());
         customer.setState(registerRequest.getState());
-        customer.setNation(registerRequest.getNation());
+        customer.setCountry(registerRequest.getNation());
         customer.setPincode(registerRequest.getPincode());
         customer.setStatus(UserStatus.ACTIVE);
         customer.setEmailVerified(true);

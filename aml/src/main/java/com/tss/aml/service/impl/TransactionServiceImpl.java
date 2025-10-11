@@ -135,20 +135,6 @@ public class TransactionServiceImpl implements TransactionService {
 				throw new UserApiException("Receiver account not found");
 			}
 
-			// Check if sender has sufficient balance
-			if (senderAccount.getBalance().compareTo(transferRequest.getAmount()) < 0) {
-				auditService.logFailure(AuditAction.TRANSFER_FUNDS, AuditResourceType.TRANSACTION, null, userId, null,
-						"Insufficient balance in sender account", ipAddress);
-				throw new UserApiException("Insufficient balance");
-			}
-
-			// Validate sender account currency matches request
-			if (!senderAccount.getCurrency().equals(transferRequest.getCurrency())) {
-				auditService.logFailure(AuditAction.TRANSFER_FUNDS, AuditResourceType.TRANSACTION, null, userId, null,
-						"Sender account currency mismatch", ipAddress);
-				throw new UserApiException("Transfer currency must match sender account currency");
-			}
-
 			// Handle currency conversion if needed
 			CurrencyConversionResult conversionResult = null;
 			BigDecimal finalAmount = transferRequest.getAmount();
@@ -162,20 +148,42 @@ public class TransactionServiceImpl implements TransactionService {
 				conversionResult = currencyService.convertCurrency(senderAccount.getCurrency(),
 						receiverAccount.getCurrency(), transferRequest.getAmount());
 
-				finalAmount = conversionResult.getNetAmount(); // Amount after conversion fee
-				totalDeductionFromSender = transferRequest.getAmount().add(conversionResult.getConversionFee());
-
-				// Check if sender has sufficient balance including conversion fee
-				if (senderAccount.getBalance().compareTo(totalDeductionFromSender) < 0) {
-					auditService.logFailure(AuditAction.TRANSFER_FUNDS, AuditResourceType.TRANSACTION, null, userId,
-							null, "Insufficient balance for transfer including conversion fee", ipAddress);
-					throw new UserApiException("Insufficient balance for transfer including conversion fee of "
-							+ conversionResult.getConversionFee() + " " + senderAccount.getCurrency());
+				// Calculate proper amounts: 
+				// 1. Deduct original amount from sender (in sender currency)
+				// 2. Calculate fee in sender currency (convert fee back from target currency)
+				// 3. Deposit converted amount to receiver (in receiver currency)
+				finalAmount = conversionResult.getConvertedAmount(); // Amount to deposit in receiver account
+				
+				// Convert fee back to sender currency for deduction
+				BigDecimal feeInSenderCurrency;
+				if (conversionResult.getConversionFee().compareTo(BigDecimal.ZERO) > 0) {
+					// Convert fee from target currency back to sender currency
+					CurrencyConversionResult feeConversion = currencyService.convertCurrency(
+						receiverAccount.getCurrency(), senderAccount.getCurrency(), conversionResult.getConversionFee());
+					feeInSenderCurrency = feeConversion.getConvertedAmount();
+				} else {
+					feeInSenderCurrency = BigDecimal.ZERO;
 				}
+				
+				totalDeductionFromSender = transferRequest.getAmount().add(feeInSenderCurrency);
 
 				logger.info("✅ Currency conversion: {} {} = {} {} (Fee: {} {})", transferRequest.getAmount(),
 						senderAccount.getCurrency(), finalAmount, receiverAccount.getCurrency(),
-						conversionResult.getConversionFee(), senderAccount.getCurrency());
+						feeInSenderCurrency, senderAccount.getCurrency());
+			}
+
+			// Check if sender has sufficient balance (including conversion fee if applicable)
+			if (senderAccount.getBalance().compareTo(totalDeductionFromSender) < 0) {
+				String errorMsg;
+				if (conversionResult != null) {
+					BigDecimal feeInSenderCurrency = totalDeductionFromSender.subtract(transferRequest.getAmount());
+					errorMsg = "Insufficient balance for transfer including conversion fee of " + feeInSenderCurrency + " " + senderAccount.getCurrency();
+				} else {
+					errorMsg = "Insufficient balance";
+				}
+				auditService.logFailure(AuditAction.TRANSFER_FUNDS, AuditResourceType.TRANSACTION, null, userId, null,
+						errorMsg, ipAddress);
+				throw new UserApiException(errorMsg);
 			}
 
 			// Create transaction
@@ -187,7 +195,8 @@ public class TransactionServiceImpl implements TransactionService {
 			transaction.setCurrency(receiverAccount.getCurrency());
 			transaction.setDescription(transferRequest.getDescription());
 			transaction.setTransactionType(TransactionType.TRANSFER);
-			transaction.setCountryCode(transferRequest.getCountryCode());
+			// Automatically fetch country code from sender account's customer
+			transaction.setCountryCode(senderAccount.getCustomer().getCountry());
 			transaction.setCounterpartyName(
 					receiverAccount.getCustomer().getFirstName() + " " + receiverAccount.getCustomer().getLastName());
 			transaction.setCounterpartyAccount(receiverAccount.getAccountNumber());
@@ -217,13 +226,13 @@ public class TransactionServiceImpl implements TransactionService {
 
 				auditService.logSuccess(AuditAction.TRANSFER_FUNDS, AuditResourceType.TRANSACTION,
 						transaction.getTransactionId(), userId, null,
-						"Transfer completed: " + transferRequest.getAmount() + " " + transferRequest.getCurrency(),
+						"Transfer completed: " + transferRequest.getAmount() + " " + senderAccount.getCurrency(),
 						ipAddress);
 			} else {
 				auditService.logAction(AuditAction.TRANSFER_FUNDS, AuditResourceType.TRANSACTION,
 						transaction.getTransactionId(), userId, null,
 						"Transfer " + transaction.getStatus().toString().toLowerCase() + ": "
-								+ transferRequest.getAmount() + " " + transferRequest.getCurrency(),
+								+ transferRequest.getAmount() + " " + senderAccount.getCurrency(),
 						ipAddress, userAgent, AuditStatus.PENDING);
 			}
 
@@ -256,24 +265,18 @@ public class TransactionServiceImpl implements TransactionService {
 				throw new UserApiException("You are not authorized to deposit to this account");
 			}
 
-			// Check currency match
-			if (!account.getCurrency().equals(depositRequest.getCurrency())) {
-				auditService.logFailure(AuditAction.TRANSACTION_CREATED, AuditResourceType.TRANSACTION, null, userId,
-						null, "Deposit failed - currency mismatch", ipAddress);
-				throw new UserApiException("Currency mismatch");
-			}
-
 			// Create deposit transaction
 			Transaction transaction = new Transaction();
 			transaction.setCustomer(account.getCustomer());
 			transaction.setSenderAccount(null); // External deposit
 			transaction.setReceiverAccount(account);
 			transaction.setAmount(depositRequest.getAmount());
-			transaction.setCurrency(depositRequest.getCurrency());
-			transaction.setDescription(
-					depositRequest.getDescription() + " (Source: " + depositRequest.getSourceOfFunds() + ")");
+			// Automatically fetch currency from account
+			transaction.setCurrency(account.getCurrency());
+			transaction.setDescription(depositRequest.getDescription());
 			transaction.setTransactionType(TransactionType.CREDIT);
-			transaction.setCountryCode(depositRequest.getCountryCode());
+			// Automatically fetch country code from customer
+			transaction.setCountryCode(account.getCustomer().getCountry());
 			transaction.setCounterpartyName("External Deposit");
 
 			// Process through AML rules
@@ -286,13 +289,13 @@ public class TransactionServiceImpl implements TransactionService {
 
 				auditService.logSuccess(AuditAction.TRANSACTION_CREATED, AuditResourceType.TRANSACTION,
 						transaction.getTransactionId(), userId, null,
-						"Deposit completed: " + depositRequest.getAmount() + " " + depositRequest.getCurrency(),
+						"Deposit completed: " + depositRequest.getAmount() + " " + account.getCurrency(),
 						ipAddress);
 			} else {
 				auditService.logAction(AuditAction.TRANSACTION_CREATED, AuditResourceType.TRANSACTION,
 						transaction.getTransactionId(), userId, null,
 						"Deposit " + transaction.getStatus().toString().toLowerCase() + ": "
-								+ depositRequest.getAmount() + " " + depositRequest.getCurrency(),
+								+ depositRequest.getAmount() + " " + account.getCurrency(),
 						ipAddress, userAgent, AuditStatus.PENDING);
 			}
 
@@ -334,24 +337,18 @@ public class TransactionServiceImpl implements TransactionService {
 				throw new UserApiException("Insufficient balance");
 			}
 
-			// Check currency match
-			if (!account.getCurrency().equals(withdrawalRequest.getCurrency())) {
-				auditService.logFailure(AuditAction.TRANSACTION_CREATED, AuditResourceType.TRANSACTION, null, userId,
-						null, "Withdrawal failed - currency mismatch", ipAddress);
-				throw new UserApiException("Currency mismatch");
-			}
-
 			// Create withdrawal transaction
 			Transaction transaction = new Transaction();
 			transaction.setCustomer(account.getCustomer());
 			transaction.setSenderAccount(account);
 			transaction.setReceiverAccount(null); // External withdrawal
 			transaction.setAmount(withdrawalRequest.getAmount());
-			transaction.setCurrency(withdrawalRequest.getCurrency());
-			transaction.setDescription(withdrawalRequest.getDescription() + " (Purpose: "
-					+ withdrawalRequest.getPurposeOfWithdrawal() + ")");
+			// Automatically fetch currency from account
+			transaction.setCurrency(account.getCurrency());
+			transaction.setDescription(withdrawalRequest.getDescription());
 			transaction.setTransactionType(TransactionType.DEBIT);
-			transaction.setCountryCode(withdrawalRequest.getCountryCode());
+			// Automatically fetch country code from customer
+			transaction.setCountryCode(account.getCustomer().getCountry());
 			transaction.setCounterpartyName("External Withdrawal");
 
 			// Process through AML rules
@@ -365,13 +362,13 @@ public class TransactionServiceImpl implements TransactionService {
 				auditService
 						.logSuccess(AuditAction.TRANSACTION_CREATED, AuditResourceType.TRANSACTION,
 								transaction.getTransactionId(), userId, null, "Withdrawal completed: "
-										+ withdrawalRequest.getAmount() + " " + withdrawalRequest.getCurrency(),
+										+ withdrawalRequest.getAmount() + " " + account.getCurrency(),
 								ipAddress);
 			} else {
 				auditService.logAction(AuditAction.TRANSACTION_CREATED, AuditResourceType.TRANSACTION,
 						transaction.getTransactionId(), userId, null,
 						"Withdrawal " + transaction.getStatus().toString().toLowerCase() + ": "
-								+ withdrawalRequest.getAmount() + " " + withdrawalRequest.getCurrency(),
+								+ withdrawalRequest.getAmount() + " " + account.getCurrency(),
 						ipAddress, userAgent, AuditStatus.PENDING);
 			}
 

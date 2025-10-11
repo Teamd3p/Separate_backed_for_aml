@@ -15,26 +15,15 @@ public class DepositRequest {
     @Positive(message = "Amount must be positive")
     private BigDecimal amount;
 
-    @NotBlank(message = "Currency is required")
-    private String currency;
-
     private String description;
-    private String sourceOfFunds; // e.g., "SALARY", "BUSINESS", "INVESTMENT"
-
-    @NotBlank(message = "Country code is required")
-    private String countryCode;
 
     // Constructors
     public DepositRequest() {}
 
-    public DepositRequest(String accountNumber, BigDecimal amount, String currency, 
-                         String description, String sourceOfFunds, String countryCode) {
+    public DepositRequest(String accountNumber, BigDecimal amount, String description) {
         this.accountNumber = accountNumber;
         this.amount = amount;
-        this.currency = currency;
         this.description = description;
-        this.sourceOfFunds = sourceOfFunds;
-        this.countryCode = countryCode;
     }
 
     // Getters and Setters
@@ -44,15 +33,6 @@ public class DepositRequest {
     public BigDecimal getAmount() { return amount; }
     public void setAmount(BigDecimal amount) { this.amount = amount; }
 
-    public String getCurrency() { return currency; }
-    public void setCurrency(String currency) { this.currency = currency; }
-
     public String getDescription() { return description; }
     public void setDescription(String description) { this.description = description; }
-
-    public String getSourceOfFunds() { return sourceOfFunds; }
-    public void setSourceOfFunds(String sourceOfFunds) { this.sourceOfFunds = sourceOfFunds; }
-
-    public String getCountryCode() { return countryCode; }
-    public void setCountryCode(String countryCode) { this.countryCode = countryCode; }
 }

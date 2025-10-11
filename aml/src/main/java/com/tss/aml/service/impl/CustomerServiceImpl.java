@@ -46,7 +46,7 @@ public class CustomerServiceImpl implements CustomerService {
 		dto.setStreet(customer.getStreet());
 		dto.setCity(customer.getCity());
 		dto.setState(customer.getState());
-		dto.setNation(customer.getNation());
+		dto.setCountry(customer.getCountry());
 		dto.setPincode(customer.getPincode());
 		dto.setKycStatus(customer.getKycStatus());
 		dto.setStatus(customer.getStatus());

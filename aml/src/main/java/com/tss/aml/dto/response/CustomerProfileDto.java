@@ -24,7 +24,7 @@ public class CustomerProfileDto {
     private String street;
     private String city;
     private String state;
-    private String nation;
+    private String country;
     private String pincode;
     private String contactNumber;
     private KycStatus kycStatus;

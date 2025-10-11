@@ -14,10 +14,10 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-@Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
+@Data
 @Table(name = "customers")
 public class Customer extends User {
 
@@ -38,7 +38,7 @@ public class Customer extends User {
 	private String street;
 	private String city;
 	private String state;
-	private String nation;
+	private String country;
 	private String pincode;
 
 	@NotNull
