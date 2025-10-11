@@ -10,9 +10,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.tss.aml.dto.VerifyOtpRequest;
 import com.tss.aml.dto.request.LoginRequest;
 import com.tss.aml.dto.request.RegisterRequest;
+import com.tss.aml.dto.request.VerifyOtpRequest;
 import com.tss.aml.dto.response.AuthResponse;
 import com.tss.aml.entity.enums.AuditAction;
 import com.tss.aml.entity.enums.AuditResourceType;
@@ -50,7 +50,7 @@ public class AuthController {
 
     @PostMapping("/verify-otp")
     public ResponseEntity<AuthResponse> verifyOtp(@Valid @RequestBody VerifyOtpRequest request) {
-        AuthResponse response = authService.verifyOtp(request);
+        AuthResponse response = authService.VerifyOtpRequest(request);
         return ResponseEntity.ok(response);
     }
 

@@ -12,7 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.tss.aml.dto.request.AccountUpdateRequest;
 import com.tss.aml.dto.request.ComplianceOfficerRequest;
-import com.tss.aml.dto.request.CustomerUpdateRequest;
+import com.tss.aml.dto.request.CustomerProfileUpdateRequest;
 import com.tss.aml.dto.request.KeywordRequest;
 import com.tss.aml.dto.request.RiskyCountryRequest;
 import com.tss.aml.dto.request.RuleRequest;
@@ -26,9 +26,9 @@ import com.tss.aml.entity.Rule;
 import com.tss.aml.entity.SuspiciousKeyword;
 import com.tss.aml.entity.User;
 import com.tss.aml.entity.enums.AccountStatus;
-import com.tss.aml.entity.enums.UserStatus;
 import com.tss.aml.entity.enums.AccountType;
 import com.tss.aml.entity.enums.KycStatus;
+import com.tss.aml.entity.enums.UserStatus;
 import com.tss.aml.repository.AccountRepository;
 import com.tss.aml.repository.AdminRepository;
 import com.tss.aml.repository.ComplianceOfficerRepository;
@@ -43,429 +43,406 @@ import com.tss.aml.service.AdminService;
 @Transactional
 public class AdminServiceImpl implements AdminService {
 
-    @Autowired
-    private ComplianceOfficerRepository complianceOfficerRepo;
-    
-    @Autowired
-    private RuleRepository ruleRepo;
-    
-    @Autowired
-    private SuspiciousKeywordRepository keywordRepo;
-    
-    @Autowired
-    private RiskyCountryRepository riskyCountryRepo;
-    
-    @Autowired
-    private AdminRepository adminRepo;
-    
-    @Autowired
-    private PasswordEncoder passwordEncoder;
-    
-    @Autowired
-    private CustomerRepository customerRepo;
-    
-    @Autowired
-    private AccountRepository accountRepo;
-    
-    @Autowired
-    private KycDocumentRepository kycDocumentRepo;
-    
-    @Autowired
-    private com.tss.aml.repository.TransactionRepository transactionRepo;
-    
-    @Autowired
-    private com.tss.aml.repository.AlertRepository alertRepo;
-    
-    @Autowired
-    private com.tss.aml.repository.AuditLogRepository auditLogRepo;
-    
-    @Autowired
-    private com.tss.aml.service.AuditService auditService;
+	@Autowired
+	private ComplianceOfficerRepository complianceOfficerRepo;
 
-    private Admin getCurrentAdmin() {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth != null && auth.getPrincipal() instanceof User) {
-            User user = (User) auth.getPrincipal();
-            return adminRepo.findById(user.getUserId()).orElse(null);
-        }
-        return null;
-    }
+	@Autowired
+	private RuleRepository ruleRepo;
 
-    // === COMPLIANCE OFFICERS ===
-    @Override
-    public ComplianceOfficer createComplianceOfficer(ComplianceOfficerRequest request) {
-        if (complianceOfficerRepo.findByEmail(request.getEmail()).isPresent()) {
-            throw new RuntimeException("Email already exists");
-        }
-        ComplianceOfficer officer = new ComplianceOfficer(
-            request.getEmail(),
-            passwordEncoder.encode(request.getPassword()),
-            request.getFirstName(),
-            request.getLastName(),
-            request.getPhone()
-        );
-        // Set officer as active and verified immediately
-        officer.setStatus(com.tss.aml.entity.enums.UserStatus.ACTIVE);
-        officer.setEmailVerified(true);
-        return complianceOfficerRepo.save(officer);
-    }
+	@Autowired
+	private SuspiciousKeywordRepository keywordRepo;
 
-    @Override
-    public List<ComplianceOfficer> getAllComplianceOfficers() {
-        return complianceOfficerRepo.findAll();
-    }
+	@Autowired
+	private RiskyCountryRepository riskyCountryRepo;
 
-    @Override
-    public void deleteComplianceOfficer(Long id) {
-        complianceOfficerRepo.deleteById(id);
-    }
+	@Autowired
+	private AdminRepository adminRepo;
 
-    // === RULES ===
-    @Override
-    public Rule createRule(RuleRequest request) {
-        Rule rule = new Rule(
-            request.getName(),
-            request.getType(),
-            request.getConditions(),
-            request.getRiskScoreImpact()
-        );
-        rule.setDescription(request.getDescription());
-        rule.setActive(request.getActive());
-        
-        // Set updatedBy and updatedAt
-        Admin currentAdmin = getCurrentAdmin();
-        if (currentAdmin != null) {
-            rule.setUpdatedBy(currentAdmin);
-        }
-        rule.setUpdatedAt(LocalDateTime.now());
-        
-        return ruleRepo.save(rule);
-    }
+	@Autowired
+	private PasswordEncoder passwordEncoder;
 
-    @Override
-    public Rule updateRule(Long id, RuleRequest request) {
-        Rule rule = ruleRepo.findById(id).orElseThrow(() -> new RuntimeException("Rule not found"));
-        rule.setName(request.getName());
-        rule.setDescription(request.getDescription());
-        rule.setType(request.getType());
-        rule.setConditions(request.getConditions());
-        rule.setRiskScoreImpact(request.getRiskScoreImpact());
-        rule.setActive(request.getActive());
-        
-        // Set updatedBy and updatedAt
-        Admin currentAdmin = getCurrentAdmin();
-        if (currentAdmin != null) {
-            rule.setUpdatedBy(currentAdmin);
-        }
-        rule.setUpdatedAt(LocalDateTime.now());
-        
-        return ruleRepo.save(rule);
-    }
+	@Autowired
+	private CustomerRepository customerRepo;
 
-    @Override
-    public void deleteRule(Long id) {
-        ruleRepo.deleteById(id);
-    }
+	@Autowired
+	private AccountRepository accountRepo;
 
-    @Override
-    public List<Rule> getAllRules() {
-        return ruleRepo.findAll();
-    }
+	@Autowired
+	private KycDocumentRepository kycDocumentRepo;
 
-    // === KEYWORDS ===
-    @Override
-    public SuspiciousKeyword createKeyword(KeywordRequest request) {
-        SuspiciousKeyword keyword = new SuspiciousKeyword(
-            request.getWord(),
-            request.getCategory(),
-            request.getSeverity()
-        );
-        keyword.setActive(request.getActive());
-        return keywordRepo.save(keyword);
-    }
+	@Autowired
+	private com.tss.aml.repository.TransactionRepository transactionRepo;
 
-    @Override
-    public SuspiciousKeyword updateKeyword(Long id, KeywordRequest request) {
-        SuspiciousKeyword kw = keywordRepo.findById(id).orElseThrow(() -> new RuntimeException("Keyword not found"));
-        kw.setWord(request.getWord());
-        kw.setCategory(request.getCategory());
-        kw.setSeverity(request.getSeverity());
-        kw.setActive(request.getActive());
-        return keywordRepo.save(kw);
-    }
+	@Autowired
+	private com.tss.aml.repository.AlertRepository alertRepo;
 
-    @Override
-    public void deleteKeyword(Long id) {
-        keywordRepo.deleteById(id);
-    }
+	@Autowired
+	private com.tss.aml.repository.AuditLogRepository auditLogRepo;
 
-    @Override
-    public List<SuspiciousKeyword> getAllKeywords() {
-        return keywordRepo.findAll();
-    }
+	@Autowired
+	private com.tss.aml.service.AuditService auditService;
 
-    // === RISKY COUNTRIES ===
-    @Override
-    public RiskyCountry createRiskyCountry(RiskyCountryRequest request) {
-        // Check if country already exists
-        if (riskyCountryRepo.findById(request.getCountryCode().toUpperCase()).isPresent()) {
-            throw new RuntimeException("Country with code " + request.getCountryCode() + " already exists");
-        }
-        
-        RiskyCountry country = new RiskyCountry(
-            request.getCountryCode().toUpperCase(),
-            request.getCountryName(),
-            request.getRiskLevel()
-        );
-        
-        // Set lastUpdatedBy
-        Admin currentAdmin = getCurrentAdmin();
-        if (currentAdmin != null) {
-            country.setLastUpdatedBy(currentAdmin);
-        }
-        country.setLastUpdatedAt(LocalDateTime.now());
-        
-        return riskyCountryRepo.save(country);
-    }
+	private Admin getCurrentAdmin() {
+		Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+		if (auth != null && auth.getPrincipal() instanceof User) {
+			User user = (User) auth.getPrincipal();
+			return adminRepo.findById(user.getUserId()).orElse(null);
+		}
+		return null;
+	}
 
-    @Override
-    public RiskyCountry updateRiskyCountry(String countryCode, RiskyCountryRequest request) {
-        RiskyCountry country = riskyCountryRepo.findById(countryCode.toUpperCase())
-            .orElseThrow(() -> new RuntimeException("Country not found"));
-        country.setCountryName(request.getCountryName());
-        country.setRiskLevel(request.getRiskLevel());
-        
-        // Set lastUpdatedBy
-        Admin currentAdmin = getCurrentAdmin();
-        if (currentAdmin != null) {
-            country.setLastUpdatedBy(currentAdmin);
-        }
-        country.setLastUpdatedAt(LocalDateTime.now());
-        
-        return riskyCountryRepo.save(country);
-    }
+	// === COMPLIANCE OFFICERS ===
+	@Override
+	public ComplianceOfficer createComplianceOfficer(ComplianceOfficerRequest request) {
+		if (complianceOfficerRepo.findByEmail(request.getEmail()).isPresent()) {
+			throw new RuntimeException("Email already exists");
+		}
+		ComplianceOfficer officer = new ComplianceOfficer(request.getEmail(),
+				passwordEncoder.encode(request.getPassword()), request.getFirstName(), request.getLastName(),
+				request.getPhone());
+		// Set officer as active and verified immediately
+		officer.setStatus(com.tss.aml.entity.enums.UserStatus.ACTIVE);
+		officer.setEmailVerified(true);
+		return complianceOfficerRepo.save(officer);
+	}
 
-    @Override
-    public void deleteRiskyCountry(String countryCode) {
-        if (!riskyCountryRepo.existsById(countryCode.toUpperCase())) {
-            throw new RuntimeException("Country not found");
-        }
-        riskyCountryRepo.deleteById(countryCode.toUpperCase());
-    }
+	@Override
+	public List<ComplianceOfficer> getAllComplianceOfficers() {
+		return complianceOfficerRepo.findAll();
+	}
 
-    @Override
-    public List<RiskyCountry> getAllRiskyCountries() {
-        return riskyCountryRepo.findAll();
-    }
-    
-    // === CUSTOMER MANAGEMENT ===
-    @Override
-    public List<Customer> getAllCustomers() {
-        return customerRepo.findAll();
-    }
-    
-    @Override
-    public Customer getCustomerById(Long id) {
-        return customerRepo.findById(id)
-            .orElseThrow(() -> new RuntimeException("Customer not found"));
-    }
-    
-    @Override
-    public Customer updateCustomer(Long id, CustomerUpdateRequest request) {
-        Customer customer = getCustomerById(id);
-        customer.setFirstName(request.getFirstName());
-        customer.setLastName(request.getLastName());
-        customer.setEmail(request.getEmail());
-        customer.setContactNumber(request.getPhoneNumber());
-        customer.setStreet(request.getAddress());
-        customer.setCity(request.getCity());
-        customer.setState(request.getState());
-        customer.setNationality(request.getCountryCode());
-        customer.setPincode(request.getPostalCode());
-        // Note: riskProfile field doesn't exist in Customer entity - removing this line
-        // customer.setRiskProfile(request.getRiskProfile());
-        return customerRepo.save(customer);
-    }
-    
-    @Override
-    public void deleteCustomer(Long id) {
-        if (!customerRepo.existsById(id)) {
-            throw new RuntimeException("Customer not found");
-        }
-        customerRepo.deleteById(id);
-    }
-    
-    // === ACCOUNT MANAGEMENT ===
-    @Override
-    public List<Account> getAllAccounts() {
-        return accountRepo.findAll();
-    }
-    
-    @Override
-    public List<Account> getAccountsByCustomerId(Long customerId) {
-        return accountRepo.findByCustomerUserId(customerId);
-    }
-    
-    @Override
-    public Account updateAccount(Long accountId, AccountUpdateRequest request) {
-        Account account = accountRepo.findById(accountId)
-            .orElseThrow(() -> new RuntimeException("Account not found"));
-        
-        // Convert string to AccountType enum
-        if (request.getAccountType() != null) {
-            account.setAccountType(AccountType.valueOf(request.getAccountType().toUpperCase()));
-        }
-        
-        if (request.getBalance() != null) {
-            account.setBalance(request.getBalance());
-        }
-        
-        // Note: dailyTransactionLimit, monthlyTransactionLimit, and riskLevel fields don't exist in Account entity
-        // These would need to be added to the Account entity if required
-        
-        // Convert string to AccountStatus enum
-        if (request.getStatus() != null) {
-            account.setStatus(AccountStatus.valueOf(request.getStatus().toUpperCase()));
-        }
-        
-        account.setUpdatedAt(java.time.LocalDateTime.now());
-        return accountRepo.save(account);
-    }
-    
-    @Override
-    public void freezeAccount(Long accountId) {
-        Account account = accountRepo.findById(accountId)
-            .orElseThrow(() -> new RuntimeException("Account not found"));
-        account.setStatus(AccountStatus.FROZEN);
-        account.setUpdatedAt(java.time.LocalDateTime.now());
-        accountRepo.save(account);
-    }
-    
-    @Override
-    public void unfreezeAccount(Long accountId) {
-        Account account = accountRepo.findById(accountId)
-            .orElseThrow(() -> new RuntimeException("Account not found"));
-        account.setStatus(AccountStatus.ACTIVE);
-        account.setUpdatedAt(java.time.LocalDateTime.now());
-        accountRepo.save(account);
-    }
-    
-    // === KYC DOCUMENT VERIFICATION MANAGEMENT ===
-    @Override
-    public List<KycDocument> getPendingDocuments() {
-        return kycDocumentRepo.findByStatus(KycStatus.PENDING);
-    }
-    
-    @Override
-    public List<KycDocument> getDocumentsRequiringManualReview() {
-        return kycDocumentRepo.findByValidatedFalse();
-    }
-    
-    @Override
-    public KycDocument verifyDocument(Long documentId, Long officerId, String notes, boolean approved) {
-        KycDocument document = kycDocumentRepo.findById(documentId)
-            .orElseThrow(() -> new RuntimeException("Document not found"));
-        
-        ComplianceOfficer officer = complianceOfficerRepo.findById(officerId)
-            .orElseThrow(() -> new RuntimeException("Compliance officer not found"));
-        
-        document.setVerifiedBy(officer);
-        document.setVerificationNotes(notes);
-        document.setVerificationTimestamp(LocalDateTime.now());
-        document.setStatus(approved ? KycStatus.VERIFIED : KycStatus.REJECTED);
-        document.setValidated(approved);
-        document.setRequiresManualReview(false);
-        
-        return kycDocumentRepo.save(document);
-    }
-    
-    @Override
-    public KycDocument rejectDocument(Long documentId, Long officerId, String rejectionReason) {
-        return verifyDocument(documentId, officerId, rejectionReason, false);
-    }
+	@Override
+	public void deleteComplianceOfficer(Long id) {
+		complianceOfficerRepo.deleteById(id);
+	}
 
-    // New methods for enhanced admin controller
-    @Override
-    public com.tss.aml.dto.response.DashboardStatsDto getDashboardStats() {
-        com.tss.aml.dto.response.DashboardStatsDto stats = new com.tss.aml.dto.response.DashboardStatsDto();
-        
-        stats.setTotalCustomers(customerRepo.count());
-        stats.setActiveCustomers(customerRepo.countByStatus(UserStatus.ACTIVE));
-        stats.setTotalTransactions(transactionRepo.count());
-        stats.setPendingAlerts(alertRepo.countByStatus(com.tss.aml.entity.enums.AlertStatus.OPEN));
-        stats.setHighRiskAlerts(alertRepo.countByRiskScoreGreaterThanEqual(85));
-        stats.setTotalComplianceOfficers(complianceOfficerRepo.count());
-        stats.setPendingKycDocuments(kycDocumentRepo.countByStatus(KycStatus.PENDING));
-        stats.setActiveRules(ruleRepo.countByIsActiveTrue());
-        
-        return stats;
-    }
+	// === RULES ===
+	@Override
+	public Rule createRule(RuleRequest request) {
+		Rule rule = new Rule(request.getName(), request.getType(), request.getConditions(),
+				request.getRiskScoreImpact());
+		rule.setDescription(request.getDescription());
+		rule.setActive(request.getActive());
 
-    @Override
-    public Long getAlertCountByCustomerId(Long customerId) {
-        return alertRepo.countByCustomerUserId(customerId);
-    }
+		// Set updatedBy and updatedAt
+		Admin currentAdmin = getCurrentAdmin();
+		if (currentAdmin != null) {
+			rule.setUpdatedBy(currentAdmin);
+		}
+		rule.setUpdatedAt(LocalDateTime.now());
 
-    @Override
-    public void updateAdminProfile(String firstName, String lastName) {
-        Admin admin = getCurrentAdmin();
-        if (admin == null) {
-            throw new RuntimeException("Admin not found");
-        }
-        
-        admin.setFirstName(firstName);
-        admin.setLastName(lastName);
+		return ruleRepo.save(rule);
+	}
+
+	@Override
+	public Rule updateRule(Long id, RuleRequest request) {
+		Rule rule = ruleRepo.findById(id).orElseThrow(() -> new RuntimeException("Rule not found"));
+		rule.setName(request.getName());
+		rule.setDescription(request.getDescription());
+		rule.setType(request.getType());
+		rule.setConditions(request.getConditions());
+		rule.setRiskScoreImpact(request.getRiskScoreImpact());
+		rule.setActive(request.getActive());
+
+		// Set updatedBy and updatedAt
+		Admin currentAdmin = getCurrentAdmin();
+		if (currentAdmin != null) {
+			rule.setUpdatedBy(currentAdmin);
+		}
+		rule.setUpdatedAt(LocalDateTime.now());
+
+		return ruleRepo.save(rule);
+	}
+
+	@Override
+	public void deleteRule(Long id) {
+		ruleRepo.deleteById(id);
+	}
+
+	@Override
+	public List<Rule> getAllRules() {
+		return ruleRepo.findAll();
+	}
+
+	// === KEYWORDS ===
+	@Override
+	public SuspiciousKeyword createKeyword(KeywordRequest request) {
+		SuspiciousKeyword keyword = new SuspiciousKeyword(request.getWord(), request.getCategory(),
+				request.getSeverity());
+		keyword.setActive(request.getActive());
+		return keywordRepo.save(keyword);
+	}
+
+	@Override
+	public SuspiciousKeyword updateKeyword(Long id, KeywordRequest request) {
+		SuspiciousKeyword kw = keywordRepo.findById(id).orElseThrow(() -> new RuntimeException("Keyword not found"));
+		kw.setWord(request.getWord());
+		kw.setCategory(request.getCategory());
+		kw.setSeverity(request.getSeverity());
+		kw.setActive(request.getActive());
+		return keywordRepo.save(kw);
+	}
+
+	@Override
+	public void deleteKeyword(Long id) {
+		keywordRepo.deleteById(id);
+	}
+
+	@Override
+	public List<SuspiciousKeyword> getAllKeywords() {
+		return keywordRepo.findAll();
+	}
+
+	// === RISKY COUNTRIES ===
+	@Override
+	public RiskyCountry createRiskyCountry(RiskyCountryRequest request) {
+		// Check if country already exists
+		if (riskyCountryRepo.findById(request.getCountryCode().toUpperCase()).isPresent()) {
+			throw new RuntimeException("Country with code " + request.getCountryCode() + " already exists");
+		}
+
+		RiskyCountry country = new RiskyCountry(request.getCountryCode().toUpperCase(), request.getCountryName(),
+				request.getRiskLevel());
+
+		// Set lastUpdatedBy
+		Admin currentAdmin = getCurrentAdmin();
+		if (currentAdmin != null) {
+			country.setLastUpdatedBy(currentAdmin);
+		}
+		country.setLastUpdatedAt(LocalDateTime.now());
+
+		return riskyCountryRepo.save(country);
+	}
+
+	@Override
+	public RiskyCountry updateRiskyCountry(String countryCode, RiskyCountryRequest request) {
+		RiskyCountry country = riskyCountryRepo.findById(countryCode.toUpperCase())
+				.orElseThrow(() -> new RuntimeException("Country not found"));
+		country.setCountryName(request.getCountryName());
+		country.setRiskLevel(request.getRiskLevel());
+
+		// Set lastUpdatedBy
+		Admin currentAdmin = getCurrentAdmin();
+		if (currentAdmin != null) {
+			country.setLastUpdatedBy(currentAdmin);
+		}
+		country.setLastUpdatedAt(LocalDateTime.now());
+
+		return riskyCountryRepo.save(country);
+	}
+
+	@Override
+	public void deleteRiskyCountry(String countryCode) {
+		if (!riskyCountryRepo.existsById(countryCode.toUpperCase())) {
+			throw new RuntimeException("Country not found");
+		}
+		riskyCountryRepo.deleteById(countryCode.toUpperCase());
+	}
+
+	@Override
+	public List<RiskyCountry> getAllRiskyCountries() {
+		return riskyCountryRepo.findAll();
+	}
+
+	// === CUSTOMER MANAGEMENT ===
+	@Override
+	public List<Customer> getAllCustomers() {
+		return customerRepo.findAll();
+	}
+
+	@Override
+	public Customer getCustomerById(Long id) {
+		return customerRepo.findById(id).orElseThrow(() -> new RuntimeException("Customer not found"));
+	}
+
+	@Override
+	public Customer updateCustomer(Long id, CustomerProfileUpdateRequest request) {
+		Customer customer = getCustomerById(id);
+		customer.setFirstName(request.getFirstName());
+		customer.setLastName(request.getLastName());
+		customer.setEmail(request.getEmail());
+		customer.setContactNumber(request.getContactNumber());
+		customer.setStreet(request.getStreet());
+		customer.setCity(request.getCity());
+		customer.setState(request.getState());
+		customer.setNationality(request.getNationality());
+		customer.setPincode(request.getPincode());
+		// Note: riskProfile field doesn't exist in Customer entity - removing this line
+		// customer.setRiskProfile(request.getRiskProfile());
+		return customerRepo.save(customer);
+	}
+
+	@Override
+	public void deleteCustomer(Long id) {
+		if (!customerRepo.existsById(id)) {
+			throw new RuntimeException("Customer not found");
+		}
+		customerRepo.deleteById(id);
+	}
+
+	// === ACCOUNT MANAGEMENT ===
+	@Override
+	public List<Account> getAllAccounts() {
+		return accountRepo.findAll();
+	}
+
+	@Override
+	public List<Account> getAccountsByCustomerId(Long customerId) {
+		return accountRepo.findByCustomerUserId(customerId);
+	}
+
+	@Override
+	public Account updateAccount(Long accountId, AccountUpdateRequest request) {
+		Account account = accountRepo.findById(accountId).orElseThrow(() -> new RuntimeException("Account not found"));
+
+		// Convert string to AccountType enum
+		if (request.getAccountType() != null) {
+			account.setAccountType(AccountType.valueOf(request.getAccountType().toUpperCase()));
+		}
+
+		if (request.getBalance() != null) {
+			account.setBalance(request.getBalance());
+		}
+
+		// Note: dailyTransactionLimit, monthlyTransactionLimit, and riskLevel fields
+		// don't exist in Account entity
+		// These would need to be added to the Account entity if required
+
+		// Convert string to AccountStatus enum
+		if (request.getStatus() != null) {
+			account.setStatus(AccountStatus.valueOf(request.getStatus().toUpperCase()));
+		}
+
+		account.setUpdatedAt(java.time.LocalDateTime.now());
+		return accountRepo.save(account);
+	}
+
+	@Override
+	public void freezeAccount(Long accountId) {
+		Account account = accountRepo.findById(accountId).orElseThrow(() -> new RuntimeException("Account not found"));
+		account.setStatus(AccountStatus.FROZEN);
+		account.setUpdatedAt(java.time.LocalDateTime.now());
+		accountRepo.save(account);
+	}
+
+	@Override
+	public void unfreezeAccount(Long accountId) {
+		Account account = accountRepo.findById(accountId).orElseThrow(() -> new RuntimeException("Account not found"));
+		account.setStatus(AccountStatus.ACTIVE);
+		account.setUpdatedAt(java.time.LocalDateTime.now());
+		accountRepo.save(account);
+	}
+
+	// === KYC DOCUMENT VERIFICATION MANAGEMENT ===
+	@Override
+	public List<KycDocument> getPendingDocuments() {
+		return kycDocumentRepo.findByStatus(KycStatus.PENDING);
+	}
+
+	@Override
+	public List<KycDocument> getDocumentsRequiringManualReview() {
+		return kycDocumentRepo.findByValidatedFalse();
+	}
+
+	@Override
+	public KycDocument verifyDocument(Long documentId, Long officerId, String notes, boolean approved) {
+		KycDocument document = kycDocumentRepo.findById(documentId)
+				.orElseThrow(() -> new RuntimeException("Document not found"));
+
+		ComplianceOfficer officer = complianceOfficerRepo.findById(officerId)
+				.orElseThrow(() -> new RuntimeException("Compliance officer not found"));
+
+		document.setVerifiedBy(officer);
+		document.setVerificationNotes(notes);
+		document.setVerificationTimestamp(LocalDateTime.now());
+		document.setStatus(approved ? KycStatus.VERIFIED : KycStatus.REJECTED);
+		document.setValidated(approved);
+		document.setRequiresManualReview(false);
+
+		return kycDocumentRepo.save(document);
+	}
+
+	@Override
+	public KycDocument rejectDocument(Long documentId, Long officerId, String rejectionReason) {
+		return verifyDocument(documentId, officerId, rejectionReason, false);
+	}
+
+	// New methods for enhanced admin controller
+	@Override
+	public com.tss.aml.dto.response.DashboardStatsDto getDashboardStats() {
+		com.tss.aml.dto.response.DashboardStatsDto stats = new com.tss.aml.dto.response.DashboardStatsDto();
+
+		stats.setTotalCustomers(customerRepo.count());
+		stats.setActiveCustomers(customerRepo.countByStatus(UserStatus.ACTIVE));
+		stats.setTotalTransactions(transactionRepo.count());
+		stats.setPendingAlerts(alertRepo.countByStatus(com.tss.aml.entity.enums.AlertStatus.OPEN));
+		stats.setHighRiskAlerts(alertRepo.countByRiskScoreGreaterThanEqual(85));
+		stats.setTotalComplianceOfficers(complianceOfficerRepo.count());
+		stats.setPendingKycDocuments(kycDocumentRepo.countByStatus(KycStatus.PENDING));
+		stats.setActiveRules(ruleRepo.countByIsActiveTrue());
+
+		return stats;
+	}
+
+	@Override
+	public Long getAlertCountByCustomerId(Long customerId) {
+		return alertRepo.countByCustomerUserId(customerId);
+	}
+
+	@Override
+	public void updateAdminProfile(String firstName, String lastName) {
+		Admin admin = getCurrentAdmin();
+		if (admin == null) {
+			throw new RuntimeException("Admin not found");
+		}
+
+		admin.setFirstName(firstName);
+		admin.setLastName(lastName);
 //        admin.setDepartment(department);
-        adminRepo.save(admin);
-    }
+		adminRepo.save(admin);
+	}
 
-    @Override
-    public String getSystemHealthStatus() {
-        // Simple health check - can be expanded
-        try {
-            customerRepo.count();
-            transactionRepo.count();
-            alertRepo.count();
-            return "HEALTHY";
-        } catch (Exception e) {
-            return "UNHEALTHY: " + e.getMessage();
-        }
-    }
+	@Override
+	public String getSystemHealthStatus() {
+		// Simple health check - can be expanded
+		try {
+			customerRepo.count();
+			transactionRepo.count();
+			alertRepo.count();
+			return "HEALTHY";
+		} catch (Exception e) {
+			return "UNHEALTHY: " + e.getMessage();
+		}
+	}
 
-    @Override
-    public List<com.tss.aml.entity.AuditLog> getAllAuditLogs(int page, int size) {
-        org.springframework.data.domain.Pageable pageable = org.springframework.data.domain.PageRequest.of(page, size);
-        return auditLogRepo.findAllByOrderByTimestampDesc(pageable).getContent();
-    }
+	@Override
+	public List<com.tss.aml.entity.AuditLog> getAllAuditLogs(int page, int size) {
+		org.springframework.data.domain.Pageable pageable = org.springframework.data.domain.PageRequest.of(page, size);
+		return auditLogRepo.findAllByOrderByTimestampDesc(pageable).getContent();
+	}
 
-    @Override
-    public void updateCustomerAccountStatus(Long customerId, com.tss.aml.entity.enums.AccountStatus status, String reason) {
-        List<Account> accounts = accountRepo.findByCustomerUserId(customerId);
-        if (accounts.isEmpty()) {
-            throw new RuntimeException("No accounts found for customer");
-        }
-        
-        for (Account account : accounts) {
-            account.setStatus(status);
-            accountRepo.save(account);
-        }
-        
-        // Log the action
-        auditService.logAction(
-            com.tss.aml.entity.enums.AuditAction.ACCOUNT_STATUS_UPDATE,
-            com.tss.aml.entity.enums.AuditResourceType.CUSTOMER,
-            customerId,
-            getCurrentAdmin().getUserId(),
-            null,
-            "Account status updated to " + status + ". Reason: " + reason,
-            null,
-            null,
-            com.tss.aml.entity.enums.AuditStatus.SUCCESS
-        );
-    }
+	@Override
+	public void updateCustomerAccountStatus(Long customerId, com.tss.aml.entity.enums.AccountStatus status,
+			String reason) {
+		List<Account> accounts = accountRepo.findByCustomerUserId(customerId);
+		if (accounts.isEmpty()) {
+			throw new RuntimeException("No accounts found for customer");
+		}
 
-    @Override
-    public List<com.tss.aml.entity.Rule> getRulesByType(com.tss.aml.entity.enums.RuleType ruleType) {
-        return ruleRepo.findByTypeAndIsActiveTrue(ruleType);
-    }
+		for (Account account : accounts) {
+			account.setStatus(status);
+			accountRepo.save(account);
+		}
+
+		// Log the action
+		auditService.logAction(com.tss.aml.entity.enums.AuditAction.ACCOUNT_STATUS_UPDATE,
+				com.tss.aml.entity.enums.AuditResourceType.CUSTOMER, customerId, getCurrentAdmin().getUserId(), null,
+				"Account status updated to " + status + ". Reason: " + reason, null, null,
+				com.tss.aml.entity.enums.AuditStatus.SUCCESS);
+	}
+
+	@Override
+	public List<com.tss.aml.entity.Rule> getRulesByType(com.tss.aml.entity.enums.RuleType ruleType) {
+		return ruleRepo.findByTypeAndIsActiveTrue(ruleType);
+	}
 }

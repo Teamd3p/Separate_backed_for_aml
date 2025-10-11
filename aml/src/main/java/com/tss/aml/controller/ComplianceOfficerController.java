@@ -16,11 +16,11 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.tss.aml.dto.AlertDTO;
-import com.tss.aml.dto.SarDTO;
-import com.tss.aml.dto.TransactionDTO;
 import com.tss.aml.dto.request.InvestigationActionRequest;
 import com.tss.aml.dto.request.SarRequest;
+import com.tss.aml.dto.response.AlertResponseDto;
+import com.tss.aml.dto.response.SarResponseDto;
+import com.tss.aml.dto.response.TransactionResponseDto;
 import com.tss.aml.entity.Alert;
 import com.tss.aml.entity.Sar;
 import com.tss.aml.entity.User;
@@ -36,44 +36,44 @@ public class ComplianceOfficerController {
 
     // === ALERTS ===
     @GetMapping("/alerts")
-    public ResponseEntity<List<AlertDTO>> getAllAlerts() {
-        List<AlertDTO> alerts = complianceService.getAllAlerts()
+    public ResponseEntity<List<AlertResponseDto>> getAllAlerts() {
+        List<AlertResponseDto> alerts = complianceService.getAllAlerts()
             .stream()
-            .map(AlertDTO::new)
+            .map(AlertResponseDto::new)
             .collect(Collectors.toList());
         return ResponseEntity.ok(alerts);
     }
 
     @PostMapping("/alerts/{alertId}/assign")
-    public ResponseEntity<AlertDTO> assignAlert(@PathVariable Long alertId) {
+    public ResponseEntity<AlertResponseDto> assignAlert(@PathVariable Long alertId) {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         if (auth == null || auth.getPrincipal() == null) {
             throw new RuntimeException("User not authenticated");
         }
         Long officerId = ((User) auth.getPrincipal()).getUserId();
         Alert alert = complianceService.assignAlertToOfficer(alertId, officerId);
-        return ResponseEntity.ok(new AlertDTO(alert));
+        return ResponseEntity.ok(new AlertResponseDto(alert));
     }
 
     @GetMapping("/alerts/{alertId}")
-    public ResponseEntity<AlertDTO> getAlertDetails(@PathVariable Long alertId) {
+    public ResponseEntity<AlertResponseDto> getAlertDetails(@PathVariable Long alertId) {
         Alert alert = complianceService.getAlertDetails(alertId);
-        return ResponseEntity.ok(new AlertDTO(alert));
+        return ResponseEntity.ok(new AlertResponseDto(alert));
     }
 
     // === TRANSACTIONS ===
     @GetMapping("/customers/{customerId}/transactions")
-    public ResponseEntity<List<TransactionDTO>> getCustomerTransactions(@PathVariable Long customerId) {
-        List<TransactionDTO> transactions = complianceService.getCustomerTransactions(customerId)
+    public ResponseEntity<List<TransactionResponseDto>> getCustomerTransactions(@PathVariable Long customerId) {
+        List<TransactionResponseDto> transactions = complianceService.getCustomerTransactions(customerId)
             .stream()
-            .map(TransactionDTO::new)
+            .map(TransactionResponseDto::new)
             .collect(Collectors.toList());
         return ResponseEntity.ok(transactions);
     }
 
     // === INVESTIGATION ===
     @PostMapping("/alerts/{alertId}/action")
-    public ResponseEntity<AlertDTO> takeAction(@PathVariable Long alertId, 
+    public ResponseEntity<AlertResponseDto> takeAction(@PathVariable Long alertId, 
                                           @RequestBody InvestigationActionRequest request) {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         if (auth == null || auth.getPrincipal() == null) {
@@ -81,12 +81,12 @@ public class ComplianceOfficerController {
         }
         Long officerId = ((User) auth.getPrincipal()).getUserId();
         Alert alert = complianceService.takeActionOnAlert(alertId, officerId, request);
-        return ResponseEntity.ok(new AlertDTO(alert));
+        return ResponseEntity.ok(new AlertResponseDto(alert));
     }
 
     // === SAR ===
     @PostMapping("/alerts/{alertId}/sar")
-    public ResponseEntity<SarDTO> generateSar(@PathVariable Long alertId,
+    public ResponseEntity<SarResponseDto> generateSar(@PathVariable Long alertId,
                                          @RequestBody SarRequest request) {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         if (auth == null || auth.getPrincipal() == null) {
@@ -94,13 +94,13 @@ public class ComplianceOfficerController {
         }
         Long officerId = ((User) auth.getPrincipal()).getUserId();
         Sar sar = complianceService.generateSar(alertId, officerId, request);
-        return ResponseEntity.ok(new SarDTO(sar));
+        return ResponseEntity.ok(new SarResponseDto(sar));
     }
 
     @PostMapping("/sars/{sarId}/submit")
-    public ResponseEntity<SarDTO> submitSar(@PathVariable Long sarId) {
+    public ResponseEntity<SarResponseDto> submitSar(@PathVariable Long sarId) {
         Sar sar = complianceService.submitSar(sarId);
-        return ResponseEntity.ok(new SarDTO(sar));
+        return ResponseEntity.ok(new SarResponseDto(sar));
     }
 
     // === ENHANCED COMPLIANCE OFFICER ENDPOINTS ===
@@ -130,10 +130,10 @@ public class ComplianceOfficerController {
     }
 
     @GetMapping("/sars")
-    public ResponseEntity<List<SarDTO>> getAllSars() {
+    public ResponseEntity<List<SarResponseDto>> getAllSars() {
         List<com.tss.aml.entity.Sar> sars = complianceService.getAllSars();
-        List<SarDTO> responses = sars.stream()
-            .map(SarDTO::new)
+        List<SarResponseDto> responses = sars.stream()
+            .map(SarResponseDto::new)
             .collect(java.util.stream.Collectors.toList());
             
         return ResponseEntity.ok(responses);

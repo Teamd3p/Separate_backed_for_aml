@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.tss.aml.dto.request.DepositRequest;
 import com.tss.aml.dto.request.TransferRequest;
 import com.tss.aml.dto.request.WithdrawalRequest;
-import com.tss.aml.dto.response.TransactionResponse;
+import com.tss.aml.dto.response.TransactionResponseDto;
 import com.tss.aml.entity.Transaction;
 import com.tss.aml.entity.enums.AuditAction;
 import com.tss.aml.entity.enums.AuditResourceType;
@@ -42,7 +42,7 @@ public class TransactionController {
 	private TransactionRepository transactionRepository;
 
 	@PostMapping("/transfer")
-	public ResponseEntity<TransactionResponse> transferFunds(@Valid @RequestBody TransferRequest transferRequest,
+	public ResponseEntity<TransactionResponseDto> transferFunds(@Valid @RequestBody TransferRequest transferRequest,
 			@RequestParam Long userId, HttpServletRequest request) {
 
 		String ipAddress = getClientIpAddress(request);
@@ -54,7 +54,7 @@ public class TransactionController {
 
 		Transaction transaction = transactionService.transferFunds(transferRequest, userId, ipAddress, userAgent);
 
-		TransactionResponse response = new TransactionResponse();
+		TransactionResponseDto response = new TransactionResponseDto();
 		response.setTransactionId(transaction.getTransactionId());
 		response.setSenderAccountNumber(
 				transaction.getSenderAccountNumber() != null ? transaction.getSenderAccountNumber() : null);
@@ -67,14 +67,13 @@ public class TransactionController {
 		response.setStatus(transaction.getStatus());
 		response.setTimestamp(transaction.getTimestamp());
 		response.setCounterpartyName(transaction.getCounterpartyName());
-		response.setCounterpartyAccount(transaction.getCounterpartyAccount());
 		response.setCountryCode(transaction.getCountryCode());
 
 		return new ResponseEntity<>(response, HttpStatus.CREATED);
 	}
 
 	@PostMapping("/deposit")
-	public ResponseEntity<TransactionResponse> depositFunds(@Valid @RequestBody DepositRequest depositRequest,
+	public ResponseEntity<TransactionResponseDto> depositFunds(@Valid @RequestBody DepositRequest depositRequest,
 			@RequestParam Long userId, HttpServletRequest request) {
 
 		String ipAddress = getClientIpAddress(request);
@@ -86,7 +85,7 @@ public class TransactionController {
 
 		Transaction transaction = transactionService.depositFunds(depositRequest, userId, ipAddress, userAgent);
 
-		TransactionResponse response = new TransactionResponse();
+		TransactionResponseDto response = new TransactionResponseDto();
 		response.setTransactionId(transaction.getTransactionId());
 		response.setSenderAccountNumber(
 				transaction.getSenderAccountNumber() != null ? transaction.getSenderAccountNumber() : null);
@@ -99,14 +98,13 @@ public class TransactionController {
 		response.setStatus(transaction.getStatus());
 		response.setTimestamp(transaction.getTimestamp());
 		response.setCounterpartyName(transaction.getCounterpartyName());
-		response.setCounterpartyAccount(transaction.getCounterpartyAccount());
 		response.setCountryCode(transaction.getCountryCode());
 
 		return new ResponseEntity<>(response, HttpStatus.CREATED);
 	}
 
 	@PostMapping("/withdraw")
-	public ResponseEntity<TransactionResponse> withdrawFunds(@Valid @RequestBody WithdrawalRequest withdrawalRequest,
+	public ResponseEntity<TransactionResponseDto> withdrawFunds(@Valid @RequestBody WithdrawalRequest withdrawalRequest,
 			@RequestParam Long userId, HttpServletRequest request) {
 
 		String ipAddress = getClientIpAddress(request);
@@ -118,7 +116,7 @@ public class TransactionController {
 
 		Transaction transaction = transactionService.withdrawFunds(withdrawalRequest, userId, ipAddress, userAgent);
 
-		TransactionResponse response = new TransactionResponse();
+		TransactionResponseDto response = new TransactionResponseDto();
 		response.setTransactionId(transaction.getTransactionId());
 		response.setSenderAccountNumber(
 				transaction.getSenderAccountNumber() != null ? transaction.getSenderAccountNumber() : null);
@@ -131,14 +129,13 @@ public class TransactionController {
 		response.setStatus(transaction.getStatus());
 		response.setTimestamp(transaction.getTimestamp());
 		response.setCounterpartyName(transaction.getCounterpartyName());
-		response.setCounterpartyAccount(transaction.getCounterpartyAccount());
 		response.setCountryCode(transaction.getCountryCode());
 
 		return new ResponseEntity<>(response, HttpStatus.CREATED);
 	}
 
 	@GetMapping("/account/{accountNumber}")
-	public ResponseEntity<List<TransactionResponse>> getTransactionHistory(@PathVariable String accountNumber,
+	public ResponseEntity<List<TransactionResponseDto>> getTransactionHistory(@PathVariable String accountNumber,
 			HttpServletRequest request) {
 
 		String ipAddress = getClientIpAddress(request);
@@ -146,8 +143,8 @@ public class TransactionController {
 		// Find transactions where this account is either sender or receiver
 		List<Transaction> transactions = transactionRepository.findBySenderAccountNumber(accountNumber);
 
-		List<TransactionResponse> responses = transactions.stream().map(transaction -> {
-			TransactionResponse response = new TransactionResponse();
+		List<TransactionResponseDto> responses = transactions.stream().map(transaction -> {
+			TransactionResponseDto response = new TransactionResponseDto();
 			response.setTransactionId(transaction.getTransactionId());
 			response.setSenderAccountNumber(
 					transaction.getSenderAccountNumber() != null ? transaction.getSenderAccountNumber() : null);
@@ -160,8 +157,7 @@ public class TransactionController {
 			response.setStatus(transaction.getStatus());
 			response.setTimestamp(transaction.getTimestamp());
 			response.setCounterpartyName(transaction.getCounterpartyName());
-			response.setCounterpartyAccount(transaction.getCounterpartyAccount());
-			response.setCountryCode(transaction.getCountryCode());
+				response.setCountryCode(transaction.getCountryCode());
 			return response;
 		}).collect(Collectors.toList());
 
@@ -172,7 +168,7 @@ public class TransactionController {
 	}
 
 	@GetMapping("/{transactionId}")
-	public ResponseEntity<TransactionResponse> getTransactionById(@PathVariable Long transactionId,
+	public ResponseEntity<TransactionResponseDto> getTransactionById(@PathVariable Long transactionId,
 			HttpServletRequest request) {
 
 		String ipAddress = getClientIpAddress(request);
@@ -184,7 +180,7 @@ public class TransactionController {
 			return ResponseEntity.notFound().build();
 		}
 
-		TransactionResponse response = new TransactionResponse();
+		TransactionResponseDto response = new TransactionResponseDto();
 		response.setTransactionId(transaction.getTransactionId());
 //        response.setSenderAccountNumber(transaction.getSenderAccount() != null ? transaction.getSenderAccount().getAccountNumber() : null);
 //        response.setReceiverAccountNumber(transaction.getReceiverAccount() != null ? transaction.getReceiverAccount().getAccountNumber() : null);
@@ -195,7 +191,6 @@ public class TransactionController {
 		response.setStatus(transaction.getStatus());
 		response.setTimestamp(transaction.getTimestamp());
 		response.setCounterpartyName(transaction.getCounterpartyName());
-		response.setCounterpartyAccount(transaction.getCounterpartyAccount());
 		response.setCountryCode(transaction.getCountryCode());
 
 		auditService.logSuccess(AuditAction.DATA_VIEWED, AuditResourceType.TRANSACTION, transactionId, null, null,

@@ -23,6 +23,4 @@ public class ComplianceOfficerRequest {
     private String lastName;
     
     private String phone;
-
-    // Getters & Setters
 }

@@ -24,8 +24,8 @@ public interface ComplianceOfficerService {
     Sar submitSar(Long sarId);
 
     // New methods for enhanced compliance officer controller
-    com.tss.aml.dto.response.OfficerProfileDto getOfficerProfile(Long officerId);
-    com.tss.aml.dto.response.OfficerProfileDto updateOfficerProfile(Long officerId, com.tss.aml.dto.request.OfficerProfileUpdateRequest request);
+    com.tss.aml.dto.response.OfficerProfileResponseDto getOfficerProfile(Long officerId);
+    com.tss.aml.dto.response.OfficerProfileResponseDto updateOfficerProfile(Long officerId, com.tss.aml.dto.request.OfficerProfileUpdateRequest request);
     void sendProfileUpdateOtp(String email);
 	void sendOfficerProfileUpdateOtp(String email);
 

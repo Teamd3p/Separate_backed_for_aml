@@ -17,6 +17,7 @@ public class RuleRequest {
     @NotBlank
     private String name;
     
+    @NotBlank
     private String description;
     
     @NotNull

@@ -9,18 +9,19 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Data
-@NoArgsConstructor
 @AllArgsConstructor
-public class ComplianceOfficerResponseDto {
-
-	private Long userId;
-	private String email;
+@NoArgsConstructor
+public class OfficerProfileResponseDto {
+	private Long officerId;
 	private String firstName;
 	private String lastName;
+	private String email;
 	private String phoneNumber;
-	private UserStatus status;
 	private String department;
-	private Integer assignedAlertsCount;
-	private LocalDateTime lastLoginAt;
+	private String badgeNumber;
+	private LocalDateTime hireDate;
+	private UserStatus status;
 	private LocalDateTime createdAt;
+	private LocalDateTime lastLoginAt;
+
 }

@@ -165,17 +165,17 @@ public class ComplianceOfficerServiceImpl implements ComplianceOfficerService {
 	}
 
 	@Override
-	public com.tss.aml.dto.response.OfficerProfileDto getOfficerProfile(Long officerId) {
+	public com.tss.aml.dto.response.OfficerProfileResponseDto getOfficerProfile(Long officerId) {
 		ComplianceOfficer officer = officerRepo.findById(officerId)
 				.orElseThrow(() -> new RuntimeException("Officer not found"));
 
-		com.tss.aml.dto.response.OfficerProfileDto dto = new com.tss.aml.dto.response.OfficerProfileDto();
+		com.tss.aml.dto.response.OfficerProfileResponseDto dto = new com.tss.aml.dto.response.OfficerProfileResponseDto();
 		dto.setOfficerId(officer.getUserId());
 		dto.setFirstName(officer.getFirstName());
 		dto.setLastName(officer.getLastName());
 		dto.setEmail(officer.getEmail());
 		dto.setPhoneNumber(officer.getPhone());
-	
+
 		dto.setStatus(officer.getStatus());
 		dto.setCreatedAt(officer.getCreatedAt());
 		dto.setLastLoginAt(officer.getLastLogin());
@@ -184,7 +184,7 @@ public class ComplianceOfficerServiceImpl implements ComplianceOfficerService {
 	}
 
 	@Override
-	public com.tss.aml.dto.response.OfficerProfileDto updateOfficerProfile(Long officerId,
+	public com.tss.aml.dto.response.OfficerProfileResponseDto updateOfficerProfile(Long officerId,
 			com.tss.aml.dto.request.OfficerProfileUpdateRequest request) {
 		// Verify OTP first
 		if (!otpService.verifyOtp(request.getEmail(), request.getOtp())) {
@@ -203,7 +203,7 @@ public class ComplianceOfficerServiceImpl implements ComplianceOfficerService {
 		if (request.getPhoneNumber() != null) {
 			officer.setPhone(request.getPhoneNumber());
 		}
-	
+
 		officer = officerRepo.save(officer);
 		return getOfficerProfile(officer.getUserId());
 	}
@@ -217,6 +217,6 @@ public class ComplianceOfficerServiceImpl implements ComplianceOfficerService {
 	@Override
 	public void sendProfileUpdateOtp(String email) {
 		String otp = otpService.generateOtp(email);
-		emailService.sendOtpEmail(email, otp);		
+		emailService.sendOtpEmail(email, otp);
 	}
 }

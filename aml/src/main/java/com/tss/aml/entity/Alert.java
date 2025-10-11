@@ -50,6 +50,7 @@ public class Alert {
 	private AlertStatus status = AlertStatus.OPEN;
 
 	private LocalDateTime createdAt = LocalDateTime.now();
+	private LocalDateTime updatedAt;
 
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "assigned_to")

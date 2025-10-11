@@ -17,7 +17,7 @@ import com.tss.aml.entity.enums.KycStatus;
 import com.tss.aml.repository.ComplianceOfficerRepository;
 import com.tss.aml.repository.CustomerRepository;
 import com.tss.aml.repository.KycDocumentRepository;
-import com.tss.aml.service.IDocumentVerificationService;
+import com.tss.aml.service.DocumentVerificationService;
 
 @Service
 @Transactional
@@ -36,7 +36,7 @@ public class KycDocumentService {
 	private FileStorageService fileStorageService;
 
 	@Autowired
-	private IDocumentVerificationService documentVerificationService;
+	private DocumentVerificationService documentVerificationService;
 
 	public KycDocument uploadDocument(Long customerId, DocumentType docType, MultipartFile file) {
 		Customer customer = customerRepository.findById(customerId)

@@ -4,7 +4,7 @@ import java.util.List;
 
 import com.tss.aml.dto.request.AccountUpdateRequest;
 import com.tss.aml.dto.request.ComplianceOfficerRequest;
-import com.tss.aml.dto.request.CustomerUpdateRequest;
+import com.tss.aml.dto.request.CustomerProfileUpdateRequest;
 import com.tss.aml.dto.request.KeywordRequest;
 import com.tss.aml.dto.request.RiskyCountryRequest;
 import com.tss.aml.dto.request.RuleRequest;
@@ -56,7 +56,7 @@ public interface AdminService {
 
 	Customer getCustomerById(Long id);
 
-	Customer updateCustomer(Long id, CustomerUpdateRequest request);
+	Customer updateCustomer(Long id, CustomerProfileUpdateRequest request);
 
 	void deleteCustomer(Long id);
 

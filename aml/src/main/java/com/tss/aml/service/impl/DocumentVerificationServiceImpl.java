@@ -10,7 +10,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.tss.aml.entity.KycDocument;
-import com.tss.aml.service.IDocumentVerificationService;
+import com.tss.aml.service.DocumentVerificationService;
 
 /**
  * Implementation of DocumentVerificationService following SOLID principles -
@@ -22,7 +22,7 @@ import com.tss.aml.service.IDocumentVerificationService;
  * not concrete classes
  */
 @Service
-public class DocumentVerificationServiceImpl implements IDocumentVerificationService {
+public class DocumentVerificationServiceImpl implements DocumentVerificationService {
 
 	
 }

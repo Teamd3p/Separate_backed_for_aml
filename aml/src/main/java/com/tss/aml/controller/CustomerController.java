@@ -22,8 +22,9 @@ import com.tss.aml.dto.response.AlertResponseDto;
 import com.tss.aml.dto.response.ApiResponseDto;
 import com.tss.aml.dto.response.CustomerProfileDto;
 import com.tss.aml.dto.response.HelpDeskTicketDto;
+import com.tss.aml.dto.response.KycDocumentResponseDto;
 import com.tss.aml.dto.response.TransactionCountDto;
-import com.tss.aml.dto.response.TransactionResponse;
+import com.tss.aml.dto.response.TransactionResponseDto;
 import com.tss.aml.entity.Alert;
 import com.tss.aml.entity.HelpDeskTicket;
 import com.tss.aml.entity.KycDocument;
@@ -57,24 +58,24 @@ public class CustomerController {
 
 	// === TRANSACTION ENDPOINTS ===
 	@GetMapping("/transactions")
-	public ResponseEntity<ApiResponseDto<List<TransactionResponse>>> getCustomerTransactions() {
+	public ResponseEntity<ApiResponseDto<List<TransactionResponseDto>>> getCustomerTransactions() {
 		Authentication auth = SecurityContextHolder.getContext().getAuthentication();
 		Long customerId = ((User) auth.getPrincipal()).getUserId();
 
 		List<Transaction> transactions = transactionService.getTransactionsByCustomerId(customerId);
-		List<TransactionResponse> responses = transactions.stream().map(this::convertToTransactionResponse)
+		List<TransactionResponseDto> responses = transactions.stream().map(this::convertToTransactionResponse)
 				.collect(Collectors.toList());
 
 		return ResponseEntity.ok(new ApiResponseDto<>(true, "Transactions retrieved successfully", responses));
 	}
 
 	@GetMapping("/transactions/flagged")
-	public ResponseEntity<ApiResponseDto<List<TransactionResponse>>> getFlaggedTransactions() {
+	public ResponseEntity<ApiResponseDto<List<TransactionResponseDto>>> getFlaggedTransactions() {
 		Authentication auth = SecurityContextHolder.getContext().getAuthentication();
 		Long customerId = ((User) auth.getPrincipal()).getUserId();
 
 		List<Transaction> transactions = transactionService.getFlaggedTransactionsByCustomerId(customerId);
-		List<TransactionResponse> responses = transactions.stream().map(this::convertToTransactionResponse)
+		List<TransactionResponseDto> responses = transactions.stream().map(this::convertToTransactionResponse)
 				.collect(Collectors.toList());
 
 		return ResponseEntity.ok(new ApiResponseDto<>(true, "Flagged transactions retrieved successfully", responses));
@@ -104,12 +105,12 @@ public class CustomerController {
 
 	// === KYC DOCUMENT ENDPOINTS ===
 	@GetMapping("/kyc-documents")
-	public ResponseEntity<ApiResponseDto<List<com.tss.aml.dto.KycDocumentDto>>> getKycDocumentHistory() {
+	public ResponseEntity<ApiResponseDto<List<KycDocumentResponseDto>>> getKycDocumentHistory() {
 		Authentication auth = SecurityContextHolder.getContext().getAuthentication();
 		Long customerId = ((User) auth.getPrincipal()).getUserId();
 
 		List<KycDocument> documents = kycDocumentService.getCustomerDocuments(customerId);
-		List<com.tss.aml.dto.KycDocumentDto> responses = documents.stream().map(this::convertToKycDocumentDto)
+		List<KycDocumentResponseDto> responses = documents.stream().map(this::convertToKycDocumentDto)
 				.collect(Collectors.toList());
 
 		return ResponseEntity.ok(new ApiResponseDto<>(true, "KYC documents retrieved successfully", responses));
@@ -182,8 +183,8 @@ public class CustomerController {
 	}
 
 	// === HELPER METHODS ===
-	private TransactionResponse convertToTransactionResponse(Transaction transaction) {
-		TransactionResponse response = new TransactionResponse();
+	private TransactionResponseDto convertToTransactionResponse(Transaction transaction) {
+		TransactionResponseDto response = new TransactionResponseDto();
 		response.setTransactionId(transaction.getTransactionId());
 		response.setAmount(transaction.getAmount());
 		response.setCurrency(transaction.getCurrency());
@@ -220,13 +221,13 @@ public class CustomerController {
 		return response;
 	}
 
-	private com.tss.aml.dto.KycDocumentDto convertToKycDocumentDto(KycDocument document) {
-		com.tss.aml.dto.KycDocumentDto dto = new com.tss.aml.dto.KycDocumentDto();
-		dto.setDocumentId(document.getId());
+	private KycDocumentResponseDto convertToKycDocumentDto(KycDocument document) {
+		KycDocumentResponseDto dto = new KycDocumentResponseDto();
+		dto.setId(document.getId());
 		dto.setDocumentType(document.getDocType());
 		dto.setFileName(document.getFileName());
 		dto.setStatus(document.getStatus());
-		dto.setUploadedAt(document.getUploadTimestamp());
+		dto.setUploadTimestamp(document.getUploadTimestamp());
 		dto.setVerificationTimestamp(document.getVerificationTimestamp());
 		dto.setVerificationNotes(document.getVerificationNotes());
 		dto.setRiskScore(document.getRiskScore());
