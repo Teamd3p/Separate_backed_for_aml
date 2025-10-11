@@ -1,4 +1,4 @@
-package com.tss.aml.service;
+package com.tss.aml.service.impl;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -10,11 +10,15 @@ import java.util.UUID;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.tss.aml.service.FileStorageService;
+
 @Service
+@Transactional
 @ConditionalOnProperty(name = "storage.type", havingValue = "local", matchIfMissing = true)
-public class LocalFileStorageService implements FileStorageService {
+public class LocalFileStorageServiceImpl implements FileStorageService {
 
     @Value("${app.file.upload-dir:uploads/kyc-documents}")
     private String uploadDir;

@@ -1,4 +1,4 @@
-package com.tss.aml.service;
+package com.tss.aml.service.impl;
 
 import java.io.IOException;
 import java.util.Map;
@@ -9,16 +9,19 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.cloudinary.Cloudinary;
 import com.cloudinary.utils.ObjectUtils;
+import com.tss.aml.service.FileStorageService;
 
 @Service
+@Transactional
 @ConditionalOnProperty(name = "storage.type", havingValue = "cloudinary")
-public class CloudinaryFileStorageService implements FileStorageService {
+public class CloudinaryFileStorageServiceImpl implements FileStorageService {
 
-    private static final Logger logger = LoggerFactory.getLogger(CloudinaryFileStorageService.class);
+    private static final Logger logger = LoggerFactory.getLogger(CloudinaryFileStorageServiceImpl.class);
 
     @Autowired
     private Cloudinary cloudinary;
