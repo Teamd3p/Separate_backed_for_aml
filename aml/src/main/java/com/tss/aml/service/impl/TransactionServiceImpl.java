@@ -189,8 +189,7 @@ public class TransactionServiceImpl implements TransactionService {
 			// Create transaction
 			Transaction transaction = new Transaction();
 			transaction.setCustomer(senderAccount.getCustomer());
-			transaction.setSenderAccount(senderAccount);
-			transaction.setReceiverAccount(receiverAccount);
+			transaction.setSenderAccountNumber(senderAccount.getAccountNumber());
 			transaction.setAmount(finalAmount);
 			transaction.setCurrency(receiverAccount.getCurrency());
 			transaction.setDescription(transferRequest.getDescription());
@@ -201,14 +200,9 @@ public class TransactionServiceImpl implements TransactionService {
 					receiverAccount.getCustomer().getFirstName() + " " + receiverAccount.getCustomer().getLastName());
 			transaction.setCounterpartyAccount(receiverAccount.getAccountNumber());
 
-			// Set currency conversion details if applicable
+			// Set currency exchange reference if applicable
 			if (conversionResult != null) {
-				transaction.setOriginalCurrency(senderAccount.getCurrency());
-				transaction.setOriginalAmount(transferRequest.getAmount());
-				transaction.setExchangeRate(conversionResult.getExchangeRate());
-				transaction.setConversionFee(conversionResult.getConversionFee());
-				transaction.setConversionId(conversionResult.getConversionId());
-				transaction.setIsCurrencyConverted(true);
+				transaction.setCurrencyExchange(conversionResult.getCurrencyExchange());
 			}
 
 			// Process the transaction through AML rules
@@ -268,8 +262,7 @@ public class TransactionServiceImpl implements TransactionService {
 			// Create deposit transaction
 			Transaction transaction = new Transaction();
 			transaction.setCustomer(account.getCustomer());
-			transaction.setSenderAccount(null); // External deposit
-			transaction.setReceiverAccount(account);
+			transaction.setSenderAccountNumber("EXTERNAL"); // External deposit
 			transaction.setAmount(depositRequest.getAmount());
 			// Automatically fetch currency from account
 			transaction.setCurrency(account.getCurrency());
@@ -278,6 +271,7 @@ public class TransactionServiceImpl implements TransactionService {
 			// Automatically fetch country code from customer
 			transaction.setCountryCode(account.getCustomer().getCountry());
 			transaction.setCounterpartyName("External Deposit");
+			transaction.setCounterpartyAccount(account.getAccountNumber());
 
 			// Process through AML rules
 			transaction = processTransaction(transaction);
@@ -340,8 +334,7 @@ public class TransactionServiceImpl implements TransactionService {
 			// Create withdrawal transaction
 			Transaction transaction = new Transaction();
 			transaction.setCustomer(account.getCustomer());
-			transaction.setSenderAccount(account);
-			transaction.setReceiverAccount(null); // External withdrawal
+			transaction.setSenderAccountNumber(account.getAccountNumber());
 			transaction.setAmount(withdrawalRequest.getAmount());
 			// Automatically fetch currency from account
 			transaction.setCurrency(account.getCurrency());
@@ -350,6 +343,7 @@ public class TransactionServiceImpl implements TransactionService {
 			// Automatically fetch country code from customer
 			transaction.setCountryCode(account.getCustomer().getCountry());
 			transaction.setCounterpartyName("External Withdrawal");
+			transaction.setCounterpartyAccount("EXTERNAL");
 
 			// Process through AML rules
 			transaction = processTransaction(transaction);

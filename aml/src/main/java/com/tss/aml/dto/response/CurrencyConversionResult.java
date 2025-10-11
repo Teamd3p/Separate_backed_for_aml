@@ -3,6 +3,8 @@ package com.tss.aml.dto.response;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
+import com.tss.aml.entity.CurrencyExchange;
+
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -22,6 +24,7 @@ public class CurrencyConversionResult {
     private String conversionId;
     private LocalDateTime conversionTime;
     private String rateSource;
+    private CurrencyExchange currencyExchange;
     
     public CurrencyConversionResult(String fromCurrency, String toCurrency, BigDecimal originalAmount, 
                                    BigDecimal convertedAmount, BigDecimal exchangeRate, BigDecimal conversionFee) {

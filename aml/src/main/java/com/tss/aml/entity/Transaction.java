@@ -40,21 +40,13 @@ public class Transaction {
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long transactionId;
 
-	@NotNull
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "customer_id", nullable = false)
-	@JsonIgnoreProperties({ "hibernateLazyInitializer", "handler", "passwordHash", "verificationOtp", "otpExpiryTime" })
+	@JsonIgnoreProperties({ "hibernateLazyInitializer", "handler", "passwordHash" })
 	private Customer customer;
 
-	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "sender_account_id")
-	@JsonIgnoreProperties({ "hibernateLazyInitializer", "handler" })
-	private Account senderAccount;
-
-	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "receiver_account_id")
-	@JsonIgnoreProperties({ "hibernateLazyInitializer", "handler" })
-	private Account receiverAccount;
+	@NotNull
+	private String senderAccountNumber;
 
 	@NotNull
 	private BigDecimal amount;
@@ -62,13 +54,11 @@ public class Transaction {
 	@NotNull
 	private String currency;
 
-	// Currency conversion fields
-	private String originalCurrency;
-	private BigDecimal originalAmount;
-	private BigDecimal exchangeRate;
-	private BigDecimal conversionFee;
-	private String conversionId;
-	private Boolean isCurrencyConverted = false;
+	// Currency exchange reference
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "currency_exchange_id")
+	@JsonIgnoreProperties({ "hibernateLazyInitializer", "handler" })
+	private CurrencyExchange currencyExchange;
 
 	private LocalDateTime timestamp = LocalDateTime.now();
 	private String description;
@@ -86,11 +76,10 @@ public class Transaction {
 
 	private Integer riskScore = 0;
 
-	public Transaction(Customer customer, Account senderAccount, Account receiverAccount, BigDecimal amount,
+	public Transaction(Customer customer, String senderAccNumber, BigDecimal amount,
 			String currency, String description, TransactionType type) {
 		this.customer = customer;
-		this.senderAccount = senderAccount;
-		this.receiverAccount = receiverAccount;
+		this.senderAccountNumber = senderAccNumber;
 		this.amount = amount;
 		this.currency = currency;
 		this.description = description;

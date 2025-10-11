@@ -10,7 +10,6 @@ public class TransactionResponse {
     
     private Long transactionId;
     private String senderAccountNumber;
-    private String receiverAccountNumber;
     private BigDecimal amount;
     private String currency;
     private String description;
@@ -25,13 +24,12 @@ public class TransactionResponse {
     // Constructors
     public TransactionResponse() {}
 
-    public TransactionResponse(Long transactionId, String senderAccountNumber, String receiverAccountNumber,
+    public TransactionResponse(Long transactionId, String senderAccountNumber,
                               BigDecimal amount, String currency, String description, TransactionType transactionType,
                               TransactionStatus status, LocalDateTime timestamp, String counterpartyName,
                               String counterpartyAccount, String countryCode, Integer riskScore) {
         this.transactionId = transactionId;
         this.senderAccountNumber = senderAccountNumber;
-        this.receiverAccountNumber = receiverAccountNumber;
         this.amount = amount;
         this.currency = currency;
         this.description = description;
@@ -50,9 +48,6 @@ public class TransactionResponse {
 
     public String getSenderAccountNumber() { return senderAccountNumber; }
     public void setSenderAccountNumber(String senderAccountNumber) { this.senderAccountNumber = senderAccountNumber; }
-
-    public String getReceiverAccountNumber() { return receiverAccountNumber; }
-    public void setReceiverAccountNumber(String receiverAccountNumber) { this.receiverAccountNumber = receiverAccountNumber; }
 
     public BigDecimal getAmount() { return amount; }
     public void setAmount(BigDecimal amount) { this.amount = amount; }

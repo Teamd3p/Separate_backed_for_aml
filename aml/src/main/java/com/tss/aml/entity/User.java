@@ -53,8 +53,6 @@ public abstract class User {
 	private LocalDateTime lastLogin;
 
 	private boolean emailVerified = false;
-	private String verificationOtp;
-	private LocalDateTime otpExpiryTime;
 
 	public User(String email, String passwordHash, Role role) {
 		this.email = email;

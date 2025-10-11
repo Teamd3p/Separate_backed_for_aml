@@ -10,7 +10,6 @@ public class TransactionHistoryResponseDto {
 
     private Long transactionId;
     private String senderAccountNumber;
-    private String receiverAccountNumber;
     private BigDecimal amount;
     private String currency;
     private TransactionType transactionType;
@@ -22,13 +21,12 @@ public class TransactionHistoryResponseDto {
     public TransactionHistoryResponseDto() {}
 
     public TransactionHistoryResponseDto(Long transactionId, String senderAccountNumber, 
-                                        String receiverAccountNumber, BigDecimal amount, 
+                                        BigDecimal amount, 
                                         String currency, TransactionType transactionType, 
                                         TransactionStatus status, LocalDateTime timestamp, 
                                         String countryCode) {
         this.transactionId = transactionId;
         this.senderAccountNumber = senderAccountNumber;
-        this.receiverAccountNumber = receiverAccountNumber;
         this.amount = amount;
         this.currency = currency;
         this.transactionType = transactionType;
@@ -43,9 +41,6 @@ public class TransactionHistoryResponseDto {
 
     public String getSenderAccountNumber() { return senderAccountNumber; }
     public void setSenderAccountNumber(String senderAccountNumber) { this.senderAccountNumber = senderAccountNumber; }
-
-    public String getReceiverAccountNumber() { return receiverAccountNumber; }
-    public void setReceiverAccountNumber(String receiverAccountNumber) { this.receiverAccountNumber = receiverAccountNumber; }
 
     public BigDecimal getAmount() { return amount; }
     public void setAmount(BigDecimal amount) { this.amount = amount; }

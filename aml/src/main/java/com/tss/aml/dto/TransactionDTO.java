@@ -19,10 +19,7 @@ public class TransactionDTO {
     private Long customerId;
     private String customerName;
     private String customerEmail;
-    private Long senderAccountId;
     private String senderAccountNumber;
-    private Long receiverAccountId;
-    private String receiverAccountNumber;
     private BigDecimal amount;
     private String currency;
     private LocalDateTime timestamp;
@@ -40,10 +37,7 @@ public class TransactionDTO {
         this.customerName = transaction.getCustomer() != null ? 
             transaction.getCustomer().getFirstName() + " " + transaction.getCustomer().getLastName() : null;
         this.customerEmail = transaction.getCustomer() != null ? transaction.getCustomer().getEmail() : null;
-        this.senderAccountId = transaction.getSenderAccount() != null ? transaction.getSenderAccount().getAccountId() : null;
-        this.senderAccountNumber = transaction.getSenderAccount() != null ? transaction.getSenderAccount().getAccountNumber() : null;
-        this.receiverAccountId = transaction.getReceiverAccount() != null ? transaction.getReceiverAccount().getAccountId() : null;
-        this.receiverAccountNumber = transaction.getReceiverAccount() != null ? transaction.getReceiverAccount().getAccountNumber() : null;
+        this.senderAccountNumber = transaction.getSenderAccountNumber();
         this.amount = transaction.getAmount();
         this.currency = transaction.getCurrency();
         this.timestamp = transaction.getTimestamp();

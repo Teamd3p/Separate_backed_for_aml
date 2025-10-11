@@ -29,13 +29,7 @@ public class KycRuleEvaluator  {
 
     public void evaluateKycRulesForTransaction(Transaction transaction) {
         Customer customer = null;
-        
-        // Determine customer from transaction
-        if (transaction.getSenderAccount() != null) {
-            customer = transaction.getSenderAccount().getCustomer();
-        } else if (transaction.getReceiverAccount() != null) {
-            customer = transaction.getReceiverAccount().getCustomer();
-        }
+   
         
         if (customer == null) {
             return; // External transaction, no KYC check needed

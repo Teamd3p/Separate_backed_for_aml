@@ -193,13 +193,13 @@ public class CustomerController {
 		response.setTimestamp(transaction.getTimestamp());
 		response.setCountryCode(transaction.getCountryCode());
 		response.setRiskScore(transaction.getRiskScore());
-
-		if (transaction.getSenderAccount() != null) {
-			response.setSenderAccountNumber(transaction.getSenderAccount().getAccountNumber());
-		}
-		if (transaction.getReceiverAccount() != null) {
-			response.setReceiverAccountNumber(transaction.getReceiverAccount().getAccountNumber());
-		}
+//
+//		if (transaction.getSenderAccount() != null) {
+//			response.setSenderAccountNumber(transaction.getSenderAccount().getAccountNumber());
+//		}
+//		if (transaction.getReceiverAccount() != null) {
+//			response.setReceiverAccountNumber(transaction.getReceiverAccount().getAccountNumber());
+//		}
 
 		return response;
 	}
