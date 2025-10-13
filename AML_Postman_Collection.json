@@ -1,0 +1,314 @@
+{
+  "info": {
+    "name": "AML System API Collection",
+    "description": "Complete API collection for Anti Money Laundering System with Indian dummy data",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080",
+      "type": "string"
+    },
+    {
+      "key": "authToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "customerId",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "accountNumber",
+      "value": "ACC001234567890",
+      "type": "string"
+    },
+    {
+      "key": "officerId",
+      "value": "2",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Authentication",
+      "item": [
+        {
+          "name": "Register Customer",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstName\": \"Rajesh\",\n  \"lastName\": \"Sharma\",\n  \"email\": \"rajesh.sharma@gmail.com\",\n  \"password\": \"SecurePass123!\",\n  \"phoneNumber\": \"+91-9876543210\",\n  \"dateOfBirth\": \"1985-03-15\",\n  \"address\": \"123, MG Road, Bangalore, Karnataka, India\",\n  \"nationality\": \"Indian\",\n  \"panNumber\": \"ABCDE1234F\",\n  \"aadharNumber\": \"123456789012\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/register",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "register"]
+            }
+          }
+        },
+        {
+          "name": "Verify OTP",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"rajesh.sharma@gmail.com\",\n  \"otp\": \"123456\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/verify-otp",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "verify-otp"]
+            }
+          }
+        },
+        {
+          "name": "Login",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"rajesh.sharma@gmail.com\",\n  \"password\": \"SecurePass123!\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "login"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.collectionVariables.set('authToken', jsonData.token);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Resend OTP",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/resend-otp?email=rajesh.sharma@gmail.com",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "resend-otp"],
+              "query": [
+                {
+                  "key": "email",
+                  "value": "rajesh.sharma@gmail.com"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Account Management",
+      "item": [
+        {
+          "name": "Create Account",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"accountType\": \"SAVING\",\n  \"currency\": \"INR\",\n  \"initialBalance\": 50000.00,\n  \"branchCode\": \"HDFC0001234\",\n  \"nomineeName\": \"Priya Sharma\",\n  \"nomineeRelation\": \"Spouse\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/accounts/customer/{{customerId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "accounts", "customer", "{{customerId}}"]
+            }
+          }
+        },
+        {
+          "name": "Get Account Balance",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/accounts/{{accountNumber}}/balance",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "accounts", "{{accountNumber}}", "balance"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Transaction Management",
+      "item": [
+        {
+          "name": "Transfer Funds",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"senderAccountNumber\": \"ACC001234567890\",\n  \"receiverAccountNumber\": \"ACC009876543210\",\n  \"amount\": 25000.00,\n  \"currency\": \"INR\",\n  \"description\": \"Business payment to supplier\",\n  \"countryCode\": \"IN\",\n  \"counterpartyName\": \"Suresh Kumar\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/transactions/transfer?userId={{customerId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "transactions", "transfer"],
+              "query": [
+                {
+                  "key": "userId",
+                  "value": "{{customerId}}"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Deposit Funds",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"accountNumber\": \"ACC001234567890\",\n  \"amount\": 100000.00,\n  \"currency\": \"INR\",\n  \"description\": \"Salary deposit from TCS Limited\",\n  \"countryCode\": \"IN\",\n  \"sourceOfFunds\": \"Salary\",\n  \"counterpartyName\": \"TCS Limited\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/transactions/deposit?userId={{customerId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "transactions", "deposit"],
+              "query": [
+                {
+                  "key": "userId",
+                  "value": "{{customerId}}"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Withdraw Funds",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"accountNumber\": \"ACC001234567890\",\n  \"amount\": 15000.00,\n  \"currency\": \"INR\",\n  \"description\": \"ATM withdrawal for personal expenses\",\n  \"countryCode\": \"IN\",\n  \"purpose\": \"Personal expenses\",\n  \"counterpartyName\": \"HDFC ATM\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/transactions/withdraw?userId={{customerId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "transactions", "withdraw"],
+              "query": [
+                {
+                  "key": "userId",
+                  "value": "{{customerId}}"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Transaction History",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/transactions/account/{{accountNumber}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "transactions", "account", "{{accountNumber}}"]
+            }
+          }
+        },
+        {
+          "name": "Get Transaction by ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/transactions/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "transactions", "1"]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

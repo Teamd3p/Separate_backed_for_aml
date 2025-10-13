@@ -36,22 +36,21 @@ public class RuleEngineServiceImpl implements RuleEngineService {
     private final AlertRepository alertRepository;
 
     @Autowired
-    public RuleEngineServiceImpl(RuleRepository ruleRepository,
-                                 List<RuleEvaluator> evaluators,
-                                 KycRuleEvaluator kycRuleEvaluator,
-                                 AlertRepository alertRepository) {
+    public RuleEngineServiceImpl(RuleRepository ruleRepository, List<RuleEvaluator> evaluators,
+            KycRuleEvaluator kycRuleEvaluator, AlertRepository alertRepository) {
         this.ruleRepository = ruleRepository;
         this.evaluators = evaluators;
         this.kycRuleEvaluator = kycRuleEvaluator;
         this.alertRepository = alertRepository;
     }
+
     @Override
     public RuleEngineResult evaluate(Transaction transaction) {
         logger.info("=== AML RULE EVALUATION START ===");
-        logger.info("Transaction ID: {}, Amount: {} {}, Type: {}, Customer: {}",
+        logger.info("Transaction ID: {}, Amount: {} {}, Type: {}, Customer: {}", 
                 transaction.getTransactionId(),
-                transaction.getAmount(),
-                transaction.getCurrency(),
+                transaction.getAmount(), 
+                transaction.getCurrency(), 
                 transaction.getTransactionType(),
                 transaction.getCustomer() != null ? transaction.getCustomer().getUserId() : "Unknown");
 
@@ -59,8 +58,7 @@ public class RuleEngineServiceImpl implements RuleEngineService {
         logger.info("Found {} active rules to evaluate", activeRules.size());
 
         List<String> triggeredRules = new ArrayList<>();
-        int totalTriggeredScore = 0;
-        int totalMaxTriggeredScore = 0;
+        int rawRiskScore = 0;
 
         // 1️⃣ Evaluate each active rule
         for (Rule rule : activeRules) {
@@ -80,12 +78,10 @@ public class RuleEngineServiceImpl implements RuleEngineService {
                 if (triggered) {
                     triggeredRules.add(rule.getName());
                     int riskImpact = evaluator.getRiskScoreImpact(rule);
-                    totalTriggeredScore += riskImpact;
-                    totalMaxTriggeredScore += riskImpact; // only triggered rules
-                    logger.warn("🚨 RULE TRIGGERED: {} | Risk Impact: {} | Running Total: {}",
-                            rule.getName(), riskImpact, totalTriggeredScore);
+                    rawRiskScore += riskImpact;
+                    logger.warn("🚨 RULE TRIGGERED: {} | Risk Impact: {} | Running Total: {}", 
+                            rule.getName(), riskImpact, rawRiskScore);
                 } else {
-                    totalMaxTriggeredScore += rule.getRiskScoreImpact(); // include for normalization
                     logger.debug("✅ Rule passed: {}", rule.getName());
                 }
 
@@ -94,7 +90,7 @@ public class RuleEngineServiceImpl implements RuleEngineService {
             }
         }
 
-        // 2️⃣ Evaluate KYC rules
+        // 2️⃣ Evaluate KYC rules (they create alerts separately)
         try {
             kycRuleEvaluator.evaluateKycRulesForTransaction(transaction);
             logger.info("KYC rule evaluation completed successfully");
@@ -102,22 +98,21 @@ public class RuleEngineServiceImpl implements RuleEngineService {
             logger.error("Error during KYC rule evaluation: {}", e.getMessage(), e);
         }
 
-        // 3️⃣ Normalize triggered score properly
-        double normalizedRuleScore = totalMaxTriggeredScore == 0 ? 0 :
-                ((double) totalTriggeredScore / totalMaxTriggeredScore) * 100;
+        // 3️⃣ Cap raw risk score at 100
+        int ruleScore = Math.min(100, rawRiskScore);
 
-        // 4️⃣ Amount factor
+        // 4️⃣ Optional: Boost for very large amounts (e.g., >1M INR)
         BigDecimal amount = Optional.ofNullable(transaction.getAmount()).orElse(BigDecimal.ZERO);
-        BigDecimal reference = new BigDecimal("1000000"); // 1M as reference
-        BigDecimal factor = amount.divide(reference, 4, RoundingMode.HALF_UP);
-        if (factor.compareTo(BigDecimal.ONE) > 0) factor = BigDecimal.ONE;
-        double normalizedAmountScore = factor.doubleValue() * 100;
+        BigDecimal reference = new BigDecimal("1000000"); // 1M INR
+        boolean isHighValue = amount.compareTo(reference) >= 0;
 
-        // 5️⃣ Combine rule score and amount factor
-        double combinedScore = normalizedRuleScore * 0.7 + normalizedAmountScore * 0.3;
-        int finalScore = (int) Math.round(combinedScore);
+        int finalScore = ruleScore;
+        if (isHighValue && ruleScore < 70) {
+            // Ensure high-value transactions with any red flag get flagged
+            finalScore = Math.max(finalScore, 70);
+        }
 
-        // 6️⃣ Determine action
+        // 5️⃣ Determine action
         String action;
         boolean suspicious;
         if (finalScore >= BLOCK_THRESHOLD) {
@@ -131,16 +126,15 @@ public class RuleEngineServiceImpl implements RuleEngineService {
             suspicious = false;
         }
 
-        // 7️⃣ Log summary
+        // 6️⃣ Log summary
         logger.info("=== EVALUATION SUMMARY ===");
-        logger.info("Final Risk Score: {}/100", finalScore);
+        logger.info("Raw Risk Score: {} → Final Risk Score: {}/100", rawRiskScore, finalScore);
         logger.info("Triggered Rules: {}", triggeredRules);
         logger.info("Transaction Action: {}", action);
         logger.info("=== AML RULE EVALUATION END ===");
 
-        return suspicious ?
-                RuleEngineResult.suspicious(finalScore, triggeredRules) :
-                RuleEngineResult.clean(finalScore, triggeredRules);
+        return suspicious 
+            ? RuleEngineResult.suspicious(finalScore, triggeredRules)
+            : RuleEngineResult.clean(finalScore, triggeredRules);
     }
-
 }

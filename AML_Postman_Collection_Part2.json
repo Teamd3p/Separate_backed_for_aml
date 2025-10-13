@@ -1,0 +1,149 @@
+{
+  "name": "Customer Management",
+  "item": [
+    {
+      "name": "Get Customer Profile",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{authToken}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/customers/profile",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "customers", "profile"]
+        }
+      }
+    },
+    {
+      "name": "Update Customer Profile",
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{authToken}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"firstName\": \"Rajesh Kumar\",\n  \"lastName\": \"Sharma\",\n  \"phoneNumber\": \"+91-9876543211\",\n  \"address\": \"456, Brigade Road, Bangalore, Karnataka, India\",\n  \"otp\": \"123456\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/customers/profile",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "customers", "profile"]
+        }
+      }
+    },
+    {
+      "name": "Send Profile Update OTP",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{authToken}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/customers/profile/send-otp",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "customers", "profile", "send-otp"]
+        }
+      }
+    },
+    {
+      "name": "Get Customer Transactions",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{authToken}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/customers/transactions",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "customers", "transactions"]
+        }
+      }
+    },
+    {
+      "name": "Get Flagged Transactions",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{authToken}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/customers/transactions/flagged",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "customers", "transactions", "flagged"]
+        }
+      }
+    },
+    {
+      "name": "Get Transaction Counts",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{authToken}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/customers/transactions/counts",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "customers", "transactions", "counts"]
+        }
+      }
+    },
+    {
+      "name": "Get Customer Alerts",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{authToken}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/customers/alerts",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "customers", "alerts"]
+        }
+      }
+    },
+    {
+      "name": "Get KYC Documents",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{authToken}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/customers/kyc-documents",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "customers", "kyc-documents"]
+        }
+      }
+    }
+  ]
+}
