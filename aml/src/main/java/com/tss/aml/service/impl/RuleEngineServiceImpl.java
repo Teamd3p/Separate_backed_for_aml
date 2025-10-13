@@ -1,7 +1,7 @@
 package com.tss.aml.service.impl;
 
 import java.math.BigDecimal;
-import java.math.RoundingMode;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -16,10 +16,14 @@ import com.tss.aml.entity.Rule;
 import com.tss.aml.entity.Transaction;
 import com.tss.aml.repository.AlertRepository;
 import com.tss.aml.repository.RuleRepository;
+import com.tss.aml.repository.TransactionRepository;
+import com.tss.aml.rule.FrequencyRuleEvaluator;
 import com.tss.aml.rule.KycRuleEvaluator;
 import com.tss.aml.rule.RuleEngineResult;
 import com.tss.aml.rule.RuleEvaluator;
 import com.tss.aml.service.RuleEngineService;
+import com.tss.aml.util.ObjectMapperHolder;
+import com.tss.aml.util.RuleUtils;
 
 @Service
 @Transactional
@@ -34,6 +38,8 @@ public class RuleEngineServiceImpl implements RuleEngineService {
     private final List<RuleEvaluator> evaluators;
     private final KycRuleEvaluator kycRuleEvaluator;
     private final AlertRepository alertRepository;
+    @Autowired
+    private TransactionRepository transactionRepository;
 
     @Autowired
     public RuleEngineServiceImpl(RuleRepository ruleRepository, List<RuleEvaluator> evaluators,
@@ -76,8 +82,26 @@ public class RuleEngineServiceImpl implements RuleEngineService {
                 boolean triggered = evaluator.evaluate(transaction, rule);
 
                 if (triggered) {
+                    int riskImpact;
+
+                    // 🔥 Special handling for FrequencyRuleEvaluator to scale risk
+                    if (evaluator instanceof FrequencyRuleEvaluator) {
+                        // Re-fetch count to calculate scaled risk
+                        var cond = ObjectMapperHolder.readMap(rule.getConditions());
+                        Integer windowMinutes = RuleUtils.getInt(cond, "timeWindowMinutes");
+                        if (windowMinutes != null && transaction.getCustomer() != null) {
+                            LocalDateTime cutoff = transaction.getTimestamp().minusMinutes(windowMinutes);
+                            long count = transactionRepository.countByCustomerUserIdAndTimestampAfter(
+                                    transaction.getCustomer().getUserId(), cutoff);
+                            riskImpact = ((FrequencyRuleEvaluator) evaluator).calculateScaledRiskScore(rule, count);
+                        } else {
+                            riskImpact = evaluator.getRiskScoreImpact(rule);
+                        }
+                    } else {
+                        riskImpact = evaluator.getRiskScoreImpact(rule);
+                    }
+
                     triggeredRules.add(rule.getName());
-                    int riskImpact = evaluator.getRiskScoreImpact(rule);
                     rawRiskScore += riskImpact;
                     logger.warn("🚨 RULE TRIGGERED: {} | Risk Impact: {} | Running Total: {}", 
                             rule.getName(), riskImpact, rawRiskScore);
