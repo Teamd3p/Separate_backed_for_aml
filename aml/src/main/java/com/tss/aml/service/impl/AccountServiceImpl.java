@@ -13,6 +13,7 @@ import com.tss.aml.exception.UserApiException;
 import com.tss.aml.repository.AccountRepository;
 import com.tss.aml.repository.CustomerRepository;
 import com.tss.aml.service.AccountService;
+import com.tss.aml.service.EmailService;
 
 @Service
 public class AccountServiceImpl implements AccountService {
@@ -22,6 +23,9 @@ public class AccountServiceImpl implements AccountService {
 
     @Autowired
     private CustomerRepository customerRepository;
+    
+    @Autowired
+    private EmailService emailService;
 
     private static final SecureRandom RANDOM = new SecureRandom();
 
@@ -44,7 +48,24 @@ public class AccountServiceImpl implements AccountService {
         String uniqueAccountNumber = generateUniqueAccountNumber();
         account.setAccountNumber(uniqueAccountNumber);
 
-        return accountRepository.save(account);
+        Account savedAccount = accountRepository.save(account);
+        
+        // Send account creation email notification
+        try {
+            emailService.sendAccountCreatedEmail(
+                customer.getEmail(),
+                customer.getFirstName(),
+                savedAccount.getAccountNumber(),
+                savedAccount.getCurrency(),
+                savedAccount.getAccountType().name(),
+                savedAccount.getBalance().toString()
+            );
+        } catch (Exception e) {
+            // Don't fail account creation if email fails
+            System.err.println("Failed to send account creation email: " + e.getMessage());
+        }
+
+        return savedAccount;
     }
 
     @Override
