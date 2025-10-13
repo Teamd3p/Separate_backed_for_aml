@@ -66,7 +66,6 @@ public class RuleEngineServiceImpl implements RuleEngineService {
         List<String> triggeredRules = new ArrayList<>();
         int rawRiskScore = 0;
 
-        // 1️⃣ Evaluate each active rule
         for (Rule rule : activeRules) {
             try {
                 Optional<RuleEvaluator> evaluatorOpt = evaluators.stream()
@@ -84,9 +83,8 @@ public class RuleEngineServiceImpl implements RuleEngineService {
                 if (triggered) {
                     int riskImpact;
 
-                    // 🔥 Special handling for FrequencyRuleEvaluator to scale risk
                     if (evaluator instanceof FrequencyRuleEvaluator) {
-                        // Re-fetch count to calculate scaled risk
+
                         var cond = ObjectMapperHolder.readMap(rule.getConditions());
                         Integer windowMinutes = RuleUtils.getInt(cond, "timeWindowMinutes");
                         if (windowMinutes != null && transaction.getCustomer() != null) {
@@ -150,7 +148,6 @@ public class RuleEngineServiceImpl implements RuleEngineService {
             suspicious = false;
         }
 
-        // 6️⃣ Log summary
         logger.info("=== EVALUATION SUMMARY ===");
         logger.info("Raw Risk Score: {} → Final Risk Score: {}/100", rawRiskScore, finalScore);
         logger.info("Triggered Rules: {}", triggeredRules);

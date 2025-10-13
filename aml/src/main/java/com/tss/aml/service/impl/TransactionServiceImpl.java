@@ -194,8 +194,25 @@ public class TransactionServiceImpl implements TransactionService {
 			transaction.setCurrency(receiverAccount.getCurrency());
 			transaction.setDescription(transferRequest.getDescription());
 			transaction.setTransactionType(TransactionType.TRANSFER);
-			// Automatically fetch country code from sender account's customer
-			transaction.setCountryCode(senderAccount.getCustomer().getCountry());
+			// Fetch country code from request or customer's country field
+			String countryCode = transferRequest.getCountryCode();
+			logger.info("🌍 Country code from request: {}", countryCode);
+			
+			if (countryCode == null || countryCode.trim().isEmpty()) {
+				// Fallback to customer's country if available
+				countryCode = senderAccount.getCustomer().getCountry();
+				logger.info("🌍 Country code from customer.country: {}", countryCode);
+				
+				if (countryCode == null || countryCode.trim().isEmpty()) {
+					// Default to sender's nationality-based country code
+					String nationality = senderAccount.getCustomer().getNationality();
+					countryCode = getCountryCodeFromNationality(nationality);
+					logger.info("🌍 Country code from nationality '{}': {}", nationality, countryCode);
+				}
+			}
+			
+			logger.info("🌍 Final country code set for transaction: {}", countryCode);
+			transaction.setCountryCode(countryCode);
 			transaction.setCounterpartyName(
 					receiverAccount.getCustomer().getFirstName() + " " + receiverAccount.getCustomer().getLastName());
 			transaction.setCounterpartyAccount(receiverAccount.getAccountNumber());
@@ -268,8 +285,17 @@ public class TransactionServiceImpl implements TransactionService {
 			transaction.setCurrency(account.getCurrency());
 			transaction.setDescription(depositRequest.getDescription());
 			transaction.setTransactionType(TransactionType.CREDIT);
-			// Automatically fetch country code from customer
-			transaction.setCountryCode(account.getCustomer().getCountry());
+			// Fetch country code from request or customer's country field
+			String countryCode = depositRequest.getCountryCode();
+			if (countryCode == null || countryCode.trim().isEmpty()) {
+				// Fallback to customer's country if available
+				countryCode = account.getCustomer().getCountry();
+				if (countryCode == null || countryCode.trim().isEmpty()) {
+					// Default to customer's nationality-based country code
+					countryCode = getCountryCodeFromNationality(account.getCustomer().getNationality());
+				}
+			}
+			transaction.setCountryCode(countryCode);
 			transaction.setCounterpartyName("External Deposit");
 			transaction.setCounterpartyAccount(account.getAccountNumber());
 
@@ -340,8 +366,17 @@ public class TransactionServiceImpl implements TransactionService {
 			transaction.setCurrency(account.getCurrency());
 			transaction.setDescription(withdrawalRequest.getDescription());
 			transaction.setTransactionType(TransactionType.DEBIT);
-			// Automatically fetch country code from customer
-			transaction.setCountryCode(account.getCustomer().getCountry());
+			// Fetch country code from request or customer's country field
+			String countryCode = withdrawalRequest.getCountryCode();
+			if (countryCode == null || countryCode.trim().isEmpty()) {
+				// Fallback to customer's country if available
+				countryCode = account.getCustomer().getCountry();
+				if (countryCode == null || countryCode.trim().isEmpty()) {
+					// Default to customer's nationality-based country code
+					countryCode = getCountryCodeFromNationality(account.getCustomer().getNationality());
+				}
+			}
+			transaction.setCountryCode(countryCode);
 			transaction.setCounterpartyName("External Withdrawal");
 			transaction.setCounterpartyAccount("EXTERNAL");
 
@@ -424,5 +459,28 @@ public class TransactionServiceImpl implements TransactionService {
 	public List<Transaction> getFlaggedTransactionsByCustomerId(Long customerId) {
 		return transactionRepository.findByCustomerUserIdAndStatusInOrderByTimestampDesc(customerId,
 				List.of(TransactionStatus.FLAGGED));
+	}
+
+	/**
+	 * Helper method to get country code from nationality
+	 */
+	private String getCountryCodeFromNationality(String nationality) {
+		if (nationality == null) return "IN"; // Default to India
+		
+		switch (nationality.toLowerCase()) {
+			case "indian": return "IN";
+			case "american": return "US";
+			case "british": return "GB";
+			case "canadian": return "CA";
+			case "australian": return "AU";
+			case "german": return "DE";
+			case "french": return "FR";
+			case "japanese": return "JP";
+			case "chinese": return "CN";
+			case "singaporean": return "SG";
+			case "emirati": return "AE";
+			case "saudi": return "SA";
+			default: return "IN"; // Default to India
+		}
 	}
 }

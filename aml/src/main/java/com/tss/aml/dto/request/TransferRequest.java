@@ -26,4 +26,6 @@ public class TransferRequest {
 
 	private String description;
 
+	private String countryCode; // Optional - for geographic AML rule evaluation
+
 }

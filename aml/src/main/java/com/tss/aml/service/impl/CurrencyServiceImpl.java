@@ -34,7 +34,7 @@ public class CurrencyServiceImpl implements CurrencyService {
         
         // Check if same currency
         if (fromCurrency.equals(toCurrency)) {
-            return new CurrencyConversionResult(
+            CurrencyConversionResult sameResult = new CurrencyConversionResult(
                 fromCurrency, 
                 toCurrency, 
                 amount, 
@@ -42,6 +42,10 @@ public class CurrencyServiceImpl implements CurrencyService {
                 BigDecimal.ONE, 
                 BigDecimal.ZERO
             );
+            sameResult.setConversionId(UUID.randomUUID().toString());
+            sameResult.setRateSource("SAME_CURRENCY");
+            // No currency exchange entity needed for same currency
+            return sameResult;
         }
         
         // Get exchange rate
@@ -65,6 +69,7 @@ public class CurrencyServiceImpl implements CurrencyService {
         
         result.setConversionId(UUID.randomUUID().toString());
         result.setRateSource(exchangeRate.getRateSource().name());
+        result.setCurrencyExchange(exchangeRate); // Set the currency exchange entity reference
         
         logger.info("✅ Conversion complete: {} {} = {} {} (Fee: {} {})", 
                    amount, fromCurrency, 

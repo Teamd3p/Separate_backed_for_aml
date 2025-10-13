@@ -28,13 +28,23 @@ public class GeographicRuleEvaluator implements RuleEvaluator {
 	public boolean evaluate(Transaction tx, Rule rule) {
 		try {
 			String country = Optional.ofNullable(tx).map(Transaction::getCountryCode).orElse(null);
-			if (country == null)
+			logger.info("🌍 GEOGRAPHIC RULE EVALUATION - Rule: {}", rule.getName());
+			logger.info("🌍 Transaction country code: '{}'", country);
+			
+			if (country == null || country.trim().isEmpty()) {
+				logger.warn("🌍 No country code found in transaction - geographic rule cannot evaluate");
 				return false;
+			}
+			
+			logger.info("🌍 Checking if country '{}' exists in risky countries database", country);
 			return riskyCountryRepository.findById(country).map(rc -> {
-				logger.warn("⚠️ GEOGRAPHIC TRIGGERED: {} | country={} | riskLevel={}", rule.getName(), country,
-						rc.getRiskLevel());
+				logger.warn("⚠️ GEOGRAPHIC RULE TRIGGERED: {} | country={} | riskLevel={}", 
+						rule.getName(), country, rc.getRiskLevel());
 				return true;
-			}).orElse(false);
+			}).orElseGet(() -> {
+				logger.info("🌍 Country '{}' not found in risky countries database - rule not triggered", country);
+				return false;
+			});
 		} catch (Exception e) {
 			logger.error("❌ Error evaluating geographic rule {}: {}", rule.getName(), e.getMessage());
 			return false;

@@ -17,6 +17,8 @@ public class WithdrawalRequest {
 
     private String description;
 
+    private String countryCode; // Optional - for geographic AML rule evaluation
+
     // Constructors
     public WithdrawalRequest() {}
 
@@ -24,6 +26,13 @@ public class WithdrawalRequest {
         this.accountNumber = accountNumber;
         this.amount = amount;
         this.description = description;
+    }
+
+    public WithdrawalRequest(String accountNumber, BigDecimal amount, String description, String countryCode) {
+        this.accountNumber = accountNumber;
+        this.amount = amount;
+        this.description = description;
+        this.countryCode = countryCode;
     }
 
     // Getters and Setters
@@ -35,4 +44,7 @@ public class WithdrawalRequest {
 
     public String getDescription() { return description; }
     public void setDescription(String description) { this.description = description; }
+
+    public String getCountryCode() { return countryCode; }
+    public void setCountryCode(String countryCode) { this.countryCode = countryCode; }
 }
