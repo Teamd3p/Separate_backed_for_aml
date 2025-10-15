@@ -59,8 +59,8 @@ public class KycRuleEvaluator  {
             .count();
         
         // Require at least 2 verified documents for complete KYC
-        if (verifiedDocuments < 2) {
-            String ruleDescription = "KYC Incomplete - Customer has only " + verifiedDocuments + " verified documents (minimum 2 required)";
+        if (verifiedDocuments < 1) {
+            String ruleDescription = "KYC Incomplete - Customer has only " + verifiedDocuments + " verified documents (minimum 1 required)";
             int riskScore = calculateKycIncompletenessRiskScore(verifiedDocuments);
             
             createKycAlert(transaction, customer, "KYC_INCOMPLETE", ruleDescription, riskScore);
@@ -128,7 +128,7 @@ public class KycRuleEvaluator  {
         if (verifiedDocuments == 0) {
             return 90; // Very high risk - no verified documents
         } else if (verifiedDocuments == 1) {
-            return 60; // Medium-high risk - only one verified document
+            return 40; // Medium-high risk - only one verified document
         }
         return 30; // Lower risk - has some documents but not complete
     }

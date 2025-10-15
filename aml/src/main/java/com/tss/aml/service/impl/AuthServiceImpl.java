@@ -16,7 +16,7 @@ import com.tss.aml.dto.request.VerifyOtpRequest;
 import com.tss.aml.dto.response.AuthResponse;
 import com.tss.aml.entity.Customer;
 import com.tss.aml.entity.User;
-import com.tss.aml.entity.enums.Role;
+import com.tss.aml.entity.enums.UserRole;
 import com.tss.aml.entity.enums.UserStatus;
 import com.tss.aml.exception.UserApiException;
 import com.tss.aml.repository.CustomerRepository;
@@ -149,7 +149,7 @@ public class AuthServiceImpl implements AuthService {
 		Customer customer = new Customer();
 		customer.setEmail(registerRequest.getEmail());
 		customer.setPasswordHash(pendingRegistration.getHashedPassword());
-		customer.setRole(Role.CUSTOMER);
+		customer.setRole(UserRole.CUSTOMER);
 		customer.setFirstName(registerRequest.getFirstName());
 		customer.setMiddleName(registerRequest.getMiddleName());
 		customer.setLastName(registerRequest.getLastName());

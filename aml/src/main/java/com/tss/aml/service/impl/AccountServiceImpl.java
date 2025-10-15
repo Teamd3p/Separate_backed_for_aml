@@ -73,6 +73,13 @@ public class AccountServiceImpl implements AccountService {
         return accountRepository.findByAccountNumber(accountNumber);
     }
 
+    @Override
+    public boolean isAccountOwnedByUser(String accountNumber, Long userId) {
+        Account account = accountRepository.findByAccountNumber(accountNumber);
+        return account != null && account.getCustomer() != null && 
+               account.getCustomer().getUserId().equals(userId);
+    }
+
     /**
      * Generates a unique 12-digit random account number.
      */

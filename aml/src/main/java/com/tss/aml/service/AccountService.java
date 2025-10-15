@@ -6,4 +6,5 @@ import com.tss.aml.entity.Account;
 public interface AccountService {
     Account createAccount(CreateAccountRequest request, Long customerId);
     Account getAccountByNumber(String accountNumber);
+    boolean isAccountOwnedByUser(String accountNumber, Long userId);
 }

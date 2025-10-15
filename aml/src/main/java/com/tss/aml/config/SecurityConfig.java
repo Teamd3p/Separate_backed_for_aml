@@ -32,7 +32,29 @@ public class SecurityConfig {
         http
             .csrf(csrf -> csrf.disable())
             .authorizeHttpRequests(auth -> auth
+                // Public endpoints
                 .requestMatchers("/api/auth/**").permitAll()
+                
+                // Admin only endpoints
+                .requestMatchers("/api/admin/**").hasRole("ADMIN")
+                
+                // Compliance officer endpoints
+                .requestMatchers("/api/compliance/**").hasAnyRole("ADMIN", "COMPLIANCE_OFFICER")
+                .requestMatchers("/api/kyc/compliance/**").hasAnyRole("ADMIN", "COMPLIANCE_OFFICER")
+                
+                // Customer endpoints - customers can only access their own data
+                .requestMatchers("/api/customers/**").hasRole("CUSTOMER")
+                
+                // Transaction endpoints - role-based access
+                .requestMatchers("/api/transactions/**").hasAnyRole("CUSTOMER", "ADMIN", "COMPLIANCE_OFFICER")
+                
+                // Account endpoints - role-based access
+                .requestMatchers("/api/accounts/**").hasAnyRole("CUSTOMER", "ADMIN")
+                
+                // KYC endpoints - authenticated users
+                .requestMatchers("/api/kyc/**").authenticated()
+                
+                // All other API endpoints require authentication
                 .requestMatchers("/api/**").authenticated()
                 .anyRequest().authenticated()
             )

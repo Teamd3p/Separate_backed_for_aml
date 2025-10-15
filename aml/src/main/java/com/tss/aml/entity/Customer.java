@@ -3,7 +3,7 @@ package com.tss.aml.entity;
 import java.time.LocalDate;
 
 import com.tss.aml.entity.enums.KycStatus;
-import com.tss.aml.entity.enums.Role;
+import com.tss.aml.entity.enums.UserRole;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -49,7 +49,7 @@ public class Customer extends User {
 
 	public Customer(String email, String passwordHash, String firstName, String lastName, LocalDate dateOfBirth,
 			String nationality, String contactNumber) {
-		super(email, passwordHash, Role.CUSTOMER);
+		super(email, passwordHash, UserRole.CUSTOMER);
 		this.firstName = firstName;
 		this.lastName = lastName;
 		this.dateOfBirth = dateOfBirth;

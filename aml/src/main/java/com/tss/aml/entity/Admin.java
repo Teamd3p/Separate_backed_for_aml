@@ -1,6 +1,6 @@
 package com.tss.aml.entity;
 
-import com.tss.aml.entity.enums.Role;
+import com.tss.aml.entity.enums.UserRole;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
@@ -23,7 +23,7 @@ public class Admin extends User {
 	private String phone;
 
 	public Admin(String email, String passwordHash, String firstName, String lastName, String phone) {
-		super(email, passwordHash, Role.ADMIN);
+		super(email, passwordHash, UserRole.ADMIN);
 		this.firstName = firstName;
 		this.lastName = lastName;
 		this.phone = phone;

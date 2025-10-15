@@ -15,7 +15,7 @@ import com.tss.aml.entity.Sar;
 import com.tss.aml.entity.Sar.SarStatus;
 import com.tss.aml.entity.Transaction;
 import com.tss.aml.entity.enums.AlertStatus;
-import com.tss.aml.entity.enums.Role;
+import com.tss.aml.entity.enums.UserRole;
 import com.tss.aml.entity.enums.TransactionStatus;
 import com.tss.aml.repository.AlertRepository;
 import com.tss.aml.repository.ComplianceOfficerRepository;
@@ -80,7 +80,7 @@ public class ComplianceOfficerServiceImpl implements ComplianceOfficerService {
 
 		ComplianceOfficer assignedOfficer = alert.getAssignedTo();
 		if (assignedOfficer != null && !officer.getUserId().equals(assignedOfficer.getUserId())
-				&& !officer.getRole().equals(Role.ADMIN)) {
+				&& !officer.getRole().equals(UserRole.ADMIN)) {
 			throw new RuntimeException("Not authorized...");
 		}
 

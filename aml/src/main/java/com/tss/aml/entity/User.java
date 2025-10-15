@@ -2,7 +2,7 @@ package com.tss.aml.entity;
 
 import java.time.LocalDateTime;
 
-import com.tss.aml.entity.enums.Role;
+import com.tss.aml.entity.enums.UserRole;
 import com.tss.aml.entity.enums.UserStatus;
 
 import jakarta.persistence.Column;
@@ -43,7 +43,7 @@ public abstract class User {
 
 	@Enumerated(EnumType.STRING)
 	@NotNull
-	private Role role;
+	private UserRole role;
 
 	@Column(length = 50)
 	@Enumerated(EnumType.STRING)
@@ -54,7 +54,7 @@ public abstract class User {
 
 	private boolean emailVerified = false;
 
-	public User(String email, String passwordHash, Role role) {
+	public User(String email, String passwordHash, UserRole role) {
 		this.email = email;
 		this.passwordHash = passwordHash;
 		this.role = role;

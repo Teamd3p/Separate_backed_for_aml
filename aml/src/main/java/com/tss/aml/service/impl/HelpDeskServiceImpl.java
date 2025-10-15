@@ -10,7 +10,6 @@ import org.springframework.transaction.annotation.Transactional;
 import com.tss.aml.dto.request.HelpDeskTicketRequest;
 import com.tss.aml.entity.Customer;
 import com.tss.aml.entity.HelpDeskTicket;
-import com.tss.aml.entity.enums.TicketPriority;
 import com.tss.aml.entity.enums.TicketStatus;
 import com.tss.aml.repository.CustomerRepository;
 import com.tss.aml.repository.HelpDeskTicketRepository;

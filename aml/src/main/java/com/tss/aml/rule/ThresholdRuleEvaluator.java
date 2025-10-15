@@ -51,6 +51,16 @@ public class ThresholdRuleEvaluator implements RuleEvaluator {
 				currency = "ANY"; // Apply to any currency
 			}
 			
+			// Inside evaluate() method, after currency check:
+			String expectedTxType = RuleUtils.getString(cond, "transactionType");
+			if (expectedTxType != null && !expectedTxType.isEmpty()) {
+			    if (tx.getTransactionType() == null || 
+			        !tx.getTransactionType().name().equalsIgnoreCase(expectedTxType)) {
+			        logger.debug("✅ THRESHOLD PASSED: {} | Transaction type mismatch", rule.getName());
+			        return false;
+			    }
+			}
+			
 			logger.info("💰 Parsed threshold: {} {}", threshold, currency);
 			
 			if (threshold == null) {

@@ -3,6 +3,7 @@ package com.tss.aml.controller;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -13,8 +14,10 @@ import org.springframework.web.bind.annotation.RestController;
 import com.tss.aml.dto.request.CreateAccountRequest;
 import com.tss.aml.dto.response.AccountResponse;
 import com.tss.aml.entity.Account;
+import com.tss.aml.entity.User;
 import com.tss.aml.entity.enums.AuditAction;
 import com.tss.aml.entity.enums.AuditResourceType;
+import com.tss.aml.security.SecurityUtils;
 import com.tss.aml.service.AccountService;
 import com.tss.aml.service.AuditService;
 
@@ -32,10 +35,14 @@ public class AccountController {
     private AuditService auditService;
 
     @PostMapping("/customer/{customerId}")
+    @PreAuthorize("hasRole('ADMIN') or (hasRole('CUSTOMER') and #customerId == authentication.principal.userId)")
     public ResponseEntity<AccountResponse> createAccount(
             @PathVariable Long customerId,
             @Valid @RequestBody CreateAccountRequest request,
             HttpServletRequest httpRequest) {
+        
+        // Additional security validation
+        SecurityUtils.validateAccountCreationAccess(customerId);
         
         String ipAddress = getClientIpAddress(httpRequest);
         try {
@@ -77,6 +84,7 @@ public class AccountController {
     }
 
     @GetMapping("/{accountNumber}/balance")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('COMPLIANCE_OFFICER') or (hasRole('CUSTOMER') and @accountService.isAccountOwnedByUser(#accountNumber, authentication.principal.userId))")
     public ResponseEntity<AccountResponse> getAccountBalance(
             @PathVariable String accountNumber,
             HttpServletRequest httpRequest) {
@@ -88,6 +96,12 @@ public class AccountController {
             auditService.logFailure(AuditAction.DATA_VIEWED, AuditResourceType.ACCOUNT, null, 
                 null, null, "Account balance query failed - account not found: " + accountNumber, ipAddress);
             return ResponseEntity.notFound().build();
+        }
+        
+        // Additional security validation for customers
+        User currentUser = SecurityUtils.getCurrentUser();
+        if (currentUser.getRole().name().equals("CUSTOMER")) {
+            SecurityUtils.validateCustomerAccess(account.getCustomer().getUserId());
         }
         
         AccountResponse response = new AccountResponse();

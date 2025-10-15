@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -126,11 +127,13 @@ public class CurrencyServiceImpl implements CurrencyService {
     public List<String> getSupportedCurrencies() {
         List<String> fromCurrencies = currencyExchangeRepository.findAllSupportedFromCurrencies();
         List<String> toCurrencies = currencyExchangeRepository.findAllSupportedToCurrencies();
-        
-        return fromCurrencies.stream()
-                .distinct()
-                .collect(Collectors.toList());
+
+        // Merge and remove duplicates
+        return Stream.concat(fromCurrencies.stream(), toCurrencies.stream())
+                     .distinct()
+                     .collect(Collectors.toList());
     }
+
     
     @Override
     public BigDecimal calculateConversionFee(String fromCurrency, String toCurrency, BigDecimal convertedAmount) {

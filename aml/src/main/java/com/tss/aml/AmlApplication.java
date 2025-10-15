@@ -10,4 +10,4 @@ public class AmlApplication {
 		SpringApplication.run(AmlApplication.class, args);
 
 	}
-}
+}	

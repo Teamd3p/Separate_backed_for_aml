@@ -6,12 +6,12 @@ import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.tss.aml.dto.request.DepositRequest;
@@ -19,9 +19,12 @@ import com.tss.aml.dto.request.TransferRequest;
 import com.tss.aml.dto.request.WithdrawalRequest;
 import com.tss.aml.dto.response.TransactionResponseDto;
 import com.tss.aml.entity.Transaction;
+import com.tss.aml.entity.User;
 import com.tss.aml.entity.enums.AuditAction;
 import com.tss.aml.entity.enums.AuditResourceType;
 import com.tss.aml.repository.TransactionRepository;
+import com.tss.aml.security.SecurityUtils;
+import com.tss.aml.service.AccountService;
 import com.tss.aml.service.AuditService;
 import com.tss.aml.service.TransactionService;
 
@@ -41,9 +44,24 @@ public class TransactionController {
 	@Autowired
 	private TransactionRepository transactionRepository;
 
+	@Autowired
+	private AccountService accountService;
+
 	@PostMapping("/transfer")
+	@PreAuthorize("hasRole('CUSTOMER') or hasRole('ADMIN')")
 	public ResponseEntity<TransactionResponseDto> transferFunds(@Valid @RequestBody TransferRequest transferRequest,
-			@RequestParam Long userId, HttpServletRequest request) {
+			HttpServletRequest request) {
+
+		// Get current authenticated user
+		User currentUser = SecurityUtils.getCurrentUser();
+		Long userId = currentUser.getUserId();
+		
+		// Validate that customer can only transfer from their own accounts
+		if (SecurityUtils.isCurrentUserCustomer()) {
+			if (!accountService.isAccountOwnedByUser(transferRequest.getSenderAccountNumber(), userId)) {
+				throw new SecurityException("Access denied: You can only transfer from your own accounts");
+			}
+		}
 
 		String ipAddress = getClientIpAddress(request);
 		String userAgent = request.getHeader("User-Agent");
@@ -73,8 +91,20 @@ public class TransactionController {
 	}
 
 	@PostMapping("/deposit")
+	@PreAuthorize("hasRole('CUSTOMER') or hasRole('ADMIN')")
 	public ResponseEntity<TransactionResponseDto> depositFunds(@Valid @RequestBody DepositRequest depositRequest,
-			@RequestParam Long userId, HttpServletRequest request) {
+			HttpServletRequest request) {
+
+		// Get current authenticated user
+		User currentUser = SecurityUtils.getCurrentUser();
+		Long userId = currentUser.getUserId();
+		
+		// Validate that customer can only deposit to their own accounts
+		if (SecurityUtils.isCurrentUserCustomer()) {
+			if (!accountService.isAccountOwnedByUser(depositRequest.getAccountNumber(), userId)) {
+				throw new SecurityException("Access denied: You can only deposit to your own accounts");
+			}
+		}
 
 		String ipAddress = getClientIpAddress(request);
 		String userAgent = request.getHeader("User-Agent");
@@ -104,8 +134,20 @@ public class TransactionController {
 	}
 
 	@PostMapping("/withdraw")
+	@PreAuthorize("hasRole('CUSTOMER') or hasRole('ADMIN')")
 	public ResponseEntity<TransactionResponseDto> withdrawFunds(@Valid @RequestBody WithdrawalRequest withdrawalRequest,
-			@RequestParam Long userId, HttpServletRequest request) {
+			HttpServletRequest request) {
+
+		// Get current authenticated user
+		User currentUser = SecurityUtils.getCurrentUser();
+		Long userId = currentUser.getUserId();
+		
+		// Validate that customer can only withdraw from their own accounts
+		if (SecurityUtils.isCurrentUserCustomer()) {
+			if (!accountService.isAccountOwnedByUser(withdrawalRequest.getAccountNumber(), userId)) {
+				throw new SecurityException("Access denied: You can only withdraw from your own accounts");
+			}
+		}
 
 		String ipAddress = getClientIpAddress(request);
 		String userAgent = request.getHeader("User-Agent");
@@ -135,8 +177,17 @@ public class TransactionController {
 	}
 
 	@GetMapping("/account/{accountNumber}")
+	@PreAuthorize("hasRole('ADMIN') or hasRole('COMPLIANCE_OFFICER') or (hasRole('CUSTOMER') and @accountService.isAccountOwnedByUser(#accountNumber, authentication.principal.userId))")
 	public ResponseEntity<List<TransactionResponseDto>> getTransactionHistory(@PathVariable String accountNumber,
 			HttpServletRequest request) {
+
+		// Additional security validation for customers
+		User currentUser = SecurityUtils.getCurrentUser();
+		if (SecurityUtils.isCurrentUserCustomer()) {
+			if (!accountService.isAccountOwnedByUser(accountNumber, currentUser.getUserId())) {
+				throw new SecurityException("Access denied: You can only view your own transaction history");
+			}
+		}
 
 		String ipAddress = getClientIpAddress(request);
 
@@ -168,6 +219,7 @@ public class TransactionController {
 	}
 
 	@GetMapping("/{transactionId}")
+	@PreAuthorize("hasRole('ADMIN') or hasRole('COMPLIANCE_OFFICER')")
 	public ResponseEntity<TransactionResponseDto> getTransactionById(@PathVariable Long transactionId,
 			HttpServletRequest request) {
 
@@ -178,6 +230,10 @@ public class TransactionController {
 			auditService.logFailure(AuditAction.DATA_VIEWED, AuditResourceType.TRANSACTION, transactionId, null, null,
 					"Transaction not found: " + transactionId, ipAddress);
 			return ResponseEntity.notFound().build();
+		}
+
+		if (SecurityUtils.isCurrentUserCustomer()) {
+			throw new SecurityException("Access denied: Customers should use customer-specific endpoints");
 		}
 
 		TransactionResponseDto response = new TransactionResponseDto();

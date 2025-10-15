@@ -5,7 +5,8 @@ package com.tss.aml.exception;
  */
 public class DocumentVerificationException extends RuntimeException {
     
-    private final String errorCode;
+    private static final long serialVersionUID = 1L;
+	private final String errorCode;
     
     public DocumentVerificationException(String message) {
         super(message);

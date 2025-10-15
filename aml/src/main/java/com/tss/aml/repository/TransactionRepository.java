@@ -49,5 +49,14 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
 
     // Count transactions for a customer filtered by status
     long countByCustomerUserIdAndStatus(Long customerId, TransactionStatus status);
+    
+ // TransactionRepository.java
+
+    
+    @Query("SELECT COUNT(DISTINCT t.customer.userId) FROM Transaction t " +
+    	       "WHERE t.counterpartyAccount = :receiverAccount " +
+    	       "AND t.timestamp > :after " +
+    	       "AND t.transactionType IN (com.tss.aml.entity.enums.TransactionType.DEBIT, com.tss.aml.entity.enums.TransactionType.TRANSFER)")
+    	long countDistinctSendersToReceiverAfter(@Param("receiverAccount") String receiverAccount, @Param("after") LocalDateTime after);
 
 }

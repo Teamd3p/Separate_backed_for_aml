@@ -1,6 +1,6 @@
 package com.tss.aml.entity;
 
-import com.tss.aml.entity.enums.Role;
+import com.tss.aml.entity.enums.UserRole;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
@@ -22,7 +22,7 @@ public class ComplianceOfficer extends User {
 	}
 
 	public ComplianceOfficer(String email, String passwordHash, String firstName, String lastName, String phone) {
-		super(email, passwordHash, Role.COMPLIANCE_OFFICER);
+		super(email, passwordHash, UserRole.COMPLIANCE_OFFICER);
 		this.firstName = firstName;
 		this.lastName = lastName;
 		this.phone = phone;
