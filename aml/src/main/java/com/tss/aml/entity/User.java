@@ -53,6 +53,10 @@ public abstract class User {
 	private LocalDateTime lastLogin;
 
 	private boolean emailVerified = false;
+	
+	// Password reset OTP fields
+	private String passwordResetOtp;
+	private LocalDateTime passwordResetOtpExpiry;
 
 	public User(String email, String passwordHash, UserRole role) {
 		this.email = email;

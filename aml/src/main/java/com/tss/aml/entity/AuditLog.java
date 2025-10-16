@@ -28,10 +28,12 @@ public class AuditLog {
 
     @NotNull
     @Enumerated(EnumType.STRING)
+    @Column(length = 50)
     private AuditAction action; // e.g., LOGIN, REGISTER, TRANSFER_FUNDS, etc.
 
     @NotNull
     @Enumerated(EnumType.STRING)
+    @Column(length = 30)
     private AuditResourceType resourceType; // e.g., USER, TRANSACTION, ACCOUNT, etc.
 
     private Long resourceId; // ID of the affected resource
@@ -45,8 +47,10 @@ public class AuditLog {
     private String details; // JSON or descriptive text of what changed
 
     @NotNull
+    @Column(length = 45)
     private String ipAddress;
 
+    @Column(length = 1000)
     private String userAgent; // Browser/client information
 
     @Enumerated(EnumType.STRING)

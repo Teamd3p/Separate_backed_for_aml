@@ -160,6 +160,96 @@ public class EmailServiceImpl implements EmailService {
         <p>Best regards,<br>
         <span class="highlight">AML Account Services</span></p>
         """;
+    
+    private static final String PASSWORD_RESET_OTP_EMAIL_CONTENT = """
+        <h2>🔐 Password Reset OTP</h2>
+        <p>Dear %s,</p>
+        
+        <p>We received a request to reset your password for your AML System account. Please use the following One-Time Password (OTP) to complete your password reset:</p>
+        
+        <div style="background-color: #f8f9fa; border: 2px solid #667eea; border-radius: 10px; padding: 30px; text-align: center; margin: 30px 0;">
+            <p style="margin: 0; font-size: 16px; color: #666; margin-bottom: 15px;">Your Password Reset OTP:</p>
+            <div style="font-family: 'Courier New', monospace; font-size: 32px; font-weight: bold; color: #667eea; letter-spacing: 8px; margin: 10px 0;">%s</div>
+            <p style="margin: 0; font-size: 14px; color: #999; margin-top: 10px;">Valid for 10 minutes only</p>
+        </div>
+        
+        <div class="warning">
+            <strong>⚠️ Important Security Information:</strong>
+            <ul style="margin: 10px 0; padding-left: 20px;">
+                <li>This OTP is valid for <strong>10 minutes only</strong></li>
+                <li>You can only use this OTP once</li>
+                <li>If you didn't request this reset, please ignore this email</li>
+                <li>Your current password remains unchanged until you complete the reset</li>
+            </ul>
+        </div>
+        
+        <p>If you did not request a password reset, please ignore this email or contact our security team immediately if you suspect unauthorized access to your account.</p>
+        
+        <p>For security reasons, we recommend:</p>
+        <ul style="line-height: 1.8;">
+            <li>🔒 Using a strong, unique password</li>
+            <li>🔄 Changing your password regularly</li>
+            <li>🚫 Never sharing your login credentials</li>
+            <li>📱 Enabling two-factor authentication when available</li>
+        </ul>
+        
+        <p>Best regards,<br>
+        <span class="highlight">AML Security Team</span></p>
+        """;
+    
+    private static final String PASSWORD_CHANGE_CONFIRMATION_EMAIL_CONTENT = """
+        <h2>✅ Password Successfully Changed</h2>
+        <p>Dear %s User,</p>
+        
+        <div class="success">
+            <strong>🔐 Password Updated!</strong><br>
+            Your password has been successfully changed for your AML System account.
+        </div>
+        
+        <div style="background-color: #f8f9fa; padding: 20px; border-radius: 10px; margin: 20px 0;">
+            <h3 style="margin-top: 0; color: #495057;">📋 Change Details</h3>
+            <table style="width: 100%%; border-collapse: collapse;">
+                <tr style="border-bottom: 1px solid #dee2e6;">
+                    <td style="padding: 10px 0; font-weight: 600;">Date & Time:</td>
+                    <td style="padding: 10px 0;">%s</td>
+                </tr>
+                <tr style="border-bottom: 1px solid #dee2e6;">
+                    <td style="padding: 10px 0; font-weight: 600;">Account Type:</td>
+                    <td style="padding: 10px 0;">%s</td>
+                </tr>
+                <tr>
+                    <td style="padding: 10px 0; font-weight: 600;">Status:</td>
+                    <td style="padding: 10px 0; color: #28a745; font-weight: 600;">✅ Completed Successfully</td>
+                </tr>
+            </table>
+        </div>
+        
+        <div class="warning">
+            <strong>🚨 Security Alert:</strong> If you did not make this change, please contact our security team immediately and consider the following actions:
+            <ul style="margin: 10px 0; padding-left: 20px;">
+                <li>Contact our support team right away</li>
+                <li>Review your account for any unauthorized activity</li>
+                <li>Consider enabling additional security measures</li>
+            </ul>
+        </div>
+        
+        <p>Your account security is our top priority. Here are some security best practices:</p>
+        <ul style="line-height: 1.8;">
+            <li>🔒 Keep your password confidential and secure</li>
+            <li>🔄 Use unique passwords for different accounts</li>
+            <li>📱 Monitor your account regularly for suspicious activity</li>
+            <li>🛡️ Log out from shared or public computers</li>
+        </ul>
+        
+        <div style="text-align: center; margin: 30px 0;">
+            <a href="#" class="button">Access Your Account</a>
+        </div>
+        
+        <p>Thank you for keeping your AML System account secure.</p>
+        
+        <p>Best regards,<br>
+        <span class="highlight">AML Security Team</span></p>
+        """;
 
     @Override
     public void sendOtpEmail(String toEmail, String otp) {
@@ -249,6 +339,50 @@ public class EmailServiceImpl implements EmailService {
             mailSender.send(mimeMessage);
         } catch (Exception e) {
             System.err.println("Failed to send account created email: " + e.getMessage());
+        }
+    }
+
+    @Override
+    public void sendPasswordResetOtpEmail(String toEmail, String otp, String userName) {
+        try {
+            MimeMessage mimeMessage = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, true, "UTF-8");
+            
+            helper.setFrom(fromEmail);
+            helper.setTo(toEmail);
+            helper.setSubject("🔐 AML - Password Reset OTP");
+            
+            String content = String.format(PASSWORD_RESET_OTP_EMAIL_CONTENT, userName, otp);
+            String htmlContent = String.format(EMAIL_BASE_TEMPLATE, "Password Reset OTP", content);
+            
+            helper.setText(htmlContent, true);
+            mailSender.send(mimeMessage);
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to send password reset OTP email: " + e.getMessage());
+        }
+    }
+
+    @Override
+    public void sendPasswordChangeConfirmationEmail(String toEmail, String userType) {
+        try {
+            MimeMessage mimeMessage = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, true, "UTF-8");
+            
+            helper.setFrom(fromEmail);
+            helper.setTo(toEmail);
+            helper.setSubject("✅ AML - Password Successfully Changed");
+            
+            String currentDateTime = java.time.LocalDateTime.now()
+                .format(java.time.format.DateTimeFormatter.ofPattern("MMM dd, yyyy 'at' HH:mm"));
+            
+            String content = String.format(PASSWORD_CHANGE_CONFIRMATION_EMAIL_CONTENT, 
+                userType, currentDateTime, userType);
+            String htmlContent = String.format(EMAIL_BASE_TEMPLATE, "Password Successfully Changed", content);
+            
+            helper.setText(htmlContent, true);
+            mailSender.send(mimeMessage);
+        } catch (Exception e) {
+            System.err.println("Failed to send password change confirmation email: " + e.getMessage());
         }
     }
 }

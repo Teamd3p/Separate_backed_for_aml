@@ -6,10 +6,15 @@ import java.util.Map;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+
+import jakarta.servlet.http.HttpServletRequest;
+import lombok.Builder;
+import lombok.Data;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -51,15 +56,45 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(error);
     }
 
-    @ExceptionHandler(org.springframework.security.access.AccessDeniedException.class)
-    public ResponseEntity<ErrorResponse> handleAccessDeniedException(org.springframework.security.access.AccessDeniedException ex) {
-        ErrorResponse error = new ErrorResponse(
-                HttpStatus.FORBIDDEN.value(),
-                "Access denied: Insufficient privileges",
-                LocalDateTime.now()
-        );
-        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(error);
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<ErrorResponse> handleAccessDenied(AccessDeniedException ex, HttpServletRequest request) {
+        ErrorResponse errorResponse = ErrorResponse.builder()
+            .timestamp(LocalDateTime.now())
+            .status(HttpStatus.FORBIDDEN.value())
+            .error("Access Denied")
+            .message("You don't have permission to access this resource")
+            .path(request.getRequestURI())
+            .build();
+        
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorResponse);
     }
+
+    @ExceptionHandler(InvalidTokenException.class)
+    public ResponseEntity<ErrorResponse> handleInvalidToken(InvalidTokenException ex, HttpServletRequest request) {
+        ErrorResponse errorResponse = ErrorResponse.builder()
+            .timestamp(LocalDateTime.now())
+            .status(HttpStatus.BAD_REQUEST.value())
+            .error("Invalid Token")
+            .message(ex.getMessage())
+            .path(request.getRequestURI())
+            .build();
+        
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
+    }
+
+    @ExceptionHandler(TooManyRequestsException.class)
+    public ResponseEntity<ErrorResponse> handleTooManyRequests(TooManyRequestsException ex, HttpServletRequest request) {
+        ErrorResponse errorResponse = ErrorResponse.builder()
+            .timestamp(LocalDateTime.now())
+            .status(HttpStatus.TOO_MANY_REQUESTS.value())
+            .error("Too Many Requests")
+            .message(ex.getMessage())
+            .path(request.getRequestURI())
+            .build();
+        
+        return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS).body(errorResponse);
+    }
+
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleGenericException(Exception ex) {
@@ -72,9 +107,13 @@ public class GlobalExceptionHandler {
     }
 
     // Inner class for error response
+    @Data
+    @Builder
     public static class ErrorResponse {
         private int status;
+        private String error;
         private String message;
+        private String path;
         private LocalDateTime timestamp;
 
         public ErrorResponse(int status, String message, LocalDateTime timestamp) {
@@ -83,13 +122,12 @@ public class GlobalExceptionHandler {
             this.timestamp = timestamp;
         }
 
-        public int getStatus() { return status; }
-        public void setStatus(int status) { this.status = status; }
-
-        public String getMessage() { return message; }
-        public void setMessage(String message) { this.message = message; }
-
-        public LocalDateTime getTimestamp() { return timestamp; }
-        public void setTimestamp(LocalDateTime timestamp) { this.timestamp = timestamp; }
+        public ErrorResponse(int status, String error, String message, String path, LocalDateTime timestamp) {
+            this.status = status;
+            this.error = error;
+            this.message = message;
+            this.path = path;
+            this.timestamp = timestamp;
+        }
     }
 }

@@ -114,7 +114,10 @@ public class AuthServiceImpl implements AuthService {
 			throw new UserApiException("Failed to send OTP email. Please try again.");
 		}
 
-		return new AuthResponse("Registration successful! Please check your email for OTP verification.");
+		return AuthResponse.builder()
+			.success(true)
+			.message("Registration successful! Please check your email for OTP verification.")
+			.build();
 	}
 
 	@Override
@@ -177,7 +180,10 @@ public class AuthServiceImpl implements AuthService {
 			// Continue even if welcome email fails
 		}
 
-		return new AuthResponse("Email verified successfully! You can now login.");
+		return AuthResponse.builder()
+			.success(true)
+			.message("Email verified successfully! You can now login.")
+			.build();
 	}
 
 	@Override
@@ -208,7 +214,13 @@ public class AuthServiceImpl implements AuthService {
 		// Generate JWT token
 		String token = jwtUtil.generateToken(user.getEmail(), user.getRole().name());
 
-		return new AuthResponse(token, user.getEmail(), user.getRole().name(), "Login successful");
+		return AuthResponse.builder()
+			.success(true)
+			.token(token)
+			.email(user.getEmail())
+			.role(user.getRole().name())
+			.message("Login successful")
+			.build();
 	}
 
 	@Override
@@ -244,7 +256,10 @@ public class AuthServiceImpl implements AuthService {
 			throw new UserApiException("Failed to send OTP email. Please try again.");
 		}
 
-		return new AuthResponse("OTP has been resent to your email.");
+		return AuthResponse.builder()
+			.success(true)
+			.message("OTP has been resent to your email.")
+			.build();
 	}
 
 	private String generateOtp() {

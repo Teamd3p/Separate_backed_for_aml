@@ -10,14 +10,17 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.tss.aml.dto.request.ForgotPasswordRequest;
 import com.tss.aml.dto.request.LoginRequest;
 import com.tss.aml.dto.request.RegisterRequest;
+import com.tss.aml.dto.request.ResetPasswordWithOtpRequest;
 import com.tss.aml.dto.request.VerifyOtpRequest;
 import com.tss.aml.dto.response.AuthResponse;
 import com.tss.aml.entity.enums.AuditAction;
 import com.tss.aml.entity.enums.AuditResourceType;
 import com.tss.aml.service.AuditService;
 import com.tss.aml.service.AuthService;
+import com.tss.aml.service.PasswordResetService;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
@@ -32,6 +35,9 @@ public class AuthController {
     
     @Autowired
     private AuditService auditService;
+    
+    @Autowired
+    private PasswordResetService passwordResetService;
 
     @PostMapping("/register")
     public ResponseEntity<AuthResponse> register(@Valid @RequestBody RegisterRequest request, HttpServletRequest httpRequest) {
@@ -77,6 +83,47 @@ public class AuthController {
         auditService.logSuccess(AuditAction.LOGIN, AuditResourceType.USER, null, 
             null, email, "OTP resend requested", ipAddress);
         return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/forgot-password")
+    public ResponseEntity<AuthResponse> forgotPassword(@Valid @RequestBody ForgotPasswordRequest request, HttpServletRequest httpRequest) {
+        String ipAddress = getClientIpAddress(httpRequest);
+        String userAgent = httpRequest.getHeader("User-Agent");
+        
+        try {
+            AuthResponse response = passwordResetService.initiatePasswordReset(request, ipAddress, userAgent);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            auditService.logFailure(AuditAction.PASSWORD_RESET_REQUEST, AuditResourceType.USER, 
+                null, null, request.getEmail(), "Password reset request failed: " + e.getMessage(), ipAddress);
+            throw e;
+        }
+    }
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<AuthResponse> resetPassword(@Valid @RequestBody ResetPasswordWithOtpRequest request, HttpServletRequest httpRequest) {
+        String ipAddress = getClientIpAddress(httpRequest);
+        String userAgent = httpRequest.getHeader("User-Agent");
+        
+        // Validate password confirmation
+        if (!request.isPasswordsMatch()) {
+            auditService.logFailure(AuditAction.PASSWORD_RESET, AuditResourceType.USER, 
+                null, null, request.getEmail(), "Password reset failed: passwords do not match", ipAddress);
+            return ResponseEntity.badRequest()
+                .body(AuthResponse.builder()
+                    .success(false)
+                    .message("Passwords do not match.")
+                    .build());
+        }
+        
+        try {
+            AuthResponse response = passwordResetService.resetPasswordWithOtp(request, ipAddress, userAgent);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            auditService.logFailure(AuditAction.PASSWORD_RESET, AuditResourceType.USER, 
+                null, null, request.getEmail(), "Password reset failed: " + e.getMessage(), ipAddress);
+            throw e;
+        }
     }
     
     private String getClientIpAddress(HttpServletRequest request) {
