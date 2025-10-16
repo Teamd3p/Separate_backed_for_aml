@@ -1,6 +1,7 @@
 package com.tss.aml.controller;
 
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -157,7 +158,7 @@ public class AdminController {
 
     // === SYSTEM HEALTH ===
     @GetMapping("/system/health")
-    public ResponseEntity<String> getSystemHealth() {
+    public ResponseEntity<Map<String, Object>> getSystemHealth() {
         return ResponseEntity.ok(adminService.getSystemHealthStatus());
     }
 }

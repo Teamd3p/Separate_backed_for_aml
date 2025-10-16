@@ -1,6 +1,7 @@
 package com.tss.aml.service;
 
 import java.util.List;
+import java.util.Map;
 
 import com.tss.aml.dto.request.AccountUpdateRequest;
 import com.tss.aml.dto.request.ComplianceOfficerRequest;
@@ -87,7 +88,7 @@ public interface AdminService {
 
 	void updateAdminProfile(String firstName, String lastName);
 
-	String getSystemHealthStatus();
+	Map<String, Object> getSystemHealthStatus();
 
 	List<com.tss.aml.entity.AuditLog> getAllAuditLogs(int page, int size);
 

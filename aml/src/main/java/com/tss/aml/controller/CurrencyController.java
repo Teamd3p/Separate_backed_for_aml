@@ -81,7 +81,7 @@ public class CurrencyController {
     /**
      * Calculate conversion fee for a given amount
      */
-    @GetMapping("/fee/{fromCurrency}/{toCurrency}")
+    @GetMapping("/fee/{fromCurrency}/{toCurrency}/{amount}")
     public ResponseEntity<BigDecimal> calculateConversionFee(
             @PathVariable String fromCurrency,
             @PathVariable String toCurrency,

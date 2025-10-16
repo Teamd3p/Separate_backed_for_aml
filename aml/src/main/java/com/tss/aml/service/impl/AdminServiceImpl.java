@@ -1,7 +1,9 @@
 package com.tss.aml.service.impl;
 
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
@@ -403,16 +405,48 @@ public class AdminServiceImpl implements AdminService {
 	}
 
 	@Override
-	public String getSystemHealthStatus() {
-		// Simple health check - can be expanded
-		try {
-			customerRepo.count();
-			transactionRepo.count();
-			alertRepo.count();
-			return "HEALTHY";
-		} catch (Exception e) {
-			return "UNHEALTHY: " + e.getMessage();
-		}
+	public Map<String, Object> getSystemHealthStatus() {
+	    Map<String, Object> healthReport = new HashMap<>();
+
+	    try {
+	        // ✅ Basic database checks
+	        long customerCount = customerRepo.count();
+	        long transactionCount = transactionRepo.count();
+	        long alertCount = alertRepo.count();
+
+	        healthReport.put("database", "OK");
+	        healthReport.put("customerCount", customerCount);
+	        healthReport.put("transactionCount", transactionCount);
+	        healthReport.put("alertCount", alertCount);
+
+	        // ✅ Check total rules (if ruleRepo exists)
+	        try {
+	            long ruleCount = ruleRepo.count();
+	            healthReport.put("rulesLoaded", ruleCount);
+	        } catch (Exception e) {
+	            healthReport.put("rulesLoaded", "Error: " + e.getMessage());
+	        }
+
+	        // ✅ System resources check
+	        Runtime runtime = Runtime.getRuntime();
+	        long totalMemory = runtime.totalMemory() / (1024 * 1024);
+	        long freeMemory = runtime.freeMemory() / (1024 * 1024);
+	        long usedMemory = totalMemory - freeMemory;
+
+	        healthReport.put("memoryUsageMB", usedMemory + " / " + totalMemory);
+	        healthReport.put("availableProcessors", runtime.availableProcessors());
+
+	        // ✅ Overall status
+	        healthReport.put("status", "HEALTHY");
+	        healthReport.put("timestamp", java.time.LocalDateTime.now().toString());
+
+	    } catch (Exception e) {
+	        healthReport.put("status", "UNHEALTHY");
+	        healthReport.put("error", e.getMessage());
+	        healthReport.put("timestamp", java.time.LocalDateTime.now().toString());
+	    }
+
+	    return healthReport;
 	}
 
 	@Override
