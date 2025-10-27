@@ -1,5 +1,7 @@
 package com.tss.aml.config;
 
+import java.util.Arrays;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -11,6 +13,9 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import com.tss.aml.security.JwtAuthenticationFilter;
 
@@ -22,45 +27,76 @@ public class SecurityConfig {
     @Autowired
     private JwtAuthenticationFilter jwtAuthenticationFilter;
 
+    // ✅ CORS configuration for Angular frontend
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration configuration = new CorsConfiguration();
+        configuration.setAllowedOrigins(Arrays.asList("http://localhost:4200")); // Angular dev server
+        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        configuration.setAllowedHeaders(Arrays.asList("*"));
+        configuration.setAllowCredentials(true);
+
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/api/**", configuration);
+        return source;
+    }
+
+    // ✅ Password encoder
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
 
+    // ✅ Security filter chain
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
+            // enable CORS & disable CSRF
+            .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .csrf(csrf -> csrf.disable())
+
+            // authorization rules
             .authorizeHttpRequests(auth -> auth
                 // Public endpoints
-                .requestMatchers("/api/auth/login", "/api/auth/register", "/api/auth/verify-otp", "/api/auth/resend-otp", "/api/auth/forgot-password", "/api/auth/reset-password").permitAll()
-                
+                .requestMatchers(
+                    "/api/auth/login",
+                    "/api/auth/register",
+                    "/api/auth/verify-otp",
+                    "/api/auth/resend-otp",
+                    "/api/auth/forgot-password",
+                    "/api/auth/reset-password"
+                ).permitAll()
+
                 // Admin only endpoints
                 .requestMatchers("/api/admin/**").hasRole("ADMIN")
-                
+
                 // Compliance officer endpoints
                 .requestMatchers("/api/compliance/**").hasAnyRole("ADMIN", "COMPLIANCE_OFFICER")
                 .requestMatchers("/api/kyc/compliance/**").hasAnyRole("ADMIN", "COMPLIANCE_OFFICER")
-                
-                // Customer endpoints - customers can only access their own data
+
+                // Customer endpoints
                 .requestMatchers("/api/customers/**").hasRole("CUSTOMER")
-                
-                // Transaction endpoints - role-based access
+
+                // Transaction endpoints
                 .requestMatchers("/api/transactions/**").hasAnyRole("CUSTOMER", "ADMIN", "COMPLIANCE_OFFICER")
-                
-                // Account endpoints - role-based access
+
+                // Account endpoints
                 .requestMatchers("/api/accounts/**").hasAnyRole("CUSTOMER", "ADMIN")
-                
-                // KYC endpoints - authenticated users
+
+                // KYC endpoints
                 .requestMatchers("/api/kyc/**").authenticated()
-                
-                // All other API endpoints require authentication
+
+                // All other API endpoints
                 .requestMatchers("/api/**").authenticated()
                 .anyRequest().authenticated()
             )
+
+            // stateless session management
             .sessionManagement(session -> session
                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
             )
+
+            // JWT filter
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
