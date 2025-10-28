@@ -1,0 +1,240 @@
+package com.tss.aml.service;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.tss.aml.entity.*;
+import com.tss.aml.repository.*;
+import jakarta.transaction.Transactional;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+
+import java.math.BigDecimal;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+import java.util.*;
+import java.util.stream.Collectors;
+
+@Service
+@RequiredArgsConstructor
+public class RuleEngineService {
+
+    private final RuleRepository ruleRepository;
+    private final RuleEvaluationRepository ruleEvaluationRepository;
+    private final AlertRepository alertRepository;
+    private final TransactionRepository transactionRepository;
+    private final KeywordBlacklistRepository keywordBlacklistRepository;
+    private final CountryRiskRepository countryRiskRepository;
+    private final AccountRepository accountRepository;
+    private final ObjectMapper objectMapper = new ObjectMapper();
+
+    @Transactional
+    public void evaluateRulesForTransaction(TransactionEntity tx) {
+        // 1. Load active rules and keywords
+        List<Rule> activeRules = ruleRepository.findByStatus("ACTIVE");
+        List<KeywordBlacklist> keywords = keywordBlacklistRepository.findAll();
+        String description = tx.getDescription() == null ? "" : tx.getDescription().toLowerCase();
+
+        Long customerId = lookupCustomerIdForAccount(tx.getAccountId());
+        boolean anyMatch = false;
+        List<RuleEvaluation> evaluations = new ArrayList<>();
+
+        for (Rule rule : activeRules) {
+            boolean matched = false;
+            Map<String,Object> matchedMap = new LinkedHashMap<>();
+
+            JsonNode params = null;
+            try { if (rule.getParameters() != null) params = objectMapper.readTree(rule.getParameters()); }
+            catch (Exception ignored) {}
+
+            String ruleType = Optional.ofNullable(rule.getRuleType()).orElse("").toUpperCase();
+
+            switch (ruleType) {
+                case "THRESHOLD":
+                    matched = evaluateThreshold(params, tx, matchedMap);
+                    break;
+                case "FREQUENCY":
+                    matched = evaluateFrequency(params, tx, customerId, matchedMap);
+                    break;
+                case "GEO_RISK":
+                    matched = evaluateGeoRisk(params, tx, matchedMap);
+                    break;
+                case "KEYWORD":
+                    matched = evaluateKeyword(params, description, keywords, matchedMap);
+                    break;
+                case "CUSTOM":
+                    matched = evaluateCustom(params, tx, customerId, description, keywords, matchedMap);
+                    break;
+                default:
+                    matched = false;
+            }
+
+            // persist evaluation
+            RuleEvaluation eval = RuleEvaluation.builder()
+                    .ruleId(rule.getRuleId())
+                    .transactionId(tx.getTransactionId())
+                    .customerId(customerId)
+                    .evaluationResult(matched ? "MATCHED" : "NOT_MATCHED")
+                    .matchedConditions(toJson(matchedMap))
+                    .severityTriggered(rule.getSeverity())
+                    .executedAt(Instant.now())
+                    .build();
+            evaluations.add(eval);
+
+            if (matched) {
+                anyMatch = true;
+                // create alert
+                Alert alert = Alert.builder()
+                        .transactionId(tx.getTransactionId())
+                        .customerId(customerId)
+                        .ruleId(rule.getRuleId())
+                        .alertType(rule.getRuleName())
+                        .severity(rule.getSeverity())
+                        .status("PENDING")
+                        .createdAt(Instant.now())
+                        .updatedAt(Instant.now())
+                        .build();
+                alertRepository.save(alert);
+            }
+        }
+
+        // bulk save evaluations
+        ruleEvaluationRepository.saveAll(evaluations);
+
+        // Optionally: if anyMatch, update transaction status to FLAGGED
+        if (anyMatch) {
+            try {
+                tx.setStatus("FLAGGED");
+                transactionRepository.save(tx);
+            } catch (Exception ignored) {}
+        }
+    }
+
+    private String toJson(Object obj) {
+        try { return objectMapper.writeValueAsString(obj); } catch (Exception e) { return "{}"; }
+    }
+
+    private Long lookupCustomerIdForAccount(Long accountId) {
+        return accountRepository.findById(accountId).map(Account::getCustomerId).orElse(null);
+    }
+
+    private boolean evaluateThreshold(JsonNode params, TransactionEntity tx, Map<String,Object> matchedMap) {
+        if (params == null || !params.has("amount")) return false;
+        BigDecimal threshold = new BigDecimal(params.get("amount").asText());
+        boolean matched = tx.getAmount() != null && tx.getAmount().compareTo(threshold) >= 0;
+        matchedMap.put("threshold", threshold);
+        matchedMap.put("txAmount", tx.getAmount());
+        matchedMap.put("matched", matched);
+        return matched;
+    }
+
+    private boolean evaluateFrequency(JsonNode params, TransactionEntity tx, Long customerId, Map<String,Object> matchedMap) {
+        if (params == null || !params.has("frequency") || !params.has("period_hours") || !params.has("amount")) return false;
+        int frequency = params.get("frequency").asInt();
+        int periodHours = params.get("period_hours").asInt();
+        BigDecimal minAmount = new BigDecimal(params.get("amount").asText());
+
+        Instant to = tx.getTimestamp() == null ? Instant.now() : tx.getTimestamp();
+        Instant from = to.minus(periodHours, ChronoUnit.HOURS);
+
+        long count = 0;
+        if (customerId != null) {
+            count = transactionRepository.countRecentTransactionsByCustomerAndMinAmount(customerId, from, to, minAmount);
+        } else {
+            count = transactionRepository.countRecentTransactionsByAccountAndMinAmount(tx.getAccountId(), from, to, minAmount);
+        }
+
+        boolean matched = count >= frequency;
+        matchedMap.put("frequency", frequency);
+        matchedMap.put("period_hours", periodHours);
+        matchedMap.put("minAmount", minAmount);
+        matchedMap.put("actualCount", count);
+        matchedMap.put("matched", matched);
+        return matched;
+    }
+
+    private boolean evaluateGeoRisk(JsonNode params, TransactionEntity tx, Map<String,Object> matchedMap) {
+        List<String> originCountries = new ArrayList<>();
+        if (params != null && params.has("origin_country") && params.get("origin_country").isArray()) {
+            params.get("origin_country").forEach(n -> originCountries.add(n.asText().toLowerCase()));
+        }
+        List<String> destCountries = new ArrayList<>();
+        if (params != null && params.has("destination_country") && params.get("destination_country").isArray()) {
+            params.get("destination_country").forEach(n -> destCountries.add(n.asText().toLowerCase()));
+        }
+
+        boolean matched = false;
+        String txOrigin = tx.getOriginCountry() == null ? "" : tx.getOriginCountry().toLowerCase();
+        String txDest = tx.getDestinationCountry() == null ? "" : tx.getDestinationCountry().toLowerCase();
+
+        if (!originCountries.isEmpty() && originCountries.contains(txOrigin)) matched = true;
+        if (!destCountries.isEmpty() && destCountries.contains(txDest)) matched = true;
+
+        // DB check: Country_Risk (HIGH)
+        try {
+            if (!matched && tx.getOriginCountry() != null) {
+                countryRiskRepository.findByCountryNameIgnoreCase(tx.getOriginCountry())
+                        .ifPresent(cr -> { if ("HIGH".equalsIgnoreCase(cr.getRiskLevel())) matched = true; });
+            }
+            if (!matched && tx.getDestinationCountry() != null) {
+                countryRiskRepository.findByCountryNameIgnoreCase(tx.getDestinationCountry())
+                        .ifPresent(cr -> { if ("HIGH".equalsIgnoreCase(cr.getRiskLevel())) matched = true; });
+            }
+        } catch (Exception ignored) {}
+
+        matchedMap.put("originCountriesConfigured", originCountries);
+        matchedMap.put("destCountriesConfigured", destCountries);
+        matchedMap.put("txOrigin", tx.getOriginCountry());
+        matchedMap.put("txDest", tx.getDestinationCountry());
+        matchedMap.put("matched", matched);
+        return matched;
+    }
+
+    private boolean evaluateKeyword(JsonNode params, String description, List<KeywordBlacklist> keywords, Map<String,Object> matchedMap) {
+        Set<String> targetKeywords;
+        if (params != null && params.has("keywords") && params.get("keywords").isArray()) {
+            targetKeywords = new HashSet<>();
+            params.get("keywords").forEach(n -> targetKeywords.add(n.asText().toLowerCase()));
+        } else {
+            targetKeywords = keywords.stream().map(k -> k.getKeyword().toLowerCase()).collect(Collectors.toSet());
+        }
+
+        Set<String> found = new HashSet<>();
+        for (String kw : targetKeywords) {
+            if (!kw.isBlank() && description.contains(kw)) found.add(kw);
+        }
+        matchedMap.put("matchedKeywords", found);
+        matchedMap.put("matched", !found.isEmpty());
+        return !found.isEmpty();
+    }
+
+    private boolean evaluateCustom(JsonNode params, TransactionEntity tx, Long customerId, String description, List<KeywordBlacklist> keywords, Map<String,Object> matchedMap) {
+        if (params == null) return false;
+        Map<String,Object> subMatches = new HashMap<>();
+        boolean overall = false;
+
+        if (params.has("amount")) {
+            boolean m = evaluateThreshold(params, tx, new HashMap<>());
+            subMatches.put("amount", m);
+            overall = overall || m;
+        }
+        if (params.has("frequency")) {
+            boolean m = evaluateFrequency(params, tx, customerId, new HashMap<>());
+            subMatches.put("frequency", m);
+            overall = overall || m;
+        }
+        if (params.has("origin_country") || params.has("destination_country")) {
+            boolean m = evaluateGeoRisk(params, tx, new HashMap<>());
+            subMatches.put("geo", m);
+            overall = overall || m;
+        }
+        if (params.has("keywords")) {
+            boolean m = evaluateKeyword(params, description, keywords, new HashMap<>());
+            subMatches.put("keywords", m);
+            overall = overall || m;
+        }
+
+        matchedMap.put("subChecks", subMatches);
+        matchedMap.put("matched", overall);
+        return overall;
+    }
+}
