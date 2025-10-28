@@ -1,0 +1,1495 @@
+{
+	"info": {
+		"_postman_id": "aml-system-collection-2024",
+		"name": "AML System - Complete API Collection",
+		"description": "Comprehensive Anti Money Laundering System API Collection with Indian sample data",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "🔐 Authentication Flow",
+			"item": [
+				{
+					"name": "Register Customer",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"rajesh.kumar@gmail.com\",\n  \"password\": \"SecurePass@123\",\n  \"firstName\": \"Rajesh\",\n  \"middleName\": \"Kumar\",\n  \"lastName\": \"Sharma\",\n  \"dateOfBirth\": \"1985-03-15\",\n  \"nationality\": \"Indian\",\n  \"contactNumber\": \"9876543210\",\n  \"street\": \"123 MG Road\",\n  \"city\": \"Mumbai\",\n  \"state\": \"Maharashtra\",\n  \"country\": \"India\",\n  \"pincode\": \"400001\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/auth/register",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "auth", "register"]
+						}
+					}
+				},
+				{
+					"name": "Login Customer",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    const response = pm.response.json();",
+									"    if (response.token) {",
+									"        pm.environment.set('authToken', response.token);",
+									"        pm.environment.set('userId', response.userId);",
+									"    }",
+									"}"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"rajesh.kumar@gmail.com\",\n  \"password\": \"SecurePass@123\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/auth/login",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "auth", "login"]
+						}
+					}
+				},
+				{
+					"name": "Verify OTP",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"rajesh.kumar@gmail.com\",\n  \"otp\": \"123456\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/auth/verify-otp",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "auth", "verify-otp"]
+						}
+					}
+				},
+				{
+					"name": "Resend OTP",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/auth/resend-otp?email=rajesh.kumar@gmail.com",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "auth", "resend-otp"],
+							"query": [
+								{
+									"key": "email",
+									"value": "rajesh.kumar@gmail.com"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Forgot Password",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"rajesh.kumar@gmail.com\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/auth/forgot-password",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "auth", "forgot-password"]
+						}
+					}
+				},
+				{
+					"name": "Reset Password",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"rajesh.kumar@gmail.com\",\n  \"otp\": \"123456\",\n  \"newPassword\": \"NewSecurePass@123\",\n  \"confirmPassword\": \"NewSecurePass@123\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/auth/reset-password",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "auth", "reset-password"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "🏦 Account Management",
+			"item": [
+				{
+					"name": "Create Account",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"accountType\": \"SAVING\",\n  \"currency\": \"INR\",\n  \"initialDeposit\": 10000.00\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/accounts/customer/{{userId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "accounts", "customer", "{{userId}}"]
+						}
+					}
+				},
+				{
+					"name": "Get Account Balance",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/accounts/{{accountNumber}}/balance",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "accounts", "{{accountNumber}}", "balance"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "💰 Transaction Management",
+			"item": [
+				{
+					"name": "Transfer Funds",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"senderAccountNumber\": \"ACC-001-INR\",\n  \"receiverAccountNumber\": \"ACC-002-INR\",\n  \"amount\": 25000.00,\n  \"description\": \"Business payment to supplier\",\n  \"countryCode\": \"IN\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/transactions/transfer",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "transactions", "transfer"]
+						}
+					}
+				},
+				{
+					"name": "Deposit Funds",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"accountNumber\": \"ACC-001-INR\",\n  \"amount\": 50000.00,\n  \"description\": \"Salary deposit from TCS Limited\",\n  \"countryCode\": \"IN\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/transactions/deposit",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "transactions", "deposit"]
+						}
+					}
+				},
+				{
+					"name": "Withdraw Funds",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"accountNumber\": \"ACC-001-INR\",\n  \"amount\": 15000.00,\n  \"description\": \"ATM withdrawal for personal expenses\",\n  \"countryCode\": \"IN\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/transactions/withdraw",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "transactions", "withdraw"]
+						}
+					}
+				},
+				{
+					"name": "Get Transaction History",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/transactions/account/{{accountNumber}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "transactions", "account", "{{accountNumber}}"]
+						}
+					}
+				},
+				{
+					"name": "Get Transaction by ID",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/transactions/{{transactionId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "transactions", "{{transactionId}}"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "👤 Customer Portal",
+			"item": [
+				{
+					"name": "Get Customer Transactions",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/customers/transactions",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "customers", "transactions"]
+						}
+					}
+				},
+				{
+					"name": "Get Flagged Transactions",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/customers/transactions/flagged",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "customers", "transactions", "flagged"]
+						}
+					}
+				},
+				{
+					"name": "Get Transaction Counts",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/customers/transactions/counts",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "customers", "transactions", "counts"]
+						}
+					}
+				},
+				{
+					"name": "Get Customer Alerts",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/customers/alerts",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "customers", "alerts"]
+						}
+					}
+				},
+				{
+					"name": "Get KYC Documents",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/customers/kyc-documents",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "customers", "kyc-documents"]
+						}
+					}
+				},
+				{
+					"name": "Get Customer Profile",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/customers/profile",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "customers", "profile"]
+						}
+					}
+				},
+				{
+					"name": "Update Customer Profile",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"firstName\": \"Rajesh\",\n  \"lastName\": \"Sharma\",\n  \"contactNumber\": \"9876543210\",\n  \"street\": \"456 New Address Lane\",\n  \"city\": \"Mumbai\",\n  \"state\": \"Maharashtra\",\n  \"country\": \"India\",\n  \"pincode\": \"400002\",\n  \"otp\": \"123456\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/customers/profile",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "customers", "profile"]
+						}
+					}
+				},
+				{
+					"name": "Send Profile Update OTP",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/customers/profile/send-otp",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "customers", "profile", "send-otp"]
+						}
+					}
+				},
+				{
+					"name": "Create Help Desk Ticket",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"subject\": \"Transaction Failed - Need Assistance\",\n  \"description\": \"My transfer of Rs. 25,000 to account ACC-002-INR failed but amount was debited from my account. Please help resolve this issue.\",\n  \"priority\": \"HIGH\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/customers/helpdesk/tickets",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "customers", "helpdesk", "tickets"]
+						}
+					}
+				},
+				{
+					"name": "Get Customer Tickets",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/customers/helpdesk/tickets",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "customers", "helpdesk", "tickets"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "🔍 Compliance Officer Portal",
+			"item": [
+				{
+					"name": "Get All Alerts",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{complianceToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/compliance/alerts",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "compliance", "alerts"]
+						}
+					}
+				},
+				{
+					"name": "Assign Alert to Officer",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{complianceToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/compliance/alerts/{{alertId}}/assign",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "compliance", "alerts", "{{alertId}}", "assign"]
+						}
+					}
+				},
+				{
+					"name": "Take Action on Alert",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{complianceToken}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"action\": \"APPROVE\",\n  \"notes\": \"Transaction verified as legitimate business payment. Customer provided valid invoices and contracts.\",\n  \"riskAssessment\": \"LOW\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/compliance/alerts/{{alertId}}/action",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "compliance", "alerts", "{{alertId}}", "action"]
+						}
+					}
+				},
+				{
+					"name": "Get Alert Details",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{complianceToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/compliance/alerts/{{alertId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "compliance", "alerts", "{{alertId}}"]
+						}
+					}
+				},
+				{
+					"name": "Filter Alerts by Status",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{complianceToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/compliance/alerts/filter?status=PENDING&riskScore=75",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "compliance", "alerts", "filter"],
+							"query": [
+								{
+									"key": "status",
+									"value": "PENDING"
+								},
+								{
+									"key": "riskScore",
+									"value": "75"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Generate SAR",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{complianceToken}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"suspiciousActivity\": \"Multiple high-value transactions to high-risk countries\",\n  \"description\": \"Customer Rajesh Sharma has conducted multiple transactions exceeding Rs. 1,00,000 to accounts in UAE and Singapore within 48 hours. Pattern suggests potential money laundering activity.\",\n  \"recommendedAction\": \"FREEZE_ACCOUNT\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/compliance/alerts/{{alertId}}/sar",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "compliance", "alerts", "{{alertId}}", "sar"]
+						}
+					}
+				},
+				{
+					"name": "Submit SAR",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{complianceToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/compliance/sar/{{sarId}}/submit",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "compliance", "sar", "{{sarId}}", "submit"]
+						}
+					}
+				},
+				{
+					"name": "Get Alert History by Customer",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{complianceToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/compliance/alerts/customer/{{userId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "compliance", "alerts", "customer", "{{userId}}"]
+						}
+					}
+				},
+				{
+					"name": "Get Alert History by Officer",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{complianceToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/compliance/alerts/officer/{{officerId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "compliance", "alerts", "officer", "{{officerId}}"]
+						}
+					}
+				},
+				{
+					"name": "Get Triggered Rules",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{complianceToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/compliance/alerts/{{alertId}}/rules",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "compliance", "alerts", "{{alertId}}", "rules"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "⚙️ Admin Portal",
+			"item": [
+				{
+					"name": "Create Compliance Officer",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{adminToken}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"firstName\": \"Priya\",\n  \"lastName\": \"Patel\",\n  \"email\": \"priya.patel@amlbank.com\",\n  \"employeeId\": \"EMP001\",\n  \"department\": \"Compliance\",\n  \"certification\": \"CAMS\",\n  \"experienceYears\": 5\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/admin/officers",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "admin", "officers"]
+						}
+					}
+				},
+				{
+					"name": "Get All Officers",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{adminToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/admin/officers",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "admin", "officers"]
+						}
+					}
+				},
+				{
+					"name": "Create AML Rule",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{adminToken}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"High Value INR Transaction Rule\",\n  \"description\": \"Flag transactions above Rs. 2,00,000 in INR\",\n  \"type\": \"THRESHOLD\",\n  \"conditions\": \"{\\\"amountThreshold\\\": 200000, \\\"currency\\\": \\\"INR\\\"}\",\n  \"riskScoreImpact\": 75,\n  \"isActive\": true\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/admin/rules",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "admin", "rules"]
+						}
+					}
+				},
+				{
+					"name": "Get All Rules",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{adminToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/admin/rules",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "admin", "rules"]
+						}
+					}
+				},
+				{
+					"name": "Get Rules by Type",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{adminToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/admin/rules/type/THRESHOLD",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "admin", "rules", "type", "THRESHOLD"]
+						}
+					}
+				},
+				{
+					"name": "Add Suspicious Keyword",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{adminToken}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"word\": \"hawala\",\n  \"category\": \"MONEY_LAUNDERING\",\n  \"severity\": 90\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/admin/keywords",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "admin", "keywords"]
+						}
+					}
+				},
+				{
+					"name": "Get All Keywords",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{adminToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/admin/keywords",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "admin", "keywords"]
+						}
+					}
+				},
+				{
+					"name": "Add Risky Country",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{adminToken}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"countryCode\": \"AF\",\n  \"countryName\": \"Afghanistan\",\n  \"riskLevel\": \"CRITICAL\",\n  \"riskScore\": 95,\n  \"reason\": \"FATF Black List - High risk of money laundering and terrorist financing\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/admin/countries",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "admin", "countries"]
+						}
+					}
+				},
+				{
+					"name": "Get All Risky Countries",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{adminToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/admin/countries",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "admin", "countries"]
+						}
+					}
+				},
+				{
+					"name": "Get Dashboard Stats",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{adminToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/admin/dashboard/stats",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "admin", "dashboard", "stats"]
+						}
+					}
+				},
+				{
+					"name": "Get Alert Counts",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{adminToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/admin/dashboard/alerts/counts",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "admin", "dashboard", "alerts", "counts"]
+						}
+					}
+				},
+				{
+					"name": "Get Audit Logs",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{adminToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/admin/audit/logs?page=0&size=50",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "admin", "audit", "logs"],
+							"query": [
+								{
+									"key": "page",
+									"value": "0"
+								},
+								{
+									"key": "size",
+									"value": "50"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Update Customer Account Status",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{adminToken}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"status\": \"FROZEN\",\n  \"reason\": \"Suspicious activity detected - multiple high-risk transactions\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/admin/customers/{{userId}}/status",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "admin", "customers", "{{userId}}", "status"]
+						}
+					}
+				},
+				{
+					"name": "System Health Check",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{adminToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/admin/system/health",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "admin", "system", "health"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "📄 KYC Management",
+			"item": [
+				{
+					"name": "Upload KYC Document",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "file",
+									"type": "file",
+									"src": "/path/to/aadhaar.pdf"
+								},
+								{
+									"key": "customerId",
+									"value": "{{userId}}",
+									"type": "text"
+								},
+								{
+									"key": "documentType",
+									"value": "AADHAAR",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/kyc/upload",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "kyc", "upload"]
+						}
+					}
+				},
+				{
+					"name": "Verify KYC Document",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{complianceToken}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"documentId\": 1,\n  \"officerId\": 1,\n  \"status\": \"VERIFIED\",\n  \"verificationNotes\": \"Aadhaar document verified successfully. All details match customer profile.\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/kyc/verify",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "kyc", "verify"]
+						}
+					}
+				},
+				{
+					"name": "Get Customer KYC Documents",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/kyc/customer/{{userId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "kyc", "customer", "{{userId}}"]
+						}
+					}
+				},
+				{
+					"name": "Get Customer KYC Status",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/kyc/customer/{{userId}}/status",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "kyc", "customer", "{{userId}}", "status"]
+						}
+					}
+				},
+				{
+					"name": "Get Pending KYC Documents",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{complianceToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/kyc/pending",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "kyc", "pending"]
+						}
+					}
+				},
+				{
+					"name": "Get High Risk KYC Documents",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{complianceToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/kyc/high-risk",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "kyc", "high-risk"]
+						}
+					}
+				},
+				{
+					"name": "Get Expiring KYC Documents",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{complianceToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/kyc/expiring?days=30",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "kyc", "expiring"],
+							"query": [
+								{
+									"key": "days",
+									"value": "30"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Update Document Risk Score",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{complianceToken}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"riskScore\": 25,\n  \"reason\": \"Document quality improved after manual review\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/kyc/documents/{{documentId}}/risk-score",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "kyc", "documents", "{{documentId}}", "risk-score"]
+						}
+					}
+				},
+				{
+					"name": "Delete KYC Document",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{complianceToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/kyc/documents/{{documentId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "kyc", "documents", "{{documentId}}"]
+						}
+					}
+				},
+				{
+					"name": "Get KYC Compliance Dashboard",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{complianceToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/kyc/compliance/dashboard",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "kyc", "compliance", "dashboard"]
+						}
+					}
+				},
+				{
+					"name": "Get All Customers KYC Status",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{complianceToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/kyc/compliance/customers/status",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "kyc", "compliance", "customers", "status"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "💱 Currency Management",
+			"item": [
+				{
+					"name": "Get Supported Currencies",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/currency/supported",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "currency", "supported"]
+						}
+					}
+				},
+				{
+					"name": "Get Exchange Rates",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/currency/rates?fromCurrency=INR&toCurrency=USD",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "currency", "rates"],
+							"query": [
+								{
+									"key": "fromCurrency",
+									"value": "INR"
+								},
+								{
+									"key": "toCurrency",
+									"value": "USD"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Convert Currency",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/currency/convert?fromCurrency=INR&toCurrency=USD&amount=100000",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "currency", "convert"],
+							"query": [
+								{
+									"key": "fromCurrency",
+									"value": "INR"
+								},
+								{
+									"key": "toCurrency",
+									"value": "USD"
+								},
+								{
+									"key": "amount",
+									"value": "100000"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Check Conversion Support",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/currency/conversion/support?fromCurrency=INR&toCurrency=EUR",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "currency", "conversion", "support"],
+							"query": [
+								{
+									"key": "fromCurrency",
+									"value": "INR"
+								},
+								{
+									"key": "toCurrency",
+									"value": "EUR"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Calculate Conversion Fee",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/currency/conversion/fee?fromCurrency=INR&toCurrency=USD&amount=50000",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "currency", "conversion", "fee"],
+							"query": [
+								{
+									"key": "fromCurrency",
+									"value": "INR"
+								},
+								{
+									"key": "toCurrency",
+									"value": "USD"
+								},
+								{
+									"key": "amount",
+									"value": "50000"
+								}
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "📊 Audit Management",
+			"item": [
+				{
+					"name": "Get All Audit Logs",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{adminToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/audit/logs?page=0&size=50",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "audit", "logs"],
+							"query": [
+								{
+									"key": "page",
+									"value": "0"
+								},
+								{
+									"key": "size",
+									"value": "50"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Audit Logs by User",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{adminToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/audit/logs/user/{{userId}}?page=0&size=20",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "audit", "logs", "user", "{{userId}}"],
+							"query": [
+								{
+									"key": "page",
+									"value": "0"
+								},
+								{
+									"key": "size",
+									"value": "20"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Audit Logs by Action",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{adminToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/audit/logs/action/LOGIN?page=0&size=20",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "audit", "logs", "action", "LOGIN"],
+							"query": [
+								{
+									"key": "page",
+									"value": "0"
+								},
+								{
+									"key": "size",
+									"value": "20"
+								}
+							]
+						}
+					}
+				}
+			]
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:8080",
+			"type": "string"
+		},
+		{
+			"key": "authToken",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "adminToken",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "complianceToken",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "userId",
+			"value": "1",
+			"type": "string"
+		},
+		{
+			"key": "accountNumber",
+			"value": "ACC-001-INR",
+			"type": "string"
+		},
+		{
+			"key": "transactionId",
+			"value": "1",
+			"type": "string"
+		},
+		{
+			"key": "alertId",
+			"value": "1",
+			"type": "string"
+		},
+		{
+			"key": "officerId",
+			"value": "1",
+			"type": "string"
+		},
+		{
+			"key": "sarId",
+			"value": "1",
+			"type": "string"
+		},
+		{
+			"key": "documentId",
+			"value": "1",
+			"type": "string"
+		},
+		{
+			"key": "ruleId",
+			"value": "1",
+			"type": "string"
+		}
+	]
+}
