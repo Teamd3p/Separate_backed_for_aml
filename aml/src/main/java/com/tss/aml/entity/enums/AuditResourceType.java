@@ -11,5 +11,5 @@ public enum AuditResourceType {
     SYSTEM,
     SESSION,
     PERMISSION,
-    ROLE
+    ROLE, COMPLIANCE_OFFICER
 }

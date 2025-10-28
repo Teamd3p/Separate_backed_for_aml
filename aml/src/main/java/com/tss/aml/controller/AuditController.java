@@ -89,4 +89,59 @@ public class AuditController {
         
         return request.getRemoteAddr();
     }
+
+//    @GetMapping("/logs/resource/{resourceType}")
+//    public ResponseEntity<List<AuditLog>> getAuditLogsByResourceType(
+//            @PathVariable AuditResourceType resourceType,
+//            HttpServletRequest request) {
+//        
+//        String ipAddress = getClientIpAddress(request);
+//        
+//        List<AuditLog> logs = auditLogRepository.findByResourceType(resourceType);
+//        
+//        auditService.logSuccess(AuditAction.DATA_VIEWED, AuditResourceType.AUDIT_LOG, null, 
+//            null, null, "Audit logs viewed for resource type: " + resourceType, ipAddress);
+//        
+//        return ResponseEntity.ok(logs);
+//    }
+//
+//    @GetMapping("/logs/date-range")
+//    public ResponseEntity<List<AuditLog>> getAuditLogsByDateRange(
+//            @RequestParam String startDate,
+//            @RequestParam String endDate,
+//            HttpServletRequest request) {
+//        
+//        String ipAddress = getClientIpAddress(request);
+//        
+//        try {
+//            java.time.LocalDateTime start = java.time.LocalDateTime.parse(startDate);
+//            java.time.LocalDateTime end = java.time.LocalDateTime.parse(endDate);
+//            
+//            List<AuditLog> logs = auditLogRepository.findByTimestampBetween(start, end);
+//            
+//            auditService.logSuccess(AuditAction.DATA_VIEWED, AuditResourceType.AUDIT_LOG, null, 
+//                null, null, "Audit logs viewed for date range: " + startDate + " to " + endDate, ipAddress);
+//            
+//            return ResponseEntity.ok(logs);
+//        } catch (Exception e) {
+//            auditService.logFailure(AuditAction.DATA_VIEWED, AuditResourceType.AUDIT_LOG, null, 
+//                null, null, "Failed to parse date range: " + e.getMessage(), ipAddress);
+//            return ResponseEntity.badRequest().build();
+//        }
+//    }
+//
+//    @GetMapping("/logs/status/{status}")
+//    public ResponseEntity<List<AuditLog>> getAuditLogsByStatus(
+//            @PathVariable com.tss.aml.entity.enums.AuditStatus status,
+//            HttpServletRequest request) {
+//        
+//        String ipAddress = getClientIpAddress(request);
+//        
+//        List<AuditLog> logs = auditLogRepository.findByStatus(status);
+//        
+//        auditService.logSuccess(AuditAction.DATA_VIEWED, AuditResourceType.AUDIT_LOG, null, 
+//            null, null, "Audit logs viewed for status: " + status, ipAddress);
+//        
+//        return ResponseEntity.ok(logs);
+//    }
 }

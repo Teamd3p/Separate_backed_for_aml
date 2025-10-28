@@ -1,7 +1,9 @@
 package com.tss.aml.controller;
 
 import java.math.BigDecimal;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -89,5 +91,27 @@ public class CurrencyController {
         
         BigDecimal fee = currencyService.calculateConversionFee(fromCurrency, toCurrency, amount);
         return ResponseEntity.ok(fee);
+    }
+    
+
+    /**
+     * Get real-time exchange rate with timestamp
+     */
+    @GetMapping("/rate/realtime/{fromCurrency}/{toCurrency}")
+    public ResponseEntity<Map<String, Object>> getRealTimeExchangeRate(
+            @PathVariable String fromCurrency,
+            @PathVariable String toCurrency) {
+        
+        CurrencyExchange rate = currencyService.getExchangeRate(fromCurrency, toCurrency);
+        
+        Map<String, Object> response = new HashMap<>();
+        response.put("fromCurrency", fromCurrency);
+        response.put("toCurrency", toCurrency);
+        response.put("exchangeRate", rate.getConversionRate());
+        response.put("timestamp", java.time.LocalDateTime.now());
+        response.put("isActive", rate.getIsActive());
+        response.put("lastUpdated", rate.getLastUpdated());
+        
+        return ResponseEntity.ok(response);
     }
 }

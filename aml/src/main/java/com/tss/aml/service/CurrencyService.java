@@ -42,4 +42,9 @@ public interface CurrencyService {
      * Update exchange rate
      */
     CurrencyExchange updateExchangeRate(String fromCurrency, String toCurrency, BigDecimal newRate);
+    
+    /**
+     * Get conversion history for audit purposes
+     */
+    List<CurrencyExchange> getConversionHistory(String fromCurrency, String toCurrency, int page, int size);
 }

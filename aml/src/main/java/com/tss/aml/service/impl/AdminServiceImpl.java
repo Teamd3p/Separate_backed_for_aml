@@ -84,6 +84,9 @@ public class AdminServiceImpl implements AdminService {
 	@Autowired
 	private com.tss.aml.service.AuditService auditService;
 
+	@Autowired
+	private com.tss.aml.service.EmailService emailService;
+
 	private Admin getCurrentAdmin() {
 		Authentication auth = SecurityContextHolder.getContext().getAuthentication();
 		if (auth != null && auth.getPrincipal() instanceof User) {
@@ -99,13 +102,40 @@ public class AdminServiceImpl implements AdminService {
 		if (complianceOfficerRepo.findByEmail(request.getEmail()).isPresent()) {
 			throw new RuntimeException("Email already exists");
 		}
+
+		// Store the plain password before encoding for email
+		String plainPassword = request.getPassword();
+		
 		ComplianceOfficer officer = new ComplianceOfficer(request.getEmail(),
 				passwordEncoder.encode(request.getPassword()), request.getFirstName(), request.getLastName(),
 				request.getPhone());
+		
 		// Set officer as active and verified immediately
 		officer.setStatus(com.tss.aml.entity.enums.UserStatus.ACTIVE);
 		officer.setEmailVerified(true);
-		return complianceOfficerRepo.save(officer);
+		
+		ComplianceOfficer savedOfficer = complianceOfficerRepo.save(officer);
+
+		// Send welcome email with credentials
+		try {
+			String loginUrl = "http://localhost:8080/login"; // You can make this configurable
+			emailService.sendOfficerAccountCreatedEmail(
+				savedOfficer.getEmail(),
+				savedOfficer.getFirstName(),
+				savedOfficer.getLastName(),
+				savedOfficer.getEmail(),
+				plainPassword,
+				loginUrl
+			);
+
+				} catch (Exception emailError) {
+			// Log email failure but don't fail the officer creation
+			System.err.println("Failed to send officer creation email: " + emailError.getMessage());
+			
+		
+		}
+
+		return savedOfficer;
 	}
 
 	@Override
@@ -479,4 +509,59 @@ public class AdminServiceImpl implements AdminService {
 	public List<com.tss.aml.entity.Rule> getRulesByType(com.tss.aml.entity.enums.RuleType ruleType) {
 		return ruleRepo.findByTypeAndIsActiveTrue(ruleType);
 	}
+
+	@Override
+	public void updateOfficerStatus(Long officerId, com.tss.aml.entity.enums.UserStatus status) {
+	    try {
+	        ComplianceOfficer officer = complianceOfficerRepo.findById(officerId)
+	                .orElseThrow(() -> new RuntimeException("Officer not found with ID: " + officerId));
+	        
+	        // Update the status field
+	        officer.setStatus(status);
+	        complianceOfficerRepo.save(officer);
+
+	        // Log the action safely
+	        try {
+	            Admin currentAdmin = getCurrentAdmin();
+	            if (currentAdmin != null) {
+	                auditService.logAction(com.tss.aml.entity.enums.AuditAction.USER_STATUS_UPDATE,
+	                        com.tss.aml.entity.enums.AuditResourceType.COMPLIANCE_OFFICER, officerId, 
+	                        currentAdmin.getUserId(), null, "Officer status updated to " + status, 
+	                        null, null, com.tss.aml.entity.enums.AuditStatus.SUCCESS);
+	            }
+	        } catch (Exception auditError) {
+	            System.err.println("Failed to log audit action: " + auditError.getMessage());
+	        }
+	    } catch (Exception e) {
+	        System.err.println("Error updating officer status: " + e.getMessage());
+	        throw new RuntimeException("Failed to update officer status: " + e.getMessage());
+	    }
+	}
+	@Override
+	public void updateCustomerStatus(Long customerId, com.tss.aml.entity.enums.UserStatus status) {
+	    try {
+	        Customer customer = customerRepo.findById(customerId)
+	                .orElseThrow(() -> new RuntimeException("Customer not found with ID: " + customerId));
+	        
+	        customer.setStatus(status);
+	        customerRepo.save(customer);
+
+	        // Log the action safely
+	        try {
+	            Admin currentAdmin = getCurrentAdmin();
+	            if (currentAdmin != null) {
+	                auditService.logAction(com.tss.aml.entity.enums.AuditAction.USER_STATUS_UPDATE,
+	                        com.tss.aml.entity.enums.AuditResourceType.CUSTOMER, customerId, 
+	                        currentAdmin.getUserId(), null, "Customer status updated to " + status, 
+	                        null, null, com.tss.aml.entity.enums.AuditStatus.SUCCESS);
+	            }
+	        } catch (Exception auditError) {
+	            System.err.println("Failed to log audit action: " + auditError.getMessage());
+	        }
+	    } catch (Exception e) {
+	        System.err.println("Error updating customer status: " + e.getMessage());
+	        throw new RuntimeException("Failed to update customer status: " + e.getMessage());
+	    }
+	}
 }
+

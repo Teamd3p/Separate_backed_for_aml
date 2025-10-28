@@ -385,4 +385,112 @@ public class EmailServiceImpl implements EmailService {
             System.err.println("Failed to send password change confirmation email: " + e.getMessage());
         }
     }
+
+    @Override
+    public void sendOfficerAccountCreatedEmail(String toEmail, String firstName, String lastName, String email, String temporaryPassword, String loginUrl) {
+        try {
+            MimeMessage mimeMessage = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, true, "UTF-8");
+            
+            helper.setTo(toEmail);
+            helper.setSubject("🏛️ Welcome to AML System - Compliance Officer Account Created");
+            helper.setFrom("noreply@amlsystem.com");
+            
+            // Debug: Print the number of arguments
+            System.out.println("Formatting officer content with 7 arguments:");
+            System.out.println("1. firstName: " + firstName);
+            System.out.println("2. lastName: " + lastName);
+            System.out.println("3. email: " + email);
+            System.out.println("4. temporaryPassword: " + temporaryPassword);
+            System.out.println("5. loginUrl (button): " + loginUrl);
+            System.out.println("6. loginUrl (link href): " + loginUrl);
+            System.out.println("7. loginUrl (display): " + loginUrl);
+            
+            // First format the content with the officer details
+            String formattedContent = String.format(OFFICER_ACCOUNT_CREATED_CONTENT, 
+                firstName, lastName, email, temporaryPassword, loginUrl, loginUrl, loginUrl);
+            
+            System.out.println("Officer content formatted successfully");
+            
+            // Use a simpler template to avoid CSS %% conflicts
+            String htmlContent = """
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <meta charset="UTF-8">
+                    <title>Compliance Officer Account Created</title>
+                    <style>
+                        body { font-family: Arial, sans-serif; margin: 0; padding: 20px; background-color: #f5f5f5; }
+                        .container { max-width: 600px; margin: 0 auto; background-color: white; padding: 30px; border-radius: 10px; }
+                        .highlight { color: #007bff; font-weight: bold; }
+                        .success { background-color: #d4edda; border-left: 4px solid #28a745; padding: 15px; margin: 20px 0; border-radius: 5px; }
+                        .info { background-color: #d1ecf1; border-left: 4px solid #17a2b8; padding: 15px; margin: 20px 0; border-radius: 5px; }
+                        .warning { background-color: #fff3cd; border-left: 4px solid #ffc107; padding: 15px; margin: 20px 0; border-radius: 5px; }
+                    </style>
+                </head>
+                <body>
+                    <div class="container">
+                        """ + formattedContent + """
+                    </div>
+                </body>
+                </html>
+                """;
+            
+            System.out.println("Base template formatted successfully");
+            
+            helper.setText(htmlContent, true);
+            mailSender.send(mimeMessage);
+            
+            System.out.println("Officer account creation email sent successfully to: " + toEmail);
+        } catch (Exception e) {
+            System.err.println("Failed to send officer account creation email: " + e.getMessage());
+            e.printStackTrace(); // Print full stack trace for debugging
+        }
+    }
+
+    private static final String OFFICER_ACCOUNT_CREATED_CONTENT = """
+        <h2>🏛️ Welcome to AML System - Compliance Officer</h2>
+        <p>Dear <span class="highlight">%s %s</span>,</p>
+        
+        <div class="success">
+            <strong>✅ Your Compliance Officer Account Has Been Created!</strong><br>
+            An administrator has created your account in the AML (Anti-Money Laundering) System.
+        </div>
+        
+        <div class="info">
+            <h3>📋 Your Account Details:</h3>
+            <p><strong>Email/Username:</strong> <span class="highlight">%s</span></p>
+            <p><strong>Temporary Password:</strong> <span class="highlight">%s</span></p>
+            <p><strong>Role:</strong> Compliance Officer</p>
+        </div>
+        
+        <div class="warning">
+            <strong>🔐 Important Security Notice:</strong><br>
+            Please change your password immediately after your first login for security purposes.
+        </div>
+        
+        <p><strong>🎯 Your Responsibilities as a Compliance Officer:</strong></p>
+        <ul style="line-height: 1.8;">
+            <li>🚨 <strong>Alert Management</strong> - Review and investigate suspicious activity alerts</li>
+            <li>📋 <strong>SAR Generation</strong> - Create and submit Suspicious Activity Reports</li>
+            <li>🔍 <strong>Transaction Monitoring</strong> - Monitor high-risk transactions and patterns</li>
+            <li>📄 <strong>KYC Document Verification</strong> - Verify customer identity documents</li>
+            <li>📊 <strong>Compliance Reporting</strong> - Generate compliance reports and analytics</li>
+            <li>👥 <strong>Customer Risk Assessment</strong> - Evaluate customer risk profiles</li>
+        </ul>
+        
+        <div style="text-align: center; margin: 30px 0;">
+            <a href="%s" style="background-color: #007bff; color: white; padding: 15px 30px; text-decoration: none; border-radius: 5px; font-weight: bold;">
+                🔑 Login to AML System
+            </a>
+        </div>
+        
+        <p><strong>📞 Need Help?</strong></p>
+        <p>If you have any questions or need assistance, please contact the system administrator or IT support team.</p>
+        
+        <div class="info">
+            <p><strong>Login URL:</strong> <a href="%s">%s</a></p>
+            <p><strong>System:</strong> Anti-Money Laundering Compliance Platform</p>
+        </div>
+        """;
 }

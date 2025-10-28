@@ -11,6 +11,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -184,5 +185,35 @@ public class ComplianceOfficerController {
         response.setAssignedOfficerName(alert.getAssignedTo() != null ? 
             alert.getAssignedTo().getFirstName() + " " + alert.getAssignedTo().getLastName() : null);
         return response;
+    }
+
+    // === OFFICER PROFILE MANAGEMENT ===
+    @GetMapping("/profile")
+    public ResponseEntity<com.tss.aml.dto.response.OfficerProfileResponseDto> getOfficerProfile() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        Long officerId = ((User) auth.getPrincipal()).getUserId();
+        
+        com.tss.aml.dto.response.OfficerProfileResponseDto profile = complianceService.getOfficerProfile(officerId);
+        return ResponseEntity.ok(profile);
+    }
+
+    @PutMapping("/profile")
+    public ResponseEntity<com.tss.aml.dto.response.OfficerProfileResponseDto> updateOfficerProfile(
+            @RequestBody com.tss.aml.dto.request.OfficerProfileUpdateRequest request) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        Long officerId = ((User) auth.getPrincipal()).getUserId();
+        
+        com.tss.aml.dto.response.OfficerProfileResponseDto updatedProfile = 
+            complianceService.updateOfficerProfile(officerId, request);
+        return ResponseEntity.ok(updatedProfile);
+    }
+
+    @PostMapping("/profile/send-otp")
+    public ResponseEntity<String> sendOfficerProfileUpdateOtp() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String email = ((User) auth.getPrincipal()).getEmail();
+        
+        complianceService.sendOfficerProfileUpdateOtp(email);
+        return ResponseEntity.ok("OTP sent successfully to your email");
     }
 }
