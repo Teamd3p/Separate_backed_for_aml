@@ -42,9 +42,12 @@ public interface CurrencyService {
      * Update exchange rate
      */
     CurrencyExchange updateExchangeRate(String fromCurrency, String toCurrency, BigDecimal newRate);
+<<<<<<< HEAD
     
     /**
      * Get conversion history for audit purposes
      */
     List<CurrencyExchange> getConversionHistory(String fromCurrency, String toCurrency, int page, int size);
+=======
+>>>>>>> 3d7d8a1cd41cfa13dbead653ab5dda9af9c601af
 }

@@ -1,9 +1,13 @@
 package com.tss.aml.controller;
 
 import java.math.BigDecimal;
+<<<<<<< HEAD
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+=======
+import java.util.List;
+>>>>>>> 3d7d8a1cd41cfa13dbead653ab5dda9af9c601af
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -92,6 +96,7 @@ public class CurrencyController {
         BigDecimal fee = currencyService.calculateConversionFee(fromCurrency, toCurrency, amount);
         return ResponseEntity.ok(fee);
     }
+<<<<<<< HEAD
     
 
     /**
@@ -114,4 +119,6 @@ public class CurrencyController {
         
         return ResponseEntity.ok(response);
     }
+=======
+>>>>>>> 3d7d8a1cd41cfa13dbead653ab5dda9af9c601af
 }

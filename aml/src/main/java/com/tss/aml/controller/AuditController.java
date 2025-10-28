@@ -89,6 +89,7 @@ public class AuditController {
         
         return request.getRemoteAddr();
     }
+<<<<<<< HEAD
 
 //    @GetMapping("/logs/resource/{resourceType}")
 //    public ResponseEntity<List<AuditLog>> getAuditLogsByResourceType(
@@ -144,4 +145,6 @@ public class AuditController {
 //        
 //        return ResponseEntity.ok(logs);
 //    }
+=======
+>>>>>>> 3d7d8a1cd41cfa13dbead653ab5dda9af9c601af
 }

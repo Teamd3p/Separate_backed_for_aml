@@ -45,5 +45,9 @@ public enum AuditAction {
     
     // Password reset actions
     PASSWORD_RESET_REQUEST,
+<<<<<<< HEAD
     PASSWORD_RESET, USER_STATUS_UPDATE
+=======
+    PASSWORD_RESET
+>>>>>>> 3d7d8a1cd41cfa13dbead653ab5dda9af9c601af
 }

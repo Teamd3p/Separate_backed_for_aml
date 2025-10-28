@@ -1,6 +1,10 @@
 package com.tss.aml.service.impl;
 
 import java.security.SecureRandom;
+<<<<<<< HEAD
+=======
+import java.util.List;
+>>>>>>> 3d7d8a1cd41cfa13dbead653ab5dda9af9c601af
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -9,6 +13,10 @@ import com.tss.aml.dto.request.CreateAccountRequest;
 import com.tss.aml.entity.Account;
 import com.tss.aml.entity.Customer;
 import com.tss.aml.entity.enums.AccountType;
+<<<<<<< HEAD
+=======
+import com.tss.aml.entity.enums.Currency;
+>>>>>>> 3d7d8a1cd41cfa13dbead653ab5dda9af9c601af
 import com.tss.aml.exception.UserApiException;
 import com.tss.aml.repository.AccountRepository;
 import com.tss.aml.repository.CustomerRepository;
@@ -38,6 +46,13 @@ public class AccountServiceImpl implements AccountService {
             throw new IllegalArgumentException("Invalid account type: " + request.getAccountType());
         }
 
+<<<<<<< HEAD
+=======
+        if (!Currency.isValidCurrency(request.getCurrency())) {
+            throw new IllegalArgumentException("Invalid currency: " + request.getCurrency());
+        }
+
+>>>>>>> 3d7d8a1cd41cfa13dbead653ab5dda9af9c601af
         Account account = new Account();
         account.setAccountType(AccountType.valueOf(request.getAccountType().toUpperCase()));
         account.setCurrency(request.getCurrency().toUpperCase());
@@ -80,6 +95,23 @@ public class AccountServiceImpl implements AccountService {
                account.getCustomer().getUserId().equals(userId);
     }
 
+<<<<<<< HEAD
+=======
+    @Override
+    public List<Account> getAccountsByCustomerId(Long customerId) {
+        try {
+            System.out.println("Fetching accounts for customer ID: " + customerId);
+            List<Account> accounts = accountRepository.findByCustomerUserId(customerId);
+            System.out.println("Found " + accounts.size() + " accounts for customer " + customerId);
+            return accounts;
+        } catch (Exception e) {
+            System.err.println("Error fetching accounts for customer " + customerId + ": " + e.getMessage());
+            e.printStackTrace();
+            throw new RuntimeException("Failed to fetch accounts: " + e.getMessage(), e);
+        }
+    }
+
+>>>>>>> 3d7d8a1cd41cfa13dbead653ab5dda9af9c601af
     /**
      * Generates a unique 12-digit random account number.
      */

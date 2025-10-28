@@ -36,6 +36,9 @@ public interface KycDocumentService {
     List<KycDocument> getDocumentsByDateRange(LocalDateTime startDate, LocalDateTime endDate);
     
     List<KycDocument> getDocumentsByOfficer(Long officerId);
+<<<<<<< HEAD
     
     KycDocument getDocumentById(Long documentId);
+=======
+>>>>>>> 3d7d8a1cd41cfa13dbead653ab5dda9af9c601af
 }

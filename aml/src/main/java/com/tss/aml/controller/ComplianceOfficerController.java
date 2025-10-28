@@ -11,7 +11,10 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+<<<<<<< HEAD
 import org.springframework.web.bind.annotation.PutMapping;
+=======
+>>>>>>> 3d7d8a1cd41cfa13dbead653ab5dda9af9c601af
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -186,6 +189,7 @@ public class ComplianceOfficerController {
             alert.getAssignedTo().getFirstName() + " " + alert.getAssignedTo().getLastName() : null);
         return response;
     }
+<<<<<<< HEAD
 
     // === OFFICER PROFILE MANAGEMENT ===
     @GetMapping("/profile")
@@ -216,4 +220,6 @@ public class ComplianceOfficerController {
         complianceService.sendOfficerProfileUpdateOtp(email);
         return ResponseEntity.ok("OTP sent successfully to your email");
     }
+=======
+>>>>>>> 3d7d8a1cd41cfa13dbead653ab5dda9af9c601af
 }

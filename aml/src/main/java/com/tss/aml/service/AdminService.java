@@ -95,10 +95,13 @@ public interface AdminService {
 	void updateCustomerAccountStatus(Long customerId, com.tss.aml.entity.enums.AccountStatus status, String reason);
 
 	List<com.tss.aml.entity.Rule> getRulesByType(com.tss.aml.entity.enums.RuleType ruleType);
+<<<<<<< HEAD
 
 	// Officer status management
 	void updateOfficerStatus(Long officerId, com.tss.aml.entity.enums.UserStatus status);
 
 	// Customer status management
 	void updateCustomerStatus(Long customerId, com.tss.aml.entity.enums.UserStatus status);
+=======
+>>>>>>> 3d7d8a1cd41cfa13dbead653ab5dda9af9c601af
 }

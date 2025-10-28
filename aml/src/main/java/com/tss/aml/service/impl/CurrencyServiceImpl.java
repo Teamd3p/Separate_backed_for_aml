@@ -181,10 +181,13 @@ public class CurrencyServiceImpl implements CurrencyService {
         
         throw new UserApiException("Exchange rate not found for " + fromCurrency + " to " + toCurrency);
     }
+<<<<<<< HEAD
 
 	@Override
 	public List<CurrencyExchange> getConversionHistory(String fromCurrency, String toCurrency, int page, int size) {
 		// TODO Auto-generated method stub
 		return null;
 	}
+=======
+>>>>>>> 3d7d8a1cd41cfa13dbead653ab5dda9af9c601af
 }

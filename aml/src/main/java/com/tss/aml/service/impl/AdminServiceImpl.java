@@ -84,9 +84,12 @@ public class AdminServiceImpl implements AdminService {
 	@Autowired
 	private com.tss.aml.service.AuditService auditService;
 
+<<<<<<< HEAD
 	@Autowired
 	private com.tss.aml.service.EmailService emailService;
 
+=======
+>>>>>>> 3d7d8a1cd41cfa13dbead653ab5dda9af9c601af
 	private Admin getCurrentAdmin() {
 		Authentication auth = SecurityContextHolder.getContext().getAuthentication();
 		if (auth != null && auth.getPrincipal() instanceof User) {
@@ -102,6 +105,7 @@ public class AdminServiceImpl implements AdminService {
 		if (complianceOfficerRepo.findByEmail(request.getEmail()).isPresent()) {
 			throw new RuntimeException("Email already exists");
 		}
+<<<<<<< HEAD
 
 		// Store the plain password before encoding for email
 		String plainPassword = request.getPassword();
@@ -136,6 +140,15 @@ public class AdminServiceImpl implements AdminService {
 		}
 
 		return savedOfficer;
+=======
+		ComplianceOfficer officer = new ComplianceOfficer(request.getEmail(),
+				passwordEncoder.encode(request.getPassword()), request.getFirstName(), request.getLastName(),
+				request.getPhone());
+		// Set officer as active and verified immediately
+		officer.setStatus(com.tss.aml.entity.enums.UserStatus.ACTIVE);
+		officer.setEmailVerified(true);
+		return complianceOfficerRepo.save(officer);
+>>>>>>> 3d7d8a1cd41cfa13dbead653ab5dda9af9c601af
 	}
 
 	@Override
@@ -509,6 +522,7 @@ public class AdminServiceImpl implements AdminService {
 	public List<com.tss.aml.entity.Rule> getRulesByType(com.tss.aml.entity.enums.RuleType ruleType) {
 		return ruleRepo.findByTypeAndIsActiveTrue(ruleType);
 	}
+<<<<<<< HEAD
 
 	@Override
 	public void updateOfficerStatus(Long officerId, com.tss.aml.entity.enums.UserStatus status) {
@@ -565,3 +579,6 @@ public class AdminServiceImpl implements AdminService {
 	}
 }
 
+=======
+}
+>>>>>>> 3d7d8a1cd41cfa13dbead653ab5dda9af9c601af

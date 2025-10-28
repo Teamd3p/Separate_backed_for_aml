@@ -1,6 +1,14 @@
 package com.tss.aml.controller;
 
+<<<<<<< HEAD
 import java.util.List;
+=======
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+>>>>>>> 3d7d8a1cd41cfa13dbead653ab5dda9af9c601af
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,11 +33,21 @@ import com.tss.aml.dto.response.HelpDeskTicketDto;
 import com.tss.aml.dto.response.KycDocumentResponseDto;
 import com.tss.aml.dto.response.TransactionCountDto;
 import com.tss.aml.dto.response.TransactionResponseDto;
+<<<<<<< HEAD
+=======
+import com.tss.aml.dto.request.CreateAccountRequest;
+import com.tss.aml.entity.Account;
+>>>>>>> 3d7d8a1cd41cfa13dbead653ab5dda9af9c601af
 import com.tss.aml.entity.Alert;
 import com.tss.aml.entity.HelpDeskTicket;
 import com.tss.aml.entity.KycDocument;
 import com.tss.aml.entity.Transaction;
 import com.tss.aml.entity.User;
+<<<<<<< HEAD
+=======
+import com.tss.aml.repository.AccountRepository;
+import com.tss.aml.service.AccountService;
+>>>>>>> 3d7d8a1cd41cfa13dbead653ab5dda9af9c601af
 import com.tss.aml.service.AlertService;
 import com.tss.aml.service.CustomerService;
 import com.tss.aml.service.HelpDeskService;
@@ -56,6 +74,83 @@ public class CustomerController {
 	@Autowired
 	private HelpDeskService helpDeskService;
 
+<<<<<<< HEAD
+=======
+	@Autowired
+	private AccountService accountService;
+
+	@Autowired
+	private AccountRepository accountRepository;
+
+	// === ACCOUNT ENDPOINTS ===
+	@GetMapping("/accounts/test")
+	public ResponseEntity<ApiResponseDto<String>> testAccountsEndpoint() {
+		try {
+			Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+			Long customerId = ((User) auth.getPrincipal()).getUserId();
+			
+			System.out.println("Test endpoint: Customer ID = " + customerId);
+			
+			// Test basic repository access
+			long totalAccounts = accountRepository.count();
+			System.out.println("Total accounts in database: " + totalAccounts);
+			
+			return ResponseEntity.ok(new ApiResponseDto<>(true, "Test successful", 
+				"Customer ID: " + customerId + ", Total accounts: " + totalAccounts));
+		} catch (Exception e) {
+			System.err.println("Test endpoint error: " + e.getMessage());
+			e.printStackTrace();
+			return ResponseEntity.status(500)
+					.body(new ApiResponseDto<>(false, "Test failed: " + e.getMessage(), null));
+		}
+	}
+
+	@GetMapping("/accounts")
+	public ResponseEntity<ApiResponseDto<List<Map<String, Object>>>> getCustomerAccounts() {
+		try {
+			Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+			Long customerId = ((User) auth.getPrincipal()).getUserId();
+			
+			System.out.println("Controller: Getting accounts for customer ID: " + customerId);
+
+			// Try to get accounts with detailed error handling
+			List<Map<String, Object>> accountDtos = new ArrayList<>();
+			
+			try {
+				List<Account> accounts = accountService.getAccountsByCustomerId(customerId);
+				System.out.println("Service returned " + accounts.size() + " accounts");
+				accountDtos = accounts.stream()
+						.map(this::convertToAccountDto)
+						.collect(Collectors.toList());
+			} catch (Exception serviceEx) {
+				System.err.println("Service layer error: " + serviceEx.getMessage());
+				serviceEx.printStackTrace();
+				// Return empty list instead of failing
+				accountDtos = new ArrayList<>();
+			}
+
+			System.out.println("Controller: Successfully returning " + accountDtos.size() + " accounts");
+			return ResponseEntity.ok(new ApiResponseDto<>(true, "Accounts retrieved successfully", accountDtos));
+		} catch (Exception e) {
+			System.err.println("Controller: Error getting customer accounts: " + e.getMessage());
+			e.printStackTrace();
+			return ResponseEntity.status(500)
+					.body(new ApiResponseDto<>(false, "Failed to retrieve accounts: " + e.getMessage(), null));
+		}
+	}
+
+	@PostMapping("/accounts")
+	public ResponseEntity<ApiResponseDto<Map<String, Object>>> createAccount(@RequestBody CreateAccountRequest request) {
+		Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+		Long customerId = ((User) auth.getPrincipal()).getUserId();
+
+		Account account = accountService.createAccount(request, customerId);
+		Map<String, Object> accountDto = convertToAccountDto(account);
+
+		return ResponseEntity.ok(new ApiResponseDto<>(true, "Account created successfully", accountDto));
+	}
+
+>>>>>>> 3d7d8a1cd41cfa13dbead653ab5dda9af9c601af
 	// === TRANSACTION ENDPOINTS ===
 	@GetMapping("/transactions")
 	public ResponseEntity<ApiResponseDto<List<TransactionResponseDto>>> getCustomerTransactions() {
@@ -251,4 +346,19 @@ public class CustomerController {
 		dto.setAssignedToId(ticket.getAssignedToId());
 		return dto;
 	}
+<<<<<<< HEAD
+=======
+
+	private Map<String, Object> convertToAccountDto(Account account) {
+		Map<String, Object> dto = new HashMap<>();
+		dto.put("id", account.getAccountId());
+		dto.put("accountNumber", account.getAccountNumber());
+		dto.put("accountType", account.getAccountType().name());
+		dto.put("balance", account.getBalance());
+		dto.put("currency", account.getCurrency());
+		dto.put("status", account.getStatus() != null ? account.getStatus().name() : "ACTIVE");
+		dto.put("openDate", account.getCreatedAt() != null ? account.getCreatedAt().toString() : LocalDateTime.now().toString());
+		return dto;
+	}
+>>>>>>> 3d7d8a1cd41cfa13dbead653ab5dda9af9c601af
 }

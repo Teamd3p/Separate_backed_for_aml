@@ -385,6 +385,7 @@ public class EmailServiceImpl implements EmailService {
             System.err.println("Failed to send password change confirmation email: " + e.getMessage());
         }
     }
+<<<<<<< HEAD
 
     @Override
     public void sendOfficerAccountCreatedEmail(String toEmail, String firstName, String lastName, String email, String temporaryPassword, String loginUrl) {
@@ -493,4 +494,6 @@ public class EmailServiceImpl implements EmailService {
             <p><strong>System:</strong> Anti-Money Laundering Compliance Platform</p>
         </div>
         """;
+=======
+>>>>>>> 3d7d8a1cd41cfa13dbead653ab5dda9af9c601af
 }

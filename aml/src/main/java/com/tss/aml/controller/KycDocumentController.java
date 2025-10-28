@@ -208,10 +208,19 @@ public class KycDocumentController {
 	@GetMapping("/{documentId}")
 	public ResponseEntity<ApiResponseDto<KycDocumentResponseDto>> getDocument(@PathVariable Long documentId) {
 		try {
+<<<<<<< HEAD
 			KycDocument document = kycDocumentService.getDocumentById(documentId);
 			KycDocumentResponseDto responseDto = convertToResponseDto(document);
 			
 			return ResponseEntity.ok(new ApiResponseDto<>(true, "Document retrieved successfully", responseDto));
+=======
+			// This would require adding a findById method to the service
+			return ResponseEntity.ok(new ApiResponseDto<>(true, "Document retrieved successfully", null // Would need to
+																										// implement
+																										// this in
+																										// service
+			));
+>>>>>>> 3d7d8a1cd41cfa13dbead653ab5dda9af9c601af
 		} catch (Exception e) {
 			return ResponseEntity.badRequest()
 					.body(new ApiResponseDto<>(false, "Failed to retrieve document: " + e.getMessage(), null));

@@ -140,10 +140,13 @@ public class KycDocumentServiceImpl implements KycDocumentService {
 	public List<KycDocument> getDocumentsByOfficer(Long officerId) {
 		return kycDocumentRepository.findByVerifiedBy(officerId);
 	}
+<<<<<<< HEAD
 
 	@Override
 	public KycDocument getDocumentById(Long documentId) {
 		return kycDocumentRepository.findById(documentId)
 				.orElseThrow(() -> new RuntimeException("Document not found with ID: " + documentId));
 	}
+=======
+>>>>>>> 3d7d8a1cd41cfa13dbead653ab5dda9af9c601af
 }

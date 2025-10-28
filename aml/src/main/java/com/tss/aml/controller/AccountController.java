@@ -1,7 +1,5 @@
 package com.tss.aml.controller;
 
-import java.util.List;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -21,7 +19,6 @@ import com.tss.aml.entity.enums.AuditAction;
 import com.tss.aml.entity.enums.AuditResourceType;
 import com.tss.aml.security.SecurityUtils;
 import com.tss.aml.service.AccountService;
-import com.tss.aml.service.AdminService;
 import com.tss.aml.service.AuditService;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -33,9 +30,6 @@ public class AccountController {
 
     @Autowired
     private AccountService accountService;
-    
-    @Autowired
-    private AdminService adminService;
     
     @Autowired
     private AuditService auditService;
@@ -123,80 +117,6 @@ public class AccountController {
         auditService.logSuccess(AuditAction.DATA_VIEWED, AuditResourceType.ACCOUNT, 
             account.getAccountId(), null, null, 
             "Account balance queried for: " + accountNumber, ipAddress);
-        
-        return ResponseEntity.ok(response);
-    }
-
-    @GetMapping("/customer/{customerId}")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('COMPLIANCE_OFFICER') or (hasRole('CUSTOMER') and #customerId == authentication.principal.userId)")
-    public ResponseEntity<List<AccountResponse>> getCustomerAccounts(
-            @PathVariable Long customerId,
-            HttpServletRequest httpRequest) {
-        
-        // Additional security validation for customers
-        User currentUser = SecurityUtils.getCurrentUser();
-        if (currentUser.getRole().name().equals("CUSTOMER")) {
-            SecurityUtils.validateCustomerAccess(customerId);
-        }
-        
-        String ipAddress = getClientIpAddress(httpRequest);
-        
-        // Get accounts from AdminService (which has getAccountsByCustomerId method)
-        List<Account> accounts = adminService.getAccountsByCustomerId(customerId);
-        
-        List<AccountResponse> responses = accounts.stream().map(account -> {
-            AccountResponse response = new AccountResponse();
-            response.setAccountId(account.getAccountId());
-            response.setAccountNumber(account.getAccountNumber());
-            response.setAccountType(account.getAccountType() != null ? account.getAccountType().name() : null);
-            response.setCurrency(account.getCurrency());
-            response.setBalance(account.getBalance());
-            response.setStatus(account.getStatus() != null ? account.getStatus().name() : null);
-            response.setCreatedAt(account.getCreatedAt());
-            response.setCustomerEmail(account.getCustomer() != null ? account.getCustomer().getEmail() : null);
-            return response;
-        }).collect(java.util.stream.Collectors.toList());
-        
-        auditService.logSuccess(AuditAction.DATA_VIEWED, AuditResourceType.ACCOUNT, null, 
-            null, null, "Customer accounts queried for customer: " + customerId, ipAddress);
-        
-        return ResponseEntity.ok(responses);
-    }
-
-    @GetMapping("/{accountNumber}")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('COMPLIANCE_OFFICER') or (hasRole('CUSTOMER') and @accountService.isAccountOwnedByUser(#accountNumber, authentication.principal.userId))")
-    public ResponseEntity<AccountResponse> getAccountDetails(
-            @PathVariable String accountNumber,
-            HttpServletRequest httpRequest) {
-        
-        String ipAddress = getClientIpAddress(httpRequest);
-        
-        Account account = accountService.getAccountByNumber(accountNumber);
-        if (account == null) {
-            auditService.logFailure(AuditAction.DATA_VIEWED, AuditResourceType.ACCOUNT, null, 
-                null, null, "Account details query failed - account not found: " + accountNumber, ipAddress);
-            return ResponseEntity.notFound().build();
-        }
-        
-        // Additional security validation for customers
-        User currentUser = SecurityUtils.getCurrentUser();
-        if (currentUser.getRole().name().equals("CUSTOMER")) {
-            SecurityUtils.validateCustomerAccess(account.getCustomer().getUserId());
-        }
-        
-        AccountResponse response = new AccountResponse();
-        response.setAccountId(account.getAccountId());
-        response.setAccountNumber(account.getAccountNumber());
-        response.setAccountType(account.getAccountType() != null ? account.getAccountType().name() : null);
-        response.setCurrency(account.getCurrency());
-        response.setBalance(account.getBalance());
-        response.setStatus(account.getStatus() != null ? account.getStatus().name() : null);
-        response.setCreatedAt(account.getCreatedAt());
-        response.setCustomerEmail(account.getCustomer() != null ? account.getCustomer().getEmail() : null);
-        
-        auditService.logSuccess(AuditAction.DATA_VIEWED, AuditResourceType.ACCOUNT, 
-            account.getAccountId(), null, null, 
-            "Account details queried for: " + accountNumber, ipAddress);
         
         return ResponseEntity.ok(response);
     }
